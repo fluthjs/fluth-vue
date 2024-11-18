@@ -1,0 +1,39 @@
+name: release and publish
+
+on:
+  push:
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    name: create Release and publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NPM_CONFIG_PROVENANCE: true
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release for Tag
+        id: release_tag
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: 'true'

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["esnext", "dom", "DOM.Iterable"],
+    "module": "umd",
+    "strict": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./packages/core"
+  },
+  "include": ["packages/core/**/*.ts"],
+  "exclude": ["node_modules", "packages/core/**/*.spec.ts", "packages/core/**/test"]
+}
