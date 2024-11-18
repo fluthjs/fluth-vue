@@ -52,6 +52,7 @@
     "headers-polyfill": "3.2.5",
     "husky": "^9.1.6",
     "jsdom": "^25.0.1",
+    "lint-staged": "^15.2.10",
     "msw": "1.0.1",
     "node-fetch": "^3.3.2",
     "sass": "^1.81.0",
