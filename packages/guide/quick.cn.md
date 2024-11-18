@@ -14,4 +14,8 @@ pnpm install fluth-vue
 
 ```ts
 import { useFetch, Stream } from "fluth-vue";
+
+const promise$ = new Stream();
+
+const { loading, error, data } = useFetch(url);
 ```
