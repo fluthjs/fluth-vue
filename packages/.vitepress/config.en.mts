@@ -8,6 +8,7 @@ export default {
     nav: [
       { text: "Guide", link: "/en/guide/introduce" },
       { text: "API", link: "/en/useFluth/index.html" },
+      { text: "changelog", link: "https://github.com/fluthjs/fluth-vue/blob/master/CHANGELOG.md" },
       { text: "fluth", link: "https://fluthjs.github.io/fluth-doc/" },
     ],
     sidebar: {
