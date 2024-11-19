@@ -9,8 +9,8 @@ dependencies:
     specifier: ^11.1.0
     version: 11.1.0(vue@3.5.12)
   fluth:
-    specifier: ^0.0.3
-    version: 0.0.3
+    specifier: ^0.0.4
+    version: 0.0.4
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
@@ -2909,8 +2909,8 @@ packages:
     resolution: {integrity: sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==}
     dev: true
 
-  /fluth@0.0.3:
-    resolution: {integrity: sha512-b4X/NieROtk8M8qjPmpZ3BAwERmFwcXEKx7X+wfY5xa6ZUdIfELqrNilW215DGdbT6goSQ2TSeo8ToU00+Yrcw==}
+  /fluth@0.0.4:
+    resolution: {integrity: sha512-AXV9TjJcJBqIZuVsYuz5I5IKbWXa+LdjzgvBk19pJ4npBt2sXppyOR+v5U8PBoXVB7zHqKmrkaRQFn9kFZ0hRA==}
     dev: false
 
   /focus-trap@7.6.0:
