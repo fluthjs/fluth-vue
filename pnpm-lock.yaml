@@ -9,8 +9,8 @@ dependencies:
     specifier: ^11.1.0
     version: 11.1.0(vue@3.5.12)
   fluth:
-    specifier: ^0.0.4
-    version: 0.0.4
+    specifier: ^0.0.5
+    version: 0.0.5
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
@@ -58,6 +58,9 @@ devDependencies:
   node-fetch:
     specifier: ^3.3.2
     version: 3.3.2
+  prettier:
+    specifier: ^3.3.3
+    version: 3.3.3
   sass:
     specifier: ^1.81.0
     version: 1.81.0
@@ -2909,8 +2912,8 @@ packages:
     resolution: {integrity: sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==}
     dev: true
 
-  /fluth@0.0.4:
-    resolution: {integrity: sha512-AXV9TjJcJBqIZuVsYuz5I5IKbWXa+LdjzgvBk19pJ4npBt2sXppyOR+v5U8PBoXVB7zHqKmrkaRQFn9kFZ0hRA==}
+  /fluth@0.0.5:
+    resolution: {integrity: sha512-dzJOfuGbGYrobZlrvgV9tSsZFjTwsP1YOUxN7G4yACqh12ZoyY/BM1JHDSzYsmEZ1wK1KIIE8wPBFWojRtvymA==}
     dev: false
 
   /focus-trap@7.6.0:
@@ -4376,6 +4379,12 @@ packages:
   /prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
+    dev: true
+
+  /prettier@3.3.3:
+    resolution: {integrity: sha512-i2tDNA0O5IrMO757lfrdQZCc2jPNDVntV0m/+4whiDfWaTKfMNgR7Qz0NAeGz/nRqF4m5/6CLzbP4/liHt12Ew==}
+    engines: {node: '>=14'}
+    hasBin: true
     dev: true
 
   /process-nextick-args@2.0.1:

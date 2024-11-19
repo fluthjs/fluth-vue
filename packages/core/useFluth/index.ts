@@ -5,9 +5,10 @@ export * from "fluth";
 
 export class Stream extends _Stream {
   constructor() {
-    super();
-    this.plugin.then.push((unsubscribe) => {
+    const streamInstance = super() as unknown as _Stream;
+    streamInstance.plugin.then.push((unsubscribe) => {
       if (getCurrentScope()) onScopeDispose(unsubscribe);
     });
+    return streamInstance;
   }
 }

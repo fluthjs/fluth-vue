@@ -1,5 +1,12 @@
 import type { MaybeRefOrGetter, Stoppable } from "@vueuse/shared";
-import { createEventHook, toRef, toValue, until, useTimeoutFn, objectPick } from "@vueuse/shared";
+import {
+  createEventHook,
+  toRef,
+  toValue,
+  until,
+  useTimeoutFn,
+  objectPick,
+} from "@vueuse/shared";
 import {
   computed,
   isRef,
@@ -8,8 +15,6 @@ import {
   ref,
   shallowRef,
   watch,
-  getCurrentScope,
-  onScopeDispose,
   nextTick,
 } from "vue-demi";
 import { debounce, throttle } from "lodash-es";
@@ -53,21 +58,38 @@ export function createFetch(config: CreateFetchOptions = {}) {
   const _combination = config.combination || ("chain" as Combination);
   const _options = config.options;
 
-  function useFactoryFetch(url: MaybeRefOrGetter<string>, options?: UseFetchOptions) {
+  function useFactoryFetch(
+    url: MaybeRefOrGetter<string>,
+    options?: UseFetchOptions,
+  ) {
     const computedUrl = computed(() => {
       const baseUrl = toValue(config.baseUrl);
       const targetUrl = toValue(url);
 
-      return baseUrl && !isAbsoluteURL(targetUrl) ? joinPaths(baseUrl, targetUrl) : targetUrl;
+      return baseUrl && !isAbsoluteURL(targetUrl)
+        ? joinPaths(baseUrl, targetUrl)
+        : targetUrl;
     });
 
     const combinedOptions = {
       ..._options,
       ...options,
       headers: { ..._options?.headers, ...options?.headers },
-      beforeFetch: combineCallbacks(_combination, _options?.beforeFetch, options?.beforeFetch),
-      afterFetch: combineCallbacks(_combination, _options?.afterFetch, options?.afterFetch),
-      onFetchError: combineCallbacks(_combination, _options?.onFetchError, options?.onFetchError),
+      beforeFetch: combineCallbacks(
+        _combination,
+        _options?.beforeFetch,
+        options?.beforeFetch,
+      ),
+      afterFetch: combineCallbacks(
+        _combination,
+        _options?.afterFetch,
+        options?.afterFetch,
+      ),
+      onFetchError: combineCallbacks(
+        _combination,
+        _options?.onFetchError,
+        options?.onFetchError,
+      ),
     };
 
     return useFetch(computedUrl, combinedOptions);
@@ -78,7 +100,7 @@ export function createFetch(config: CreateFetchOptions = {}) {
 
 export function useFetch<T>(
   url: MaybeRefOrGetter<string>,
-  fetchOptions?: UseFetchOptions
+  fetchOptions?: UseFetchOptions,
 ): UseFetchReturn<T> & PromiseLike<UseFetchReturn<T>> {
   const supportsAbort = typeof AbortController === "function";
 
@@ -98,11 +120,13 @@ export function useFetch<T>(
 
   const promise$ = new Stream();
 
-  promise$.plugin.then.push((unsubscribe) => {
-    if (getCurrentScope()) onScopeDispose(unsubscribe);
-  });
-
-  const { fetch = window?.fetch, initialData, timeout, refresh, cacheSetting } = options;
+  const {
+    fetch = window?.fetch,
+    initialData,
+    timeout,
+    refresh,
+    cacheSetting,
+  } = options;
 
   // Event Hooks
   const responseEvent = createEventHook<Response>();
@@ -153,7 +177,8 @@ export function useFetch<T>(
 
     setLoading(true);
     // cache process
-    cacheKey = cacheSetting?.cacheResolve?.({ url: toValue(url), ...config }) || null;
+    cacheKey =
+      cacheSetting?.cacheResolve?.({ url: toValue(url), ...config }) || null;
     if (cacheKey) {
       const cacheData = useFetch._cache.get(cacheKey);
       if (cacheData !== undefined) {
@@ -176,7 +201,10 @@ export function useFetch<T>(
     };
 
     if (config.payload && config.method !== "GET") {
-      const headers = headersToObject(defaultFetchOptions.headers) as Record<string, string>;
+      const headers = headersToObject(defaultFetchOptions.headers) as Record<
+        string,
+        string
+      >;
       const payload = toValue(config.payload);
       // Set the payload to json type only if it's not provided and a literal object is provided and the object is not `formData`
       // The only case we can deduce the content type and `fetch` can't
@@ -188,9 +216,14 @@ export function useFetch<T>(
       )
         config.payloadType = "json";
 
-      if (config.payloadType) headers["Content-Type"] = payloadMapping[config.payloadType] ?? config.payloadType;
+      if (config.payloadType)
+        headers["Content-Type"] =
+          payloadMapping[config.payloadType] ?? config.payloadType;
 
-      defaultFetchOptions.body = config.payloadType === "json" ? JSON.stringify(payload) : (payload as BodyInit);
+      defaultFetchOptions.body =
+        config.payloadType === "json"
+          ? JSON.stringify(payload)
+          : (payload as BodyInit);
     }
 
     let isCanceled = false;
@@ -208,7 +241,8 @@ export function useFetch<T>(
       },
     };
 
-    if (options.beforeFetch) Object.assign(context, await options.beforeFetch(context));
+    if (options.beforeFetch)
+      Object.assign(context, await options.beforeFetch(context));
 
     if (isCanceled || !fetch) {
       setLoading(false);
@@ -250,7 +284,10 @@ export function useFetch<T>(
         if (cacheKey) {
           useFetch._cache.set(cacheKey, responseData);
           if (cacheSetting?.expiration)
-            setTimeout(() => useFetch._cache.delete(cacheKey || ""), cacheSetting.expiration);
+            setTimeout(
+              () => useFetch._cache.delete(cacheKey || ""),
+              cacheSetting.expiration,
+            );
         }
         promise$.next(Promise.resolve(responseData));
 
@@ -265,11 +302,12 @@ export function useFetch<T>(
         let errorData = fetchError.message || fetchError.name;
 
         if (options.onFetchError) {
-          ({ error: errorData, data: responseData } = await options.onFetchError({
-            data: responseData,
-            error: fetchError,
-            response: response.value,
-          }));
+          ({ error: errorData, data: responseData } =
+            await options.onFetchError({
+              data: responseData,
+              error: fetchError,
+              response: response.value,
+            }));
         }
 
         error.value = errorData;
@@ -290,16 +328,22 @@ export function useFetch<T>(
   const executeFun = options.debounce
     ? debounce(
         execute,
-        typeof options.debounce === "number" ? options.debounce : options.debounce.wait,
-        (typeof options.debounce === "object" && options.debounce.options) || {}
+        typeof options.debounce === "number"
+          ? options.debounce
+          : options.debounce.wait,
+        (typeof options.debounce === "object" && options.debounce.options) ||
+          {},
       )
     : options.throttle
-    ? throttle(
-        execute,
-        typeof options.throttle === "number" ? options.throttle : options.throttle.wait,
-        (typeof options.throttle === "object" && options.throttle.options) || {}
-      )
-    : execute;
+      ? throttle(
+          execute,
+          typeof options.throttle === "number"
+            ? options.throttle
+            : options.throttle.wait,
+          (typeof options.throttle === "object" && options.throttle.options) ||
+            {},
+        )
+      : execute;
   if (options.immediate) nextTick(() => executeFun());
 
   if (refresh) interval = setInterval(() => executeFun(), refresh);
@@ -353,7 +397,10 @@ export function useFetch<T>(
         config.payloadType = payloadType;
 
         // watch for payload changes
-        if ((isRef(config.payload) || isReactive(config.payload)) && refetch.value) {
+        if (
+          (isRef(config.payload) || isReactive(config.payload)) &&
+          refetch.value
+        ) {
           watch(config.payload as any, () => executeFun(), { deep: true });
         }
 
@@ -417,7 +464,7 @@ function addQueryParams(url: string, params: unknown) {
   const query = url.split("?")[1] || "";
   const paramsObj = new URLSearchParams(query);
   Object.keys(params as Record<string, unknown>).forEach((key) =>
-    paramsObj.set(key, (params as Record<string, string>)[key])
+    paramsObj.set(key, (params as Record<string, string>)[key]),
   );
   return path + "?" + paramsObj.toString();
 }
@@ -428,13 +475,17 @@ function isAbsoluteURL(url: string) {
 }
 
 function headersToObject(headers: HeadersInit | undefined) {
-  if (typeof Headers !== "undefined" && headers instanceof Headers) return Object.fromEntries(headers.entries());
+  if (typeof Headers !== "undefined" && headers instanceof Headers)
+    return Object.fromEntries(headers.entries());
   return headers;
 }
 
 function combineCallbacks<T = any>(
   combination: Combination,
-  ...callbacks: (((ctx: T) => void | Partial<T> | Promise<void | Partial<T>>) | undefined)[]
+  ...callbacks: (
+    | ((ctx: T) => void | Partial<T> | Promise<void | Partial<T>>)
+    | undefined
+  )[]
 ) {
   if (combination === "overwrite") {
     // use last callback
