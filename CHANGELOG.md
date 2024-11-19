@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.3](https://github.com/fluthjs/fluth-vue/compare/v0.0.2...v0.0.3) (2024-11-19)
+
+
+### Bug Fixes
+
+* vue proxy problem ([aa7bd7c](https://github.com/fluthjs/fluth-vue/commit/aa7bd7c0adc43775a55dfe5e1f17dba214526964))
+
 ### 0.0.2 (2024-11-19)
 
 
