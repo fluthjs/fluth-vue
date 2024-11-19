@@ -1,7 +1,3 @@
 module.exports = {
-  './src/**/*.ts': [
-    () => 'pnpm run check',
-    'eslint --cache --fix',
-    'prettier --write',
-  ],
-}
+  "./packages/core/**/*.ts": [() => "pnpm run check", "eslint --cache --fix", "prettier --write"],
+};
