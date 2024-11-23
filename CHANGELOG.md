@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/fluthjs/fluth-vue/compare/v0.0.3...v0.0.4) (2024-11-23)
+
+
+### Features
+
+* add retry for useFetch ([64bc19a](https://github.com/fluthjs/fluth-vue/commit/64bc19a704ef1431e6a13fed1145ab64dacfcf7e))
+
 ### [0.0.3](https://github.com/fluthjs/fluth-vue/compare/v0.0.2...v0.0.3) (2024-11-19)
 
 
