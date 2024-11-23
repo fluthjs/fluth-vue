@@ -3,7 +3,7 @@ name: release and publish
 on:
   push:
     tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: 'write'
+      id-token: "write"
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
@@ -21,9 +21,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'pnpm'
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
       - run: pnpm run build
       - run: pnpm publish --no-git-checks
         env:
@@ -36,4 +37,4 @@ jobs:
         id: release_tag
         uses: ncipollo/release-action@v1
         with:
-          generateReleaseNotes: 'true'
+          generateReleaseNotes: "true"
