@@ -1,6 +1,6 @@
 # Introduction
 
-`fluth-vue` is a Vue Composition API toolkit based on the [fluth](https://fluthjs.github.io/fluth-doc/index.html) stream programming library. It provides a collection of practical composable functions to help you better handle asynchronous processes and state management in Vue projects.
+`fluth-vue` is a Vue Composition toolkit based on the [fluth](https://fluthjs.github.io/fluth-doc/index.html). It provides a collection of practical composable functions to help you better handle asynchronous processes and state management in Vue projects.
 
 ## Features
 

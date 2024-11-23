@@ -166,6 +166,7 @@ export function useFetch<T>(
 
   if (timeout) timer = useTimeoutFn(abort, timeout, { immediate: false });
 
+  let retryCount = 0;
   let executeCounter = 0;
   let interval: null | ReturnType<typeof setInterval> = null;
   let cacheKey: string | null = null;
@@ -253,7 +254,6 @@ export function useFetch<T>(
     response.value = null;
 
     if (timer) timer.start();
-
     return fetch(context.url, {
       ...defaultFetchOptions,
       ...objectPick(context.options, requestInitKeys),
@@ -280,6 +280,8 @@ export function useFetch<T>(
             response: fetchResponse,
           }));
         }
+        // reset retry count
+        retryCount = 0;
         data.value = responseData;
         if (cacheKey) {
           useFetch._cache.set(cacheKey, responseData);
@@ -310,6 +312,13 @@ export function useFetch<T>(
             }));
         }
 
+        // retry should not release error
+        if (options.retry && retryCount < options.retry) {
+          retryCount += 1;
+          execute();
+          return;
+        }
+
         error.value = errorData;
         if (options.updateDataOnError) data.value = responseData;
 
@@ -319,7 +328,8 @@ export function useFetch<T>(
         return null;
       })
       .finally(() => {
-        if (currentExecuteCounter === executeCounter) setLoading(false);
+        if (currentExecuteCounter === executeCounter && retryCount === 0)
+          setLoading(false);
         if (timer) timer.stop();
         finallyEvent.trigger(null);
       });

@@ -1,6 +1,6 @@
 # useFetch
 
-采用原生`fetch`封装的请求器，基于[vueuse/useFetch](https://vueuse.org/core/useFetch/)实现并支持了**缓存**、**更新**、**条件**、**防抖**、**节流**、**推流**等全新功能。
+采用原生`fetch`封装的请求器，基于[vueuse/useFetch](https://vueuse.org/core/useFetch/)实现并支持了**缓存**、**更新**、**条件**、**重试**、**防抖**、**节流**、**推流**等全新功能。
 
 ## 使用场景
 

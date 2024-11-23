@@ -3,9 +3,17 @@ import type { ComputedRef, Ref } from "vue-demi";
 import { Subjection } from "../useFluth";
 export type * from "../useFluth";
 
-export type UseFetchResult<T> = UseFetchReturn<T> & PromiseLike<UseFetchReturn<T>>;
+export type UseFetchResult<T> = UseFetchReturn<T> &
+  PromiseLike<UseFetchReturn<T>>;
 export type DataType = "text" | "json" | "blob" | "arrayBuffer" | "formData";
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
+export type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "DELETE"
+  | "PATCH"
+  | "HEAD"
+  | "OPTIONS";
 export type Combination = "overwrite" | "chain";
 
 export interface UseFetchOptions extends RequestInit {
@@ -43,6 +51,12 @@ export interface UseFetchOptions extends RequestInit {
    * @default undefined
    */
   refresh?: number;
+
+  /**
+   * Retry times when fetch error
+   * @default 0
+   */
+  retry?: number;
 
   /**
    *  Allow cache the request result and reuse it if cacheResolve result is same
@@ -114,14 +128,19 @@ export interface UseFetchOptions extends RequestInit {
    * Will run immediately before the fetch request is dispatched
    */
   beforeFetch?: (
-    ctx: BeforeFetchContext
-  ) => Promise<Partial<BeforeFetchContext> | void> | Partial<BeforeFetchContext> | void;
+    ctx: BeforeFetchContext,
+  ) =>
+    | Promise<Partial<BeforeFetchContext> | void>
+    | Partial<BeforeFetchContext>
+    | void;
 
   /**
    * Will run immediately after the fetch request is returned.
    * Runs after any 2xx response
    */
-  afterFetch?: (ctx: AfterFetchContext) => Promise<Partial<AfterFetchContext>> | Partial<AfterFetchContext>;
+  afterFetch?: (
+    ctx: AfterFetchContext,
+  ) => Promise<Partial<AfterFetchContext>> | Partial<AfterFetchContext>;
 
   /**
    * Will run immediately after the fetch request is returned.
@@ -218,19 +237,40 @@ export interface UseFetchReturn<T> {
 
   // methods
   get: (payload?: MaybeRefOrGetter<unknown>) => UseFetchResult<T>;
-  post: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  put: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  delete: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  patch: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  head: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  options: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  post: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  put: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  delete: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  patch: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  head: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  options: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
 
   // type
-  json: <JSON = any>() => UseFetchReturn<JSON> & PromiseLike<UseFetchReturn<JSON>>;
+  json: <JSON = any>() => UseFetchReturn<JSON> &
+    PromiseLike<UseFetchReturn<JSON>>;
   text: () => UseFetchReturn<string> & PromiseLike<UseFetchReturn<string>>;
   blob: () => UseFetchReturn<Blob> & PromiseLike<UseFetchReturn<Blob>>;
-  arrayBuffer: () => UseFetchReturn<ArrayBuffer> & PromiseLike<UseFetchReturn<ArrayBuffer>>;
-  formData: () => UseFetchReturn<FormData> & PromiseLike<UseFetchReturn<FormData>>;
+  arrayBuffer: () => UseFetchReturn<ArrayBuffer> &
+    PromiseLike<UseFetchReturn<ArrayBuffer>>;
+  formData: () => UseFetchReturn<FormData> &
+    PromiseLike<UseFetchReturn<FormData>>;
 }
 
 export interface BeforeFetchContext {
