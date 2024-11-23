@@ -20,7 +20,7 @@ import CreateFetch from '../../../.vitepress/components/createFetch.vue'
   ```typescript
   declare function useFetch<T>(
     url: MaybeRefOrGetter<string>,
-    fetchOptions?: UseFetchOptions
+    fetchOptions?: UseFetchOptions,
   ): UseFetchReturn<T> & PromiseLike<UseFetchReturn<T>>;
   ```
 
@@ -136,14 +136,19 @@ interface UseFetchOptions extends RequestInit {
    * Will run immediately before the fetch request is dispatched
    */
   beforeFetch?: (
-    ctx: BeforeFetchContext
-  ) => Promise<Partial<BeforeFetchContext> | void> | Partial<BeforeFetchContext> | void;
+    ctx: BeforeFetchContext,
+  ) =>
+    | Promise<Partial<BeforeFetchContext> | void>
+    | Partial<BeforeFetchContext>
+    | void;
 
   /**
    * Will run immediately after the fetch request is returned.
    * Runs after any 2xx response
    */
-  afterFetch?: (ctx: AfterFetchContext) => Promise<Partial<AfterFetchContext>> | Partial<AfterFetchContext>;
+  afterFetch?: (
+    ctx: AfterFetchContext,
+  ) => Promise<Partial<AfterFetchContext>> | Partial<AfterFetchContext>;
 
   /**
    * Will run immediately after the fetch request is returned.
@@ -210,6 +215,7 @@ interface UseFetchOptions extends RequestInit {
 - Details
 
   Whether to automatically refetch when:
+
   - URL is a ref and changes
   - payload is a ref and changes
 
@@ -226,6 +232,18 @@ interface UseFetchOptions extends RequestInit {
 - Details
 
   Auto refresh interval in milliseconds
+
+#### retry
+
+- Type
+
+  ```typescript
+  number;
+  ```
+
+- Details
+
+  Number of automatic retry attempts on error
 
 #### cacheSetting
 
@@ -352,8 +370,11 @@ interface UseFetchOptions extends RequestInit {
     cancel: Fn;
   }
   type beforeFetch = (
-    ctx: BeforeFetchContext
-  ) => Promise<Partial<BeforeFetchContext> | void> | Partial<BeforeFetchContext> | void;
+    ctx: BeforeFetchContext,
+  ) =>
+    | Promise<Partial<BeforeFetchContext> | void>
+    | Partial<BeforeFetchContext>
+    | void;
   ```
 
 - Details
@@ -365,7 +386,8 @@ interface UseFetchOptions extends RequestInit {
 - Type
 
   ```typescript
-  (ctx: AfterFetchContext) => Promise<Partial<AfterFetchContext>> | Partial<AfterFetchContext>;
+  (ctx: AfterFetchContext) =>
+    Promise<Partial<AfterFetchContext>> | Partial<AfterFetchContext>;
   ```
 
 - Details
@@ -497,17 +519,38 @@ interface UseFetchReturn<T> {
    */
   onFetchFinally: EventHookOn;
   get: (payload?: MaybeRefOrGetter<unknown>) => UseFetchResult<T>;
-  post: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  put: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  delete: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  patch: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  head: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  options: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
-  json: <JSON = any>() => UseFetchReturn<JSON> & PromiseLike<UseFetchReturn<JSON>>;
+  post: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  put: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  delete: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  patch: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  head: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  options: (
+    payload?: MaybeRefOrGetter<unknown>,
+    type?: string,
+  ) => UseFetchResult<T>;
+  json: <JSON = any>() => UseFetchReturn<JSON> &
+    PromiseLike<UseFetchReturn<JSON>>;
   text: () => UseFetchReturn<string> & PromiseLike<UseFetchReturn<string>>;
   blob: () => UseFetchReturn<Blob> & PromiseLike<UseFetchReturn<Blob>>;
-  arrayBuffer: () => UseFetchReturn<ArrayBuffer> & PromiseLike<UseFetchReturn<ArrayBuffer>>;
-  formData: () => UseFetchReturn<FormData> & PromiseLike<UseFetchReturn<FormData>>;
+  arrayBuffer: () => UseFetchReturn<ArrayBuffer> &
+    PromiseLike<UseFetchReturn<ArrayBuffer>>;
+  formData: () => UseFetchReturn<FormData> &
+    PromiseLike<UseFetchReturn<FormData>>;
 }
 ```
 

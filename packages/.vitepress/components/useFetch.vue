@@ -1,15 +1,38 @@
 <template>
-  <div style="background-color: #292d3e; margin: 30px 0; padding: 20px; border-radius: 8px; position: relative">
-    <div style="display: flex; justify-content: space-between; font-family: var(--vp-font-family-mono)">
+  <div
+    style="
+      background-color: #292d3e;
+      margin: 30px 0;
+      padding: 20px;
+      border-radius: 8px;
+      position: relative;
+    "
+  >
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--vp-font-family-mono);
+      "
+    >
       <div>
         <span class="line"
-          ><span style="color: #f97583">const</span><span style="color: #79b8ff"> fetch</span
-          ><span style="color: #f97583"> =</span><span style="color: #b392f0"> useFetch </span
+          ><span style="color: #f97583">const</span
+          ><span style="color: #79b8ff"> fetch</span
+          ><span style="color: #f97583"> =</span
+          ><span style="color: #b392f0"> useFetch </span
           ><span style="color: #fcaa6f">(url, fetchOptions)</span></span
         >
       </div>
     </div>
-    <div style="color: #e1e4e8; display: flex; align-items: flex-start; position: relative">
+    <div
+      style="
+        color: #e1e4e8;
+        display: flex;
+        align-items: flex-start;
+        position: relative;
+      "
+    >
       <ul
         class="fetch"
         style="
@@ -20,7 +43,16 @@
           border-radius: 4px;
         "
       >
-        <span class="type" style="position: absolute; left: -12px; top: 180px; background: #292d3e; z-index: 1">
+        <span
+          class="type"
+          style="
+            position: absolute;
+            left: -12px;
+            top: 180px;
+            background: #292d3e;
+            z-index: 1;
+          "
+        >
           UseFetchReturn
         </span>
         <a
@@ -35,7 +67,16 @@
       </ul>
     </div>
 
-    <div style="color: #e1e4e8; display: flex; align-items: flex-start; position: absolute; top: 45px; right: 130px">
+    <div
+      style="
+        color: #e1e4e8;
+        display: flex;
+        align-items: flex-start;
+        position: absolute;
+        top: 45px;
+        right: 130px;
+      "
+    >
       <ul
         class="options"
         style="
@@ -46,7 +87,16 @@
           border-radius: 4px;
         "
       >
-        <span class="type" style="position: absolute; left: -5px; top: 180px; background: #292d3e; z-index: 1">
+        <span
+          class="type"
+          style="
+            position: absolute;
+            left: -5px;
+            top: 180px;
+            background: #292d3e;
+            z-index: 1;
+          "
+        >
           UseFetchOptions
         </span>
         <a
@@ -224,6 +274,10 @@ const optionsApi = [
   {
     name: "refresh",
     address: "#refresh",
+  },
+  {
+    name: "retry",
+    address: "#retry",
   },
   {
     name: "cacheSetting",
