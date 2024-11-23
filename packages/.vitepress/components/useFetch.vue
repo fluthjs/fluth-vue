@@ -154,7 +154,7 @@ const streamApi = [
   },
   {
     name: "promise$",
-    address: "#promise$",
+    address: "#promise",
   },
   {
     name: "execute",
