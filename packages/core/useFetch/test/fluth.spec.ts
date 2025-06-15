@@ -12,10 +12,12 @@ window.fetch = nodeFetch as any;
 describe.skipIf(isBelowNode18).sequential("useFetch with fluth", () => {
   beforeEach(() => {
     process.on("unhandledRejection", () => null);
-    consoleSpy.mockClear;
+    consoleSpy.mockClear();
   });
   it("should resolve stream correctly", async () => {
-    const { execute, promise$ } = useFetch("https://example.com?text=hello", { immediate: false });
+    const { execute, promise$ } = useFetch("https://example.com?text=hello", {
+      immediate: false,
+    });
     promise$.then((data: string) => {
       console.log(data);
     });
@@ -27,7 +29,9 @@ describe.skipIf(isBelowNode18).sequential("useFetch with fluth", () => {
   });
 
   it("should reject stream correctly", async () => {
-    const { execute, promise$ } = useFetch("https://example.com?status=400", { immediate: false });
+    const { execute, promise$ } = useFetch("https://example.com?status=400", {
+      immediate: false,
+    });
     promise$.catch((data: string) => {
       console.log(data);
     });

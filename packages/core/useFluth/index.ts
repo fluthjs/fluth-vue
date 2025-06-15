@@ -1,14 +1,16 @@
-import { Stream as _Stream } from "fluth";
-import { onScopeDispose, getCurrentScope } from "vue-demi";
+import { createStream } from "fluth";
+import { onScopeDispose, getCurrentScope, ReactiveFlags } from "vue-demi";
 
 export * from "fluth";
+export type * from "fluth";
 
-export class Stream extends _Stream {
-  constructor() {
-    const streamInstance = super() as unknown as _Stream;
-    streamInstance.plugin.then.push((unsubscribe) => {
-      if (getCurrentScope()) onScopeDispose(unsubscribe);
-    });
-    return streamInstance;
-  }
-}
+export const vuePlugin = {
+  then: (unsubscribe: () => void) => {
+    if (getCurrentScope()) onScopeDispose(unsubscribe);
+  },
+  chain: () => ({
+    [ReactiveFlags?.SKIP || "__v_skip"]: true,
+  }),
+};
+
+export const $ = createStream(vuePlugin);

@@ -7,13 +7,13 @@
 ## 使用
 
 ```javascript
-import { Stream } from "fluth-vue";
+import { $ } from "fluth-vue";
 
-const promise$ = new Stream();
+const promise$ = $();
 
 promise$.then(
   (r) => console.log("resolve", r),
-  (e) => console.log("reject", e)
+  (e) => console.log("reject", e),
 );
 
 promise$.next(1);
@@ -26,40 +26,47 @@ promise$.next(3);
 // resolve 3
 ```
 
-## 操作符
+## 自动取消订阅
 
-```javascript
-import { Stream, fork, finish, combine, concat, merge, partition, race } from "fluth-vue";
+在`vue`组件`setup`函数中使用`fluth`流，当组件销毁时会自动取消流的所有订阅。
 
-const promise1$ = new Stream();
-const promise2$ = new Stream();
+- 示例
 
-const forkPromise$ = fork(promise1$);
+```typescript
+<template>
+  <div></div>
+</template>
 
-const finishPromise$ = finish(promise1$, promise2$);
+<script setup lang="tsx">
+import { promise$ } from "xx/store/xxxxx";
 
-const combinePromise$ = combine(promise1$, promise2$);
+defineOptions({
+  name: 'test'
+})
 
-const concatPromise$ = concat(promise1$, promise2$);
+const promise$ = $('123');
+promise$.then((data) => {
+  console.log(data);
+})
 
-const mergePromise$ = merge(promise1$, promise2$);
+</script>
 
-const [selection$, unSelection$] = partition(promise1$, (data) => data % 2 === 1);
-
-const racePromise$ = race(promise1$, promise2$);
+<style lang="scss" scoped></style>
 ```
 
-::: warning 提示
+当`test`组件销毁时`promise$`流在组件内的订阅节点都会自动取消订阅，即当`promise$`流推流后也不会再进行打印了。
+
+::: info 提示
 `fluth-vue`对`fluth`的`Stream`流内置了一个插件，当在`vue`组件`setup`使用`Stream`后，组件销毁能够自动销毁`stream`的所有订阅，插件实现原理：
 
 ```javascript
 import { getCurrentScope, onScopeDispose } from "vue";
 
-streamInstance.plugin.then = [
-  (unsubscribe) => {
+const vuePlugin = {
+  then: (unsubscribe: () => void) => {
     if (getCurrentScope()) onScopeDispose(unsubscribe);
   },
-];
+};
 ```
 
 :::
