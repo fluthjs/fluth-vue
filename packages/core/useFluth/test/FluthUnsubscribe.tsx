@@ -2,15 +2,16 @@ import { defineComponent } from "vue";
 import { Stream } from "../index";
 
 interface Props {
-  stream: Stream;
+  stream: Stream<number>;
 }
 
 export default defineComponent(
   (props: Props) => {
-    return () => <div>{props.stream}</div>;
+    props.stream?.then((value) => console.log(value));
+    return () => <div>hello</div>;
   },
   {
-    name: "",
-    props: [],
+    name: "FluthJSXTest",
+    props: ["stream"],
   },
 );

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 
 import FluthTest from "./FluthUnsubscribe.vue";
+import FluthJSXTest from "./FluthUnsubscribe";
 import { $ } from "../index";
 
 const consoleSpy = vi.spyOn(console, "log");
@@ -15,6 +16,19 @@ describe.sequential("useFluth", () => {
   it("stream will unsubscribe after component unmount", async () => {
     const promise$ = $();
     const wrapper = mount(FluthTest, {
+      props: { stream: promise$ },
+    });
+    promise$.next(1);
+    expect(consoleSpy).toHaveBeenNthCalledWith(1, 1);
+    consoleSpy.mockClear();
+    wrapper.unmount();
+    promise$.next(2);
+    expect(consoleSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it("stream will unsubscribe in JSX after component unmount", async () => {
+    const promise$ = $<number>();
+    const wrapper = mount(FluthJSXTest, {
       props: { stream: promise$ },
     });
     promise$.next(1);
