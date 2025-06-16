@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0](https://github.com/fluthjs/fluth-vue/compare/v0.0.4...v0.1.0) (2025-06-16)
+
+
+### Features
+
+* update fluth and add useComp ([c159a73](https://github.com/fluthjs/fluth-vue/commit/c159a733cbb6a38c38f59f0b827886de1e56aa47))
+
 ### [0.0.4](https://github.com/fluthjs/fluth-vue/compare/v0.0.3...v0.0.4) (2024-11-23)
 
 
