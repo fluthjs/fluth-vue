@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  fluth: link:../../../.local/share/pnpm/global/5/node_modules/fluth
-
 importers:
 
   .:
@@ -15,8 +12,8 @@ importers:
         specifier: ^11.1.0
         version: 11.3.0(vue@3.5.15(typescript@5.8.3))
       fluth:
-        specifier: link:../../../.local/share/pnpm/global/5/node_modules/fluth
-        version: link:../../../.local/share/pnpm/global/5/node_modules/fluth
+        specifier: ^0.1.0
+        version: 0.1.0
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -1708,6 +1705,9 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
+  fluth@0.1.0:
+    resolution: {integrity: sha512-9k5VCe4ovgEcnyuvOekwQdmY55nlL1pTraOyekHEG3lCVF94B7MpWknkuIqLPep4yGFq/Q8kRf23cFcw1CLxfg==}
+
   focus-trap@7.6.4:
     resolution: {integrity: sha512-xx560wGBk7seZ6y933idtjJQc1l+ck+pI3sKvhKozdBV1dRZoKhkW5xoCaFv9tQiX5RH1xfSxjuNu6g+lmN/gw==}
 
@@ -2135,6 +2135,10 @@ packages:
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
     engines: {node: '>=14'}
+
+  limu@3.13.2:
+    resolution: {integrity: sha512-wTN7gklCjfVUDyFh8Rj3n03D7RzXb3CXfgljR0kX2D+YADcbruv6+rxCzXz0mK1D3XHTIyQpin5xM1xIg0xsUg==}
+    bundledDependencies: []
 
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
@@ -5037,6 +5041,10 @@ snapshots:
 
   flatted@3.3.3: {}
 
+  fluth@0.1.0:
+    dependencies:
+      limu: 3.13.2
+
   focus-trap@7.6.4:
     dependencies:
       tabbable: 6.2.0
@@ -5472,6 +5480,8 @@ snapshots:
       type-check: 0.4.0
 
   lilconfig@3.1.3: {}
+
+  limu@3.13.2: {}
 
   lines-and-columns@1.2.4: {}
 
