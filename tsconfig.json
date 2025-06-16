@@ -8,6 +8,10 @@
     "moduleResolution": "node",
     "rootDir": "./packages/core"
   },
-  "include": ["packages/core/**/*.ts"],
-  "exclude": ["node_modules", "packages/core/**/*.spec.ts", "packages/core/**/test"]
+  "include": ["packages/core/**/*.ts", "node_modules/fluth/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "packages/core/**/*.spec.ts",
+    "packages/core/**/test"
+  ]
 }

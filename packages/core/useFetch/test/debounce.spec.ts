@@ -1,4 +1,3 @@
-import { nextTick } from "vue-demi";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import nodeFetch from "node-fetch";
 import { useFetch } from "../index";
@@ -16,13 +15,15 @@ describe.skipIf(isBelowNode18).sequential("useFetch with debounce", () => {
     vi.useFakeTimers();
   });
   it("should debounce work correctly", async () => {
-    const { execute } = useFetch("https://example.com", { immediate: false, debounce: 100 });
+    const { execute } = useFetch("https://example.com", {
+      immediate: false,
+      debounce: 100,
+    });
     execute();
     await sleep(80);
     execute();
     await sleep(80);
     await execute();
-    await nextTick();
     await retry(() => {
       expect(fetchSpy).toBeCalledTimes(1);
     });
@@ -37,7 +38,6 @@ describe.skipIf(isBelowNode18).sequential("useFetch with debounce", () => {
     execute();
     await sleep(80);
     await execute();
-    await nextTick();
     await retry(() => {
       expect(fetchSpy).toBeCalledTimes(2);
     });

@@ -1,6 +1,6 @@
 import type { EventHookOn, Fn, MaybeRefOrGetter } from "@vueuse/shared";
 import type { ComputedRef, Ref } from "vue-demi";
-import { Subjection } from "../useFluth";
+import { Stream } from "../useFluth";
 export type * from "../useFluth";
 
 export type UseFetchResult<T> = UseFetchReturn<T> &
@@ -197,7 +197,7 @@ export interface UseFetchReturn<T> {
   /**
    * promise stream
    */
-  promise$: Readonly<Subjection>;
+  promise$: Stream<T>;
 
   /**
    * Manually call the fetch

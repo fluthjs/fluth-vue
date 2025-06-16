@@ -26,7 +26,11 @@ export default {
         {
           text: "API",
           items: [
-            { text: "流", link: "/cn/useFluth/index.html" },
+            {
+              text: "fluth",
+              link: "/cn/useFluth/index.html",
+              items: [{ text: "useComp", link: "/cn/useFluth/useComp.html" }],
+            },
             {
               text: "useFetch",
               items: [

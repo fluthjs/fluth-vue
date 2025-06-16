@@ -17,7 +17,15 @@ export default defineConfig({
   },
   head: [
     ["link", { rel: "icon", href: "/fluth-vue/favicon.ico" }],
-    ["link", { rel: "icon", href: "/fluth-vue/logo.svg", sizes: "any", type: "image/svg+xml" }],
+    [
+      "link",
+      {
+        rel: "icon",
+        href: "/fluth-vue/logo.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+      },
+    ],
   ],
   rewrites: {
     "core/:pkg/{:name}.cn.md": "cn/:pkg/{:name}.md",
@@ -30,6 +38,9 @@ export default defineConfig({
   },
   themeConfig: {
     logo: "/logo.svg",
-    socialLinks: [{ icon: "github", link: "https://github.com/fluthjs/fluth-vue" }],
+    outline: "deep",
+    socialLinks: [
+      { icon: "github", link: "https://github.com/fluthjs/fluth-vue" },
+    ],
   },
 });

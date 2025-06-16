@@ -48,7 +48,7 @@ const { data: data2, execute: fetchData2 } = useFetchApi(data1);
 import { useFetch } from "fluth-vue";
 // 定义
 const useFetchApi = (payload: Record<string, any>) =>
-  useFetch("https://example.com", { immediate: false, refetch: false }).post(payload).json();
+  useFetch("https://example.com").post(payload).json();
 // 使用
 const data1 = ref({ a: 1 });
 const { data: data2 } = await useFetchApi(data1.value);

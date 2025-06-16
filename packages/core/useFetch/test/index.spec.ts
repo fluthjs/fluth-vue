@@ -1,5 +1,5 @@
 import { until } from "@vueuse/shared";
-import { nextTick, ref } from "vue-demi";
+import { ref } from "vue-demi";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import nodeFetch from "node-fetch";
 import { createFetch, useFetch } from "../index";
@@ -133,8 +133,13 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
     const requestHeaders = { "Accept-Language": "en-US" };
     const allHeaders = { ...fetchHeaders, ...requestHeaders };
     const requestOptions = { headers: requestHeaders };
-    const useMyFetchWithBaseUrl = createFetch({ baseUrl, options: { headers: fetchHeaders } });
-    const useMyFetchWithoutBaseUrl = createFetch({ options: { headers: fetchHeaders } });
+    const useMyFetchWithBaseUrl = createFetch({
+      baseUrl,
+      options: { headers: fetchHeaders },
+    });
+    const useMyFetchWithoutBaseUrl = createFetch({
+      options: { headers: fetchHeaders },
+    });
 
     useMyFetchWithBaseUrl("test", requestOptions);
     useMyFetchWithBaseUrl("/test", requestOptions);
@@ -146,7 +151,11 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
       Array.from({ length: 4 })
         .fill(0)
         .forEach((x, i) => {
-          expect(fetchSpy).toHaveBeenNthCalledWith(i + 1, "https://example.com/test", expect.anything());
+          expect(fetchSpy).toHaveBeenNthCalledWith(
+            i + 1,
+            "https://example.com/test",
+            expect.anything(),
+          );
         });
       expect(fetchSpyHeaders()).toMatchObject(allHeaders);
     });
@@ -192,7 +201,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
     }).json();
 
     await retry(() => {
-      expect(data.value).toEqual(expect.objectContaining({ title: "Global Local" }));
+      expect(data.value).toEqual(
+        expect.objectContaining({ title: "Global Local" }),
+      );
     });
   });
 
@@ -260,7 +271,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
     }).json();
 
     await retry(() => {
-      expect(data.value).toEqual(expect.objectContaining({ title: "Global Local" }));
+      expect(data.value).toEqual(
+        expect.objectContaining({ title: "Global Local" }),
+      );
     });
   });
 
@@ -330,7 +343,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
 
     await retry(() => {
       expect(data.value).toEqual(expect.objectContaining({ local: "Local" }));
-      expect(data.value).toEqual(expect.not.objectContaining({ global: "Global" }));
+      expect(data.value).toEqual(
+        expect.not.objectContaining({ global: "Global" }),
+      );
     });
   });
 
@@ -402,7 +417,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
 
     await retry(() => {
       expect(data.value).toEqual(expect.objectContaining({ local: "Local" }));
-      expect(data.value).toEqual(expect.not.objectContaining({ global: "Global" }));
+      expect(data.value).toEqual(
+        expect.not.objectContaining({ global: "Global" }),
+      );
     });
   });
 
@@ -444,7 +461,10 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
     });
 
     await retry(() => {
-      expect(fetchSpyHeaders()).toMatchObject({ Authorization: "my-auth-token", "Accept-Language": "en-US" });
+      expect(fetchSpyHeaders()).toMatchObject({
+        Authorization: "my-auth-token",
+        "Accept-Language": "en-US",
+      });
     });
   });
 
@@ -478,12 +498,15 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
     }).json();
 
     await retry(() => {
-      expect(data.value).toEqual(expect.objectContaining({ title: "Hunter x Hunter" }));
+      expect(data.value).toEqual(
+        expect.objectContaining({ title: "Hunter x Hunter" }),
+      );
     });
   });
 
   it("async chained beforeFetch and afterFetch should be executed in order", async () => {
-    const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+    const sleep = (delay: number) =>
+      new Promise((resolve) => setTimeout(resolve, delay));
 
     const useMyFetch = createFetch({
       baseUrl: "https://example.com",
@@ -517,18 +540,23 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
 
     await retry(() => {
       expect(fetchSpyHeaders()).toMatchObject({ title: "Hello, VueUse" });
-      expect(data.value).toEqual(expect.objectContaining({ message: "Hello, VueUse" }));
+      expect(data.value).toEqual(
+        expect.objectContaining({ message: "Hello, VueUse" }),
+      );
     });
   });
 
   it("should run the onFetchError function", async () => {
-    const { data, error, statusCode } = useFetch("https://example.com?status=400&json", {
-      onFetchError(ctx) {
-        ctx.error = "Internal Server Error";
-        ctx.data = "Internal Server Error";
-        return ctx;
+    const { data, error, statusCode } = useFetch(
+      "https://example.com?status=400&json",
+      {
+        onFetchError(ctx) {
+          ctx.error = "Internal Server Error";
+          ctx.data = "Internal Server Error";
+          return ctx;
+        },
       },
-    }).json();
+    ).json();
 
     await retry(() => {
       expect(statusCode.value).toEqual(400);
@@ -538,14 +566,17 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   });
 
   it("should return data in onFetchError when updateDataOnError is true", async () => {
-    const { data, error, statusCode } = useFetch("https://example.com?status=400&json", {
-      updateDataOnError: true,
-      onFetchError(ctx) {
-        ctx.error = "Internal Server Error";
-        ctx.data = "Internal Server Error";
-        return ctx;
+    const { data, error, statusCode } = useFetch(
+      "https://example.com?status=400&json",
+      {
+        updateDataOnError: true,
+        onFetchError(ctx) {
+          ctx.error = "Internal Server Error";
+          ctx.data = "Internal Server Error";
+          return ctx;
+        },
       },
-    }).json();
+    ).json();
 
     await retry(() => {
       expect(statusCode.value).toEqual(400);
@@ -555,13 +586,16 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   });
 
   it("should run the onFetchError function when network error", async () => {
-    const { data, error, statusCode } = useFetch("https://example.com?status=500&text=Internal%20Server%20Error", {
-      onFetchError(ctx) {
-        ctx.error = "Internal Server Error";
+    const { data, error, statusCode } = useFetch(
+      "https://example.com?status=500&text=Internal%20Server%20Error",
+      {
+        onFetchError(ctx) {
+          ctx.error = "Internal Server Error";
 
-        return ctx;
+          return ctx;
+        },
       },
-    }).json();
+    ).json();
 
     await retry(() => {
       expect(statusCode.value).toStrictEqual(500);
@@ -571,7 +605,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   });
 
   it("should emit onFetchResponse event", async () => {
-    const { onFetchResponse, onFetchError, onFetchFinally } = useFetch("https://example.com");
+    const { onFetchResponse, onFetchError, onFetchFinally } = useFetch(
+      "https://example.com",
+    );
 
     onFetchResponse(onFetchResponseSpy);
     onFetchError(onFetchErrorSpy);
@@ -584,7 +620,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   });
 
   it("should emit onFetchError event", async () => {
-    const { onFetchError, onFetchFinally, onFetchResponse } = useFetch("https://example.com?status=400");
+    const { onFetchError, onFetchFinally, onFetchResponse } = useFetch(
+      "https://example.com?status=400",
+    );
 
     onFetchError(onFetchErrorSpy);
     onFetchResponse(onFetchResponseSpy);
@@ -631,7 +669,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   });
 
   it("should abort request when timeout reached", async () => {
-    const { aborted, execute } = useFetch("https://example.com?delay=100", { timeout: 10 });
+    const { aborted, execute } = useFetch("https://example.com?delay=100", {
+      timeout: 10,
+    });
 
     await retry(() => expect(aborted.value).toBeTruthy());
     await execute(false);
@@ -657,11 +697,18 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   });
 
   it("should abort previous request", async () => {
-    const { onFetchResponse, execute } = useFetch("https://example.com", { immediate: false });
+    const { onFetchResponse, execute } = useFetch("https://example.com", {
+      immediate: false,
+    });
 
     onFetchResponse(onFetchResponseSpy);
 
-    await Promise.all([execute(false), execute(false), execute(false), execute(false)]);
+    await Promise.all([
+      execute(false),
+      execute(false),
+      execute(false),
+      execute(false),
+    ]);
 
     await retry(() => {
       expect(onFetchResponseSpy).toBeCalledTimes(1);
@@ -670,14 +717,15 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
 
   it("should listen url ref change abort previous request", async () => {
     const url = ref("https://example.com");
-    const { onFetchResponse } = useFetch(url, { refetch: true, immediate: false });
+    const { onFetchResponse } = useFetch(url, {
+      refetch: true,
+      immediate: false,
+    });
 
     onFetchResponse(onFetchResponseSpy);
 
     url.value = "https://example.com?t=1";
-    await nextTick();
     url.value = "https://example.com?t=2";
-    await nextTick();
     url.value = "https://example.com?t=3";
 
     await retry(() => {
@@ -710,7 +758,9 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   });
 
   it("should be modified the request status after the request is completed", async () => {
-    const { loading, isFinished, execute } = useFetch("https://example.com", { immediate: false });
+    const { loading, isFinished, execute } = useFetch("https://example.com", {
+      immediate: false,
+    });
 
     await execute();
     expect(loading.value).toBe(false);

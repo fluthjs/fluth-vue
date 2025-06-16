@@ -18,7 +18,7 @@ import {
   nextTick,
 } from "vue-demi";
 import { debounce, throttle } from "lodash-es";
-import { Stream, pipe } from "../useFluth";
+import { $, Observable, Stream } from "../useFluth";
 import type {
   DataType,
   HttpMethod,
@@ -29,6 +29,14 @@ import type {
   CreateFetchOptions,
   InternalConfig,
 } from "./type";
+import {
+  joinPaths,
+  isAbsoluteURL,
+  headersToObject,
+  addQueryParams,
+  combineCallbacks,
+  getValue,
+} from "./utils";
 
 export type * from "./type";
 
@@ -99,7 +107,7 @@ export function createFetch(config: CreateFetchOptions = {}) {
 }
 
 export function useFetch<T>(
-  url: MaybeRefOrGetter<string>,
+  url: MaybeRefOrGetter<string> | Observable<string> | Stream<string>,
   fetchOptions?: UseFetchOptions,
 ): UseFetchReturn<T> & PromiseLike<UseFetchReturn<T>> {
   const supportsAbort = typeof AbortController === "function";
@@ -118,7 +126,7 @@ export function useFetch<T>(
     payload: undefined as unknown,
   };
 
-  const promise$ = new Stream();
+  const promise$ = $<T>();
 
   const {
     fetch = window?.fetch,
@@ -146,10 +154,11 @@ export function useFetch<T>(
   let controller: AbortController | undefined;
   let timer: Stoppable | undefined;
   const REPEAT_REQUEST = "repeat request";
+  const TIME_OUT = "fetch timeout";
 
-  const abort = () => {
+  const abort = (message?: string) => {
     if (supportsAbort) {
-      controller?.abort(REPEAT_REQUEST);
+      controller?.abort(message);
       controller = new AbortController();
       controller.signal.onabort = () => (aborted.value = true);
       fetchOptions = {
@@ -164,7 +173,8 @@ export function useFetch<T>(
     isFinished.value = !isLoading;
   };
 
-  if (timeout) timer = useTimeoutFn(abort, timeout, { immediate: false });
+  if (timeout)
+    timer = useTimeoutFn(() => abort(TIME_OUT), timeout, { immediate: false });
 
   let retryCount = 0;
   let executeCounter = 0;
@@ -174,12 +184,12 @@ export function useFetch<T>(
   const execute = async (throwOnFailed = true) => {
     if (!toValue(options.condition)) return Promise.resolve(null);
 
-    abort();
+    abort(REPEAT_REQUEST);
 
     setLoading(true);
     // cache process
     cacheKey =
-      cacheSetting?.cacheResolve?.({ url: toValue(url), ...config }) || null;
+      cacheSetting?.cacheResolve?.({ url: getValue(url), ...config }) || null;
     if (cacheKey) {
       const cacheData = useFetch._cache.get(cacheKey);
       if (cacheData !== undefined) {
@@ -231,8 +241,8 @@ export function useFetch<T>(
     const context: BeforeFetchContext = {
       url:
         config.method === "GET" && config.payload
-          ? addQueryParams(toValue(url), toValue(config.payload))
-          : toValue(url),
+          ? addQueryParams(getValue(url), toValue(config.payload))
+          : getValue(url),
       options: {
         ...defaultFetchOptions,
         ...fetchOptions,
@@ -299,7 +309,6 @@ export function useFetch<T>(
       .catch(async (fetchError) => {
         if (fetchError === REPEAT_REQUEST) {
           console.warn(REPEAT_REQUEST, toValue(url));
-          return null;
         }
         let errorData = fetchError.message || fetchError.name;
 
@@ -363,7 +372,9 @@ export function useFetch<T>(
 
   // watch for url changes
   if (isRef(url) && refetch.value) {
-    watch(url, () => execute());
+    watch(url, () => executeFun());
+  } else if (url instanceof Observable || url instanceof Stream) {
+    url.then(() => executeFun());
   }
 
   const shell: UseFetchReturn<T> = {
@@ -375,7 +386,7 @@ export function useFetch<T>(
     data,
     canAbort,
     aborted,
-    promise$: Object.freeze(pipe(promise$)),
+    promise$,
     abort,
     execute: executeFun,
     cancelRefresh: () => clearInterval(interval || undefined),
@@ -412,6 +423,11 @@ export function useFetch<T>(
           refetch.value
         ) {
           watch(config.payload as any, () => executeFun(), { deep: true });
+        } else if (
+          config.payload instanceof Observable ||
+          config.payload instanceof Stream
+        ) {
+          config.payload.then(() => executeFun());
         }
 
         return {
@@ -460,59 +476,4 @@ useFetch._cache = new Map() as unknown as Map<string, any>;
 
 export function clearFetchCache() {
   useFetch._cache = new Map();
-}
-
-function joinPaths(start: string, end: string): string {
-  if (!start.endsWith("/") && !end.startsWith("/")) return `${start}/${end}`;
-
-  return `${start}${end}`;
-}
-
-function addQueryParams(url: string, params: unknown) {
-  if (Object.prototype.toString.call(params) !== "[object Object]") return url;
-  const path = url.split("?")[0];
-  const query = url.split("?")[1] || "";
-  const paramsObj = new URLSearchParams(query);
-  Object.keys(params as Record<string, unknown>).forEach((key) =>
-    paramsObj.set(key, (params as Record<string, string>)[key]),
-  );
-  return path + "?" + paramsObj.toString();
-}
-
-// A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
-function isAbsoluteURL(url: string) {
-  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
-}
-
-function headersToObject(headers: HeadersInit | undefined) {
-  if (typeof Headers !== "undefined" && headers instanceof Headers)
-    return Object.fromEntries(headers.entries());
-  return headers;
-}
-
-function combineCallbacks<T = any>(
-  combination: Combination,
-  ...callbacks: (
-    | ((ctx: T) => void | Partial<T> | Promise<void | Partial<T>>)
-    | undefined
-  )[]
-) {
-  if (combination === "overwrite") {
-    // use last callback
-    return async (ctx: T) => {
-      const callback = callbacks[callbacks.length - 1];
-      if (callback) return { ...ctx, ...(await callback(ctx)) };
-
-      return ctx;
-    };
-  } else {
-    // chaining and combine result
-    return async (ctx: T) => {
-      for (const callback of callbacks) {
-        if (callback) ctx = { ...ctx, ...(await callback(ctx)) };
-      }
-
-      return ctx;
-    };
-  }
 }
