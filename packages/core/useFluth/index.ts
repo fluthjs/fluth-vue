@@ -1,4 +1,4 @@
-import { createStream, Stream, Observable } from "fluth";
+import { Stream, Observable } from "fluth";
 import {
   onScopeDispose,
   getCurrentScope,
@@ -9,16 +9,15 @@ import {
 
 export * from "fluth";
 
+const skipKey = "__v_skip";
 /**
  * vue plugin for fluth
  */
 export const vuePlugin = {
-  then: (unsubscribe: () => void) => {
+  thenAll: (unsubscribe: () => void, observable: Observable) => {
     if (getCurrentScope()) onScopeDispose(unsubscribe);
+    if (!(observable as any)[skipKey]) (observable as any)[skipKey] = true;
   },
-  chain: () => ({
-    ["__v_skip"]: true,
-  }),
 };
 
 /**
@@ -43,4 +42,10 @@ export function toComp<T, I extends boolean>(
 /**
  * create stream factory with default plugin
  */
-export const $ = createStream(vuePlugin);
+export function $<T = any>(): Stream<T, false>;
+export function $<T = any>(data: T): Stream<T, true>;
+export function $<T = any>(data?: T) {
+  const stream$ = new Stream<T, boolean>(data);
+  (stream$ as any)[skipKey] = true;
+  return stream$.use(vuePlugin);
+}
