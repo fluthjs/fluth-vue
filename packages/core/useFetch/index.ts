@@ -18,7 +18,7 @@ import {
   nextTick,
 } from "vue-demi";
 import { debounce, throttle } from "lodash-es";
-import { $, Observable, Stream } from "../useFluth";
+import { $, Observable, Stream, PromiseStatus } from "../useFluth";
 import type {
   DataType,
   HttpMethod,
@@ -264,6 +264,9 @@ export function useFetch<T>(
     response.value = null;
 
     if (timer) timer.start();
+
+    promise$.status = PromiseStatus.PENDING;
+
     return fetch(context.url, {
       ...defaultFetchOptions,
       ...objectPick(context.options, requestInitKeys),
