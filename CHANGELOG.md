@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.2](https://github.com/fluthjs/fluth-vue/compare/v0.2.1...v0.2.2) (2025-07-02)
+
+
+### Features
+
+* add toComps function ([5fe8048](https://github.com/fluthjs/fluth-vue/commit/5fe8048a6a249f9d5fb0ef4a312b68c490035905))
+
 ### [0.2.1](https://github.com/fluthjs/fluth-vue/compare/v0.2.0...v0.2.1) (2025-07-02)
 
 
