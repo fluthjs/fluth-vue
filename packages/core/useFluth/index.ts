@@ -39,6 +39,25 @@ export function toComp<T, I extends boolean>(
   return computed(() => value.value);
 }
 
+export function toComps<T extends Record<string, any>>(
+  target: T,
+): {
+  [K in keyof T]: T[K] extends Stream<infer U, any> | Observable<infer U>
+    ? ComputedRef<U | undefined>
+    : T[K];
+} {
+  if (Object.prototype.toString.call(target) === "[object Object]") {
+    return Object.keys(target).reduce((acc, key) => {
+      if (target[key] instanceof Stream || target[key] instanceof Observable)
+        acc[key] = toComp(target[key]);
+      else acc[key] = target[key];
+      return acc;
+    }, {} as any);
+  } else {
+    throw new Error("comComps param must be object");
+  }
+}
+
 /**
  * create stream factory with default plugin
  */
