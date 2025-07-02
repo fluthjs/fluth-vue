@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.6](https://github.com/fluthjs/fluth-vue/compare/v0.2.5...v0.2.6) (2025-07-02)
+
+
+### Features
+
+* update useFetch promise$ status ([678b03b](https://github.com/fluthjs/fluth-vue/commit/678b03bc89badb5e1d3889cd457a96c0ec8a21ed))
+
 ### [0.2.5](https://github.com/fluthjs/fluth-vue/compare/v0.2.4...v0.2.5) (2025-07-02)
 
 
