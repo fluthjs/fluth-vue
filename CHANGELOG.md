@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.9](https://github.com/fluthjs/fluth-vue/compare/v0.2.8...v0.2.9) (2025-07-06)
+
+
+### Features
+
+* update fluth version ([0ccecee](https://github.com/fluthjs/fluth-vue/commit/0ccecee01d8bd6acbf5eff6909582fd36d84c3ac))
+
 ### [0.2.8](https://github.com/fluthjs/fluth-vue/compare/v0.2.7...v0.2.8) (2025-07-03)
 
 

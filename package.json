@@ -1,6 +1,6 @@
 {
   "name": "fluth-vue",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "fluth composition utilities collection for vue",
   "author": "yiludege <https://github.com/yiludege>",
   "repository": "https://github.com/fluthjs/fluth-vue",
