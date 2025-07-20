@@ -1,10 +1,10 @@
 # 简介
 
-`fluth-vue` 是一个基于 [fluth](https://fluthjs.github.io/fluth-doc/index.html) 的 Vue Composition 工具集合。它提供了一系列实用的组合式函数，帮助你更好地在 Vue 项目中处理异步流程和状态管理。
+`fluth-vue` 是一个基于 [fluth](https://fluthjs.github.io/fluth-doc/index.html) 的 Vue Composition 工具集合。它提供了一系列实用的方法和组合式函数，更好地在 Vue 项目中处理异步流程和状态管理。
 
 ## 特点
 
-- 🌊 **基于流式编程** - 利用 `fluth` 强大的流式编程能力，优雅地处理异步操作
+- 🌊 **基于流式编程** - 利用 `fluth` 强大的流式编程能力，实现代码逻辑的响应式编程
 - 🎯 **专注 Vue** - 组合式 API，完美融入 Vue 的响应式系统
 
 ## 为什么选择 fluth-vue?

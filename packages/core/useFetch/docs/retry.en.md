@@ -4,14 +4,15 @@
 
 ```ts
 const { data, error } = useFetch("/api/user", {
-  retry: 3, // Retry up to 3 times on failure
+  retry: 3, // Retry up to 3 times after failure
 });
 ```
 
 :::warning Note
-When the `retry` option is set, before reaching the maximum retry count:
 
-- The `error` state won't be updated
-- The `loading` state will remain `true` until all retries are completed
-- The `promise$` stream will only emit after the final retry attempt
-  :::
+After setting the `retry` option, before reaching the maximum retry count:
+
+- `error` will not be updated;
+- `loading` will remain `true` until retries are complete;
+- `promise$` will only stream the result after retries are finished.
+:::

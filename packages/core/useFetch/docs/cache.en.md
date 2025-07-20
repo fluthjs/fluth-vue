@@ -2,7 +2,7 @@
 
 ## Instance Cache
 
-Configure caching for `useFetch` requests by setting the `cacheSetting` parameter:
+Implement `useFetch` request caching by setting the `cacheSetting` parameter.
 
 ```javascript
 import { useFetch } from "fluth-vue";
@@ -13,20 +13,23 @@ const { data, execute, promise$, clearCache } = useFetch(url, {
     cacheResolve: ({url, payload}) => url + payload.id;
   }.post(payload).json();
 });
+
 ```
 
 ::: warning Note
+
 - Current cache implementation is stored in memory
-- When `execute` hits the cache, it returns Promise.resolve(cacheData), so you can use `execute.then` for subsequent actions
-- When cache is hit, `promise$` will not emit a stream
+- When `execute` hits cache, it returns Promise.resolve(cacheData), so you can use `execute.then` for subsequent actions
+- When cache is hit, `promise$` will not stream
+
 :::
 
 ## Global Cache
 
-You can clear all `useFetch` caches using `clearFetchCache`:
+You can use `clearFetchCache` to clear all `useFetch` caches
 
 ```javascript
 import { clearFetchCache } from "fluth-vue";
 
 clearFetchCache();
-``` 
+```

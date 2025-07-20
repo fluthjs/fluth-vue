@@ -2,7 +2,7 @@
 
 ## Usage
 
-You can control whether `useFetch` makes a request using the `condition` parameter
+You can control whether `useFetch` makes a request through the `condition` parameter
 
 ```ts
 const payload = ref({ id: 1 });
@@ -17,5 +17,5 @@ payload.value.id = null; // Will not trigger another request
 ```
 
 ::: warning Note
-The `condition` parameter affects reactive updates (`refetch`), automatic updates (`refresh`), and manual execution (`execute`)
-::: 
+The `condition` applies to reactive updates `refetch`, auto updates `refresh`, and manual execution `execute`
+:::

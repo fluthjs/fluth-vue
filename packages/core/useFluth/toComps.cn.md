@@ -2,6 +2,10 @@
 
 `toComps` 是一个用于将包含 `Stream` 或 `Observable` 属性的对象转换为包含 `ComputedRef` 属性的对象的工具函数。
 
+::: warning 注意
+如果在`Vue`组件中使用 `toComps`，需要在组件的 `setup` 函数中使用 `toComps`，以便在组件销毁时自动取消订阅，如果在`template`中使用 `toComps`，可能会有内存泄漏的风险
+:::
+
 ## 使用场景
 
 当你有一个对象，其中包含多个 `Stream` 或 `Observable` 属性，并希望将它们批量转换为 Vue 的计算属性以便在模板中使用时，`toComps` 提供了一种便捷的批量转换方式。

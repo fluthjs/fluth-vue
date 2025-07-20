@@ -1,68 +1,73 @@
+---
+sidebarDepth: 2
+---
+
 # useFetch
 
-A request handler wrapped around the native `fetch`, based on [vueuse/useFetch](https://vueuse.org/core/useFetch/) implementation with additional features including **caching**, **updating**, **conditional requests**, **debouncing**, **throttling**, and **streaming**.
+Based on [vueuse/useFetch](https://vueuse.org/core/useFetch/), with support for new features like caching, auto updates, conditional requests, and streams
+
+## Usage
+
+```javascript
+import { useFetch } from "fluth-vue";
+
+const { data, loading, error, promise$ } = useFetch("https://example.com");
+```
 
 ## Use Cases
 
-`useFetch` handles relationships between asynchronous data requests, with three typical use cases:
+`useFetch` is used to handle relationships between asynchronous data, generally with the following three use cases:
 
-**_1. Declarative + Reactive Scenario_**
+### Declarative + Reactive Relationship
 
-`useFetch` with reactive `payload` and enabled `refetch` auto-update, as shown in the example with data2 and data1:
+For example, `data2` and `data1` in the following example:
 
 ```javascript{7}
 import { useFetch } from "fluth-vue";
-// Definition
+
 const useFetchApi = (payload: Ref<Record<string, any>>) =>
-  useFetch("https://example.com", { immediate: true, refresh: true }).post(payload).json();
-// Usage
+  useFetch("https://example.com", { refetch: true }).post(payload).json();
 const data1 = ref({ a: 1 });
+// Usage
 const { data: data2 } = useFetchApi(data1);
 ```
 
-- data2 and data1 form a declarative relationship through the `useFetchApi` function, where users don't need to worry about the details of producing data2
-- data2 and data1 form a reactive relationship through the `useFetchApi` function, where data2 automatically updates via `fetch` when data1 changes
+- `data2` and `data1` form a declarative relationship through the `useFetchApi` function, without needing to care about the details of producing `data2`
+- `data2` and `data1` form a reactive relationship through the `useFetchApi` function, `data2` will change as `data1` changes
 
-**_2. Declarative Scenario_**
+### Declarative Relationship
 
-`useFetch` with reactive `payload` but without `refetch` auto-update, as shown in the example with data2 and data1:
+For example, `data2` and `data1` in the following example:
 
 ```javascript{7}
 import { useFetch } from "fluth-vue";
-// Definition
+
 const useFetchApi = (payload: Ref<Record<string, any>>) =>
-  useFetch("https://example.com").post(payload, { immediate: false, refetch: false }).json();
-// Usage
+  useFetch("https://example.com").post(payload).json();
+
 const data1 = ref({ a: 1 });
 const { data: data2, execute: fetchData2 } = useFetchApi(data1);
 ```
 
-- data2 and data1 form a declarative relationship through the `useFetchApi` function, where users don't need to worry about the details of producing data2
-- You still need to call the `fetchData2` function to actively update data2, which will use the latest data1 as the request parameter
+- `data2` and `data1` form a declarative relationship through the `useFetchApi` function
+- Update `data2` by calling the `fetchData2` function, which will use the latest `data1` as the request parameter
 
-**_3. Call Relationship_**
+### Call Relationship
 
-`useFetch` with non-reactive `payload`, where values are retrieved manually each time, as shown in the example with data2 and data1:
+For example, `data2` and `data1` in the following example:
 
 ```javascript{7}
 import { useFetch } from "fluth-vue";
-// Definition
+
 const useFetchApi = (payload: Record<string, any>) =>
   useFetch("https://example.com").post(payload).json();
-// Usage
+
 const data1 = ref({ a: 1 });
 const { data: data2 } = await useFetchApi(data1.value);
 ```
 
-- data2 is obtained by calling the `useFetchApi` async function and using the current value of data1 as the request parameter
+- `data2` is obtained by calling the `useFetchApi` async function and taking the current value of `data1` as the request parameter in real-time
 
-## Features
+## Stream
 
-- 🚀 Simple and intuitive API
-- ⚡️ Automatic request cancellation on component unmount
-- 🔄 Loading state management
-- ❌ Error handling
-- 🎯 TypeScript support
-- 📦 Zero dependencies
-
-## Installation
+`useFetch` provides not only reactive data returns but also `fluth` stream support. You can get the async data stream through [promise$](/en/useFetch/stream) and combine it with `fluth` operators to implement complex data flow processing

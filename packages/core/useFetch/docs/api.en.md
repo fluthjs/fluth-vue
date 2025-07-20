@@ -200,7 +200,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Execute request only when condition is true
+  Execute fetch only when condition is true
 
   Default: `true`
 
@@ -214,7 +214,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Whether to automatically refetch when:
+  Whether to automatically refetch when the following occurs:
 
   - URL is a ref and changes
   - payload is a ref and changes
@@ -231,7 +231,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Auto refresh interval in milliseconds
+  Auto refresh interval (milliseconds)
 
 #### retry
 
@@ -243,7 +243,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Number of automatic retry attempts on error
+  Number of automatic retries when an error occurs
 
 #### cacheSetting
 
@@ -287,7 +287,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Request debounce interval in milliseconds. When an object is used, the usage and effect are the same as [lodash.debounce](https://lodash.com/docs/4.17.15#debounce)
+  Request debounce interval (milliseconds). When it's an object, usage and effect are the same as [lodash.debounce](https://lodash.com/docs/4.17.15#debounce)
 
 #### throttle
 
@@ -307,7 +307,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Request throttle interval in milliseconds. When an object is used, the usage and effect are the same as [lodash.throttle](https://lodash.com/docs/4.17.15#throttle)
+  Request throttle interval (milliseconds). When it's an object, usage and effect are the same as [lodash.throttle](https://lodash.com/docs/4.17.15#throttle)
 
 #### isFinished
 
@@ -319,7 +319,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Indicates if the fetch request has finished
+  Indicates whether the fetch is completed
 
 #### timeout
 
@@ -331,7 +331,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Request timeout in milliseconds, `0` means use browser default
+  Request timeout (milliseconds), `0` means use browser default
 
 #### fetch
 
@@ -355,7 +355,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Whether to allow updating the `data` ref when a fetch error occurs
+  Whether to allow updating the `data` ref when a request error occurs
 
   Default: `false`
 
@@ -379,7 +379,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Hook function before the request is sent
+  Hook function before request is sent
 
 #### afterFetch
 
@@ -445,7 +445,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  `UseFetchOptions` inherits all properties from `RequestInit`, allowing you to set any `RequestInit` property
+`UseFetchOptions` inherits all properties of `RequestInit`, and any property of `RequestInit` can be set
 
 ### UseFetchReturn
 
@@ -556,7 +556,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  The return type of `useFetch`, containing the following properties and methods:
+  Return type of `useFetch`, containing the following properties and methods:
 
 #### data
 
@@ -567,7 +567,7 @@ interface UseFetchReturn<T> {
   ```
 
 - Details
-  The fetch response body on success, may either be JSON or text
+  Fetch response body on success, may be JSON or text
 
 #### loading
 
@@ -578,6 +578,7 @@ interface UseFetchReturn<T> {
   ```
 
 - Details
+
   Indicates if the request is currently being fetched
 
 #### error
@@ -590,7 +591,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Any fetch errors that may have occurred
+  Error information on failure
 
 #### isFinished
 
@@ -602,7 +603,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Indicates if the fetch request has finished
+  Indicates whether the fetch is completed
 
 #### statusCode
 
@@ -626,7 +627,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  The raw fetch response object
+  Raw fetch response object
 
 #### canAbort
 
@@ -638,7 +639,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Indicates if the current request can be aborted
+  Indicates whether the current request can be aborted
 
 #### aborted
 
@@ -650,7 +651,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Indicates if the request was aborted
+  Indicates whether the request has been aborted
 
 #### promise$
 
@@ -662,7 +663,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  [fluth](https://fluthjs.github.io/fluth-doc/index.html) stream that pushes latest data to subscribers after each request
+  [fluth](https://fluthjs.github.io/fluth-doc/index.html) stream, pushes the latest data to subscribers after each request
 
 #### execute
 
@@ -675,7 +676,7 @@ interface UseFetchReturn<T> {
 - Details
 
   - Manually trigger fetch request (default not throwing error)
-  - Returns void when `debounce` or `throttle` is set
+  - When `debounce` or `throttle` is set, returns void after execution
 
 #### abort
 
@@ -699,7 +700,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Cancel auto refresh requests
+  Cancel auto refresh request
 
 #### clearCache
 
@@ -711,7 +712,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Clear the cache for the current request
+  Clear the cache of the current request
 
 #### onFetchResponse
 
@@ -723,7 +724,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Callback after fetch request completes
+  Callback after fetch request is completed
 
 #### onFetchError
 
@@ -747,7 +748,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Callback when fetch request completes (regardless of success or failure)
+  Callback when fetch request is completed (whether successful or failed)
 
 #### get
 
@@ -759,7 +760,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Sets fetch request method to `GET` and provides payload. The payload will be parsed into query parameters and appended to the URL. Payload can be reactive data.
+  Set the fetch request method to `GET` and provide payload. The payload will be parsed as query parameters and appended to the URL. The payload can be reactive data.
 
 #### post
 
@@ -771,8 +772,8 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  - Sets fetch request method to `POST` and provides payload. The payload will be included in the request body. Payload can be reactive data.
-  - Type can specify the `Content-Type` header, commonly set to json or text
+  - Set the fetch request method to `POST` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### put
 
@@ -784,8 +785,8 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  - Sets fetch request method to `PUT` and provides payload. The payload will be included in the request body. Payload can be reactive data.
-  - Type can specify the `Content-Type` header, commonly set to json or text
+  - Set the fetch request method to `PUT` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### delete
 
@@ -797,8 +798,8 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  - Sets fetch request method to `DELETE` and provides payload. The payload will be included in the request body. Payload can be reactive data.
-  - Type can specify the `Content-Type` header, commonly set to json or text
+  - Set the fetch request method to `DELETE` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### patch
 
@@ -810,8 +811,8 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  - Sets fetch request method to `PATCH` and provides payload. The payload will be included in the request body. Payload can be reactive data.
-  - Type can specify the `Content-Type` header, commonly set to json or text
+  - Set the fetch request method to `PATCH` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### head
 
@@ -823,8 +824,8 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  - Sets fetch request method to `HEAD` and provides payload. The payload will be included in the request body. Payload can be reactive data.
-  - Type can specify the `Content-Type` header, commonly set to json or text
+  - Set the fetch request method to `HEAD` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### options
 
@@ -836,8 +837,8 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  - Sets fetch request method to `OPTIONS` and provides payload. The payload will be included in the request body. Payload can be reactive data.
-  - Type can specify the `Content-Type` header, commonly set to json or text
+  - Set the fetch request method to `OPTIONS` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### json
 
@@ -914,7 +915,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Create a `useFetch` with preset configuration
+  Create `useFetch` with preset configuration
 
 ## clearFetchCache
 

@@ -2,6 +2,10 @@
 
 `toComp` 是一个用于将 `fluth` 的 `Stream` 或 `Observable` 转换为`Vue`的 `ComputedRef` 的工具函数。
 
+::: warning 注意
+如果在`Vue`组件中使用 `toComp`，需要在组件的 `setup` 函数中使用 `toComp`，以便在组件销毁时自动取消订阅，如果在`template`中使用 `toComp`，可能会有内存泄漏的风险
+:::
+
 ## 类型定义
 
 ```typescript
