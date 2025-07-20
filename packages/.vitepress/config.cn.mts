@@ -29,7 +29,11 @@ export default {
             {
               text: "fluth",
               link: "/cn/useFluth/index.html",
-              items: [{ text: "useComp", link: "/cn/useFluth/useComp.html" }],
+              items: [
+                { text: "to$", link: "/cn/useFluth/to$.html" },
+                { text: "toComp", link: "/cn/useFluth/toComp.html" },
+                { text: "toComps", link: "/cn/useFluth/toComps.html" },
+              ],
             },
             {
               text: "useFetch",

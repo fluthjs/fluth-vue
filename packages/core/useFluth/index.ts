@@ -1,10 +1,17 @@
 import { Stream, Observable } from "fluth";
+import { cloneDeep } from "lodash-es";
 import {
   onScopeDispose,
   getCurrentScope,
   ref,
   computed,
+  watch,
+  Ref,
   ComputedRef,
+  Reactive,
+  isRef,
+  isReactive,
+  toRaw,
 } from "vue-demi";
 
 export * from "fluth";
@@ -21,24 +28,34 @@ export const vuePlugin = {
 };
 
 /**
- * convert stream to computed ref
- * @param arg stream
+ * convert stream or observable to computed ref
+ * @param arg$ stream
  * @returns computed ref
  */
-export function toComp<T>(arg: Stream<T, true>): ComputedRef<T>;
+export function toComp<T>(arg$: Stream<T, true>): ComputedRef<T>;
 export function toComp<T>(
   arg: Stream<T, false> | Observable<T>,
 ): ComputedRef<T | undefined>;
 export function toComp<T, I extends boolean>(
-  arg: Stream<T, I> | Observable<T>,
+  arg$: Stream<T, I> | Observable<T>,
 ) {
-  const value = ref(arg.value);
-  arg.then((v: T) => {
+  // check input type
+  if (!(arg$ instanceof Stream) && !(arg$ instanceof Observable)) {
+    throw new Error("toComp only accepts Stream or Observable as input");
+  }
+
+  const value = ref(arg$.value);
+  arg$.then((v: T) => {
     value.value = v;
   });
   return computed(() => value.value);
 }
 
+/**
+ * convert an object with Stream/Observable properties to an object with ComputedRef properties
+ * @param target the object to convert
+ * @returns an object with ComputedRef properties
+ */
 export function toComps<T extends Record<string, any>>(
   target: T,
 ): {
@@ -56,6 +73,40 @@ export function toComps<T extends Record<string, any>>(
   } else {
     throw new Error("comComps param must be object");
   }
+}
+
+/**
+ * convert vue ref or computed ref or reactive to stream
+ * @param arg vue ref or computed ref or reactive
+ * @returns stream
+ */
+export function to$<T>(
+  arg: Ref<T> | ComputedRef<T> | Reactive<T>,
+): Stream<T, true> {
+  const getClonedValue = (arg: Ref<T> | ComputedRef<T> | Reactive<T>) => {
+    if (isRef(arg)) {
+      return cloneDeep(arg.value);
+    }
+    if (isReactive(arg)) {
+      return cloneDeep(toRaw(arg));
+    }
+    return cloneDeep(arg as any);
+  };
+  const stream$ = $<T>(getClonedValue(arg));
+
+  const unWatch = watch(
+    () => arg,
+    () => {
+      stream$.next(getClonedValue(arg));
+    },
+    { deep: true, immediate: false },
+  );
+
+  stream$.afterUnsubscribe(() => {
+    unWatch();
+  });
+
+  return stream$;
 }
 
 /**
