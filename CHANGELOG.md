@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.12](https://github.com/fluthjs/fluth-vue/compare/v0.2.11...v0.2.12) (2025-07-24)
+
+
+### Bug Fixes
+
+* get error url stream or payload stream value ([e2b9073](https://github.com/fluthjs/fluth-vue/commit/e2b9073bc50152e040a82251b1fd918e579dd00b))
+
 ### [0.2.11](https://github.com/fluthjs/fluth-vue/compare/v0.2.10...v0.2.11) (2025-07-20)
 
 
