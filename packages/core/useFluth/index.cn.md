@@ -1,6 +1,6 @@
 # fluth
 
-`fluth` 是一个基于 `promise` 的流式编程库。`fluth-vue` 默认集成 `fluth`
+`fluth` 是一个类 `promise` 的流式编程库。`fluth-vue` 默认集成 `fluth`
 
 具体使用详情见：[fluth](https://fluthjs.github.io/fluth-doc/)
 
@@ -22,8 +22,8 @@ promise$.next(3);
 
 // Logs:
 // resolve 1
-// reject 2
 // resolve 3
+// reject 2
 ```
 
 ## 自动取消订阅
@@ -57,7 +57,7 @@ promise$.then((data) => {
 当`test`组件销毁时`promise$`流在组件内的订阅节点都会自动取消订阅，即当`promise$`流推流后也不会再进行打印了。
 
 ::: info 提示
-`fluth-vue`对`fluth`的`Stream`流内置了一个插件，当在`vue`组件`setup`使用`Stream`后，组件销毁能够自动销毁`stream`的所有订阅，插件实现原理：
+`fluth-vue`在`Stream`内置了一个`then`插件，当在`vue`组件`setup`使用`Stream`后，组件销毁能够自动销毁`stream`的所有订阅，插件实现原理：
 
 ```javascript
 import { getCurrentScope, onScopeDispose } from "vue";
@@ -69,4 +69,5 @@ const vuePlugin = {
 };
 ```
 
+对于还不支持`getCurrentScope`的`vue`版本，需要自行实现取消订阅。
 :::

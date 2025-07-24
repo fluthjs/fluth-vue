@@ -1,6 +1,6 @@
 # fluth
 
-`fluth` is a Promise-based streaming programming library. `fluth-vue` includes `fluth` by default.
+`fluth` is a Promise-like streaming programming library. `fluth-vue` includes `fluth` by default.
 
 For detailed usage, see: [fluth](https://fluthjs.github.io/fluth-doc/)
 
@@ -22,8 +22,8 @@ promise$.next(3);
 
 // Logs:
 // resolve 1
-// reject 2
 // resolve 3
+// reject 2
 ```
 
 ## Operators
@@ -49,8 +49,8 @@ const [selection$, unSelection$] = partition(promise1$, (data) => data % 2 === 1
 const racePromise$ = race(promise1$, promise2$);
 ```
 
-::: warning Note
-`fluth-vue` includes a built-in plugin for the `fluth` `Stream` that automatically destroys all stream subscriptions when a Vue component is destroyed when using `Stream` in the component's `setup`. The plugin implementation principle:
+::: info Note
+`fluth-vue` includes a built-in `then` plugin for `Stream` that automatically destroys all stream subscriptions when a Vue component is destroyed when using `Stream` in the component's `setup`. The plugin implementation principle:
 
 ```javascript
 import { getCurrentScope, onScopeDispose } from "vue";
@@ -62,4 +62,5 @@ streamInstance.plugin.then = [
 ];
 ```
 
+For Vue versions that don't support `getCurrentScope`, you need to implement unsubscription manually.
 :::

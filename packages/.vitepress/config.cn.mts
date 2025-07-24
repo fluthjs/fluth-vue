@@ -20,6 +20,7 @@ export default {
           text: "指南",
           items: [
             { text: "简介", link: "/cn/guide/introduce" },
+            { text: "动机", link: "/cn/guide/motion" },
             { text: "快速开始", link: "/cn/guide/quick" },
           ],
         },

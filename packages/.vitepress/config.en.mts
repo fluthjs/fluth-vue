@@ -20,6 +20,7 @@ export default {
           text: "Guide",
           items: [
             { text: "Introduction", link: "/en/guide/introduce" },
+            { text: "Motivation", link: "/en/guide/motion" },
             { text: "Quick Start", link: "/en/guide/quick" },
           ],
         },
