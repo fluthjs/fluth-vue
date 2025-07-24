@@ -126,7 +126,7 @@ export function useFetch<T>(
     payload: undefined as unknown,
   };
 
-  const promise$ = $<T>();
+  const promise$ = $<T>(fetchOptions?.initialData);
 
   const {
     fetch = window?.fetch,
