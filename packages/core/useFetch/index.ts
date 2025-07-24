@@ -182,7 +182,7 @@ export function useFetch<T>(
   let cacheKey: string | null = null;
 
   const execute = async (throwOnFailed = true) => {
-    if (!toValue(options.condition)) return Promise.resolve(null);
+    if (!getValue(options.condition)) return Promise.resolve(null);
 
     abort(REPEAT_REQUEST);
 
@@ -216,7 +216,7 @@ export function useFetch<T>(
         string,
         string
       >;
-      const payload = toValue(config.payload);
+      const payload = getValue(config.payload);
       // Set the payload to json type only if it's not provided and a literal object is provided and the object is not `formData`
       // The only case we can deduce the content type and `fetch` can't
       if (
@@ -241,7 +241,7 @@ export function useFetch<T>(
     const context: BeforeFetchContext = {
       url:
         config.method === "GET" && config.payload
-          ? addQueryParams(getValue(url), toValue(config.payload))
+          ? addQueryParams(getValue(url), getValue(config.payload))
           : getValue(url),
       options: {
         ...defaultFetchOptions,
@@ -311,7 +311,7 @@ export function useFetch<T>(
       })
       .catch(async (fetchError) => {
         if (fetchError === REPEAT_REQUEST) {
-          console.warn(REPEAT_REQUEST, toValue(url));
+          console.warn(REPEAT_REQUEST, getValue(url));
         }
         let errorData = fetchError.message || fetchError.name;
 

@@ -3,6 +3,7 @@ import nodeFetch from "node-fetch";
 import { useFetch } from "../index";
 import "./mockServer";
 import { isBelowNode18, retry } from "./utils";
+import { $ } from "../../useFluth/index";
 
 const consoleSpy = vi.spyOn(console, "log") as any;
 
@@ -21,9 +22,7 @@ describe.skipIf(isBelowNode18).sequential("useFetch with fluth", () => {
       console.log(data);
     });
     await execute();
-    await retry(() => {
-      expect(consoleSpy).toHaveBeenCalledWith("hello");
-    });
+    await retry(() => expect(consoleSpy).toHaveBeenCalledWith("hello"));
   });
 
   it("should reject stream correctly", async () => {
@@ -38,8 +37,47 @@ describe.skipIf(isBelowNode18).sequential("useFetch with fluth", () => {
     } catch (e) {
       console.info(e);
     }
+    await retry(() => expect(consoleSpy).toHaveBeenCalledWith("Bad Request"));
+  });
+
+  it("should use right url", async () => {
+    let url = "";
+    const url1 = "https://example.com";
+    const url$ = $(url1);
+    useFetch(url$, {
+      beforeFetch: (ctx) => {
+        url = ctx.url;
+      },
+    }).get();
+
+    await retry(() => expect(url).toEqual(url1));
+  });
+
+  it("should use right get payload", async () => {
+    let url = "";
+    const url1 = "https://example.com";
+    const url$ = $(url1);
+    const payload = $({ a: 1, b: 2 });
+    useFetch(url$, {
+      beforeFetch: (ctx) => {
+        url = ctx.url;
+      },
+    }).get(payload);
+
+    await retry(() => expect(url).toEqual(url1 + "?a=1&b=2"));
+  });
+
+  it("should use right post payload", async () => {
+    const payload = $({ a: 1, b: 2 });
+    let options: any;
+    useFetch("https://example.com", {
+      beforeFetch: (ctx) => {
+        options = ctx.options;
+      },
+    }).post(payload, "unknown");
+
     await retry(() => {
-      expect(consoleSpy).toHaveBeenCalledWith("Bad Request");
+      expect(options.body).toEqual(payload.value);
     });
   });
 });
