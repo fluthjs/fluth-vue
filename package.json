@@ -43,7 +43,7 @@
   "license": "MIT",
   "dependencies": {
     "@vueuse/shared": "^11.1.0",
-    "fluth": "^0.3.15",
+    "fluth": "^0.3.17",
     "lodash-es": "^4.17.21",
     "vue-demi": "^0.14.10"
   },
