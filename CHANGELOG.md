@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.15](https://github.com/fluthjs/fluth-vue/compare/v0.2.14...v0.2.15) (2025-07-27)
+
+
+### Features
+
+* add render$ directive ([28a7e4d](https://github.com/fluthjs/fluth-vue/commit/28a7e4d7b4046c254f150d7875e4c4adb3c5b25b))
+* condition support stream and function ([fa1caef](https://github.com/fluthjs/fluth-vue/commit/fa1caefbe39ae0684785a6dcd1f77171284eb5e4))
+
 ### [0.2.14](https://github.com/fluthjs/fluth-vue/compare/v0.2.12...v0.2.14) (2025-07-26)
 
 
