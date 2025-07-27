@@ -32,6 +32,7 @@ export default {
               link: "/en/useFluth/index.html",
               items: [
                 { text: "to$", link: "/en/useFluth/to$.html" },
+                { text: "render$", link: "/en/useFluth/render$.html" },
                 { text: "toComp", link: "/en/useFluth/toComp.html" },
                 { text: "toComps", link: "/en/useFluth/toComps.html" },
               ],

@@ -12,6 +12,8 @@ import {
   isRef,
   isReactive,
   toRaw,
+  DirectiveBinding,
+  Directive,
 } from "vue-demi";
 
 export * from "fluth";
@@ -108,6 +110,28 @@ export function to$<T>(
 
   return stream$;
 }
+
+/**
+ * vue directive, convert stream value to dom element content
+ */
+export const render$: Directive = {
+  mounted(el: HTMLElement, binding: DirectiveBinding) {
+    const stream$ = binding.value;
+    if (!(stream$ instanceof Stream) && !(stream$ instanceof Observable)) {
+      throw new Error("$render only accepts Stream or Observable as input");
+    }
+
+    const observable$ = stream$.thenImmediate((v) => {
+      el.textContent = v?.toString() ?? "";
+    });
+
+    (el as any).__fluth_unsubscribe = () => observable$.unsubscribe();
+  },
+  beforeUnmount(el: HTMLElement) {
+    (el as any).__fluth_unsubscribe?.();
+    (el as any).__fluth_unsubscribe = null;
+  },
+};
 
 /**
  * create stream factory with default plugin
