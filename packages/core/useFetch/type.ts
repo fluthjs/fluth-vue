@@ -1,6 +1,6 @@
 import type { EventHookOn, Fn, MaybeRefOrGetter } from "@vueuse/shared";
 import type { ComputedRef, Ref } from "vue-demi";
-import { Stream } from "../useFluth";
+import { Stream, Observable } from "../useFluth";
 export type * from "../useFluth";
 
 export type UseFetchResult<T> = UseFetchReturn<T> &
@@ -35,7 +35,11 @@ export interface UseFetchOptions extends RequestInit {
    * execute fetch only when condition is true
    * @default true
    */
-  condition?: MaybeRefOrGetter<boolean>;
+  condition?:
+    | MaybeRefOrGetter<boolean>
+    | Observable<boolean>
+    | Stream<boolean>
+    | (() => boolean);
 
   /**
    * Will automatically refetch when:
@@ -236,29 +240,31 @@ export interface UseFetchReturn<T> {
   onFetchFinally: EventHookOn;
 
   // methods
-  get: (payload?: MaybeRefOrGetter<unknown>) => UseFetchResult<T>;
+  get: (
+    payload?: MaybeRefOrGetter<unknown> | Stream<unknown> | Observable<unknown>,
+  ) => UseFetchResult<T>;
   post: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   put: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   delete: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   patch: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   head: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   options: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
 

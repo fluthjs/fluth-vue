@@ -19,13 +19,25 @@ import CreateFetch from '../../../.vitepress/components/createFetch.vue'
 
   ```typescript
   declare function useFetch<T>(
-    url: MaybeRefOrGetter<string>,
+    url: MaybeRefOrGetter<string> | Observable<string> | Stream<string>,
     fetchOptions?: UseFetchOptions,
   ): UseFetchReturn<T> & PromiseLike<UseFetchReturn<T>>;
   ```
 
 - Details
   `useFetch` requester
+
+### URL
+
+- Type
+
+  ```typescript
+  MaybeRefOrGetter<string> | Observable<string> | Stream<string>;
+  ```
+
+- Details
+
+  The URL for the request, supports reactive data, Observable, Stream. When `refetch` is `true`, the request will automatically be re-executed when the URL changes.
 
 ### UseFetchOptions
 
@@ -49,7 +61,11 @@ interface UseFetchOptions extends RequestInit {
    * execute fetch only when condition is true
    * @default true
    */
-  condition?: MaybeRefOrGetter<boolean>;
+  condition?:
+    | MaybeRefOrGetter<boolean>
+    | Observable<boolean>
+    | Stream<boolean>
+    | (() => boolean);
 
   /**
    * Will automatically refetch when:
@@ -195,12 +211,15 @@ interface UseFetchOptions extends RequestInit {
 - Type
 
   ```typescript
-  MaybeRefOrGetter<boolean>;
+  MaybeRefOrGetter<boolean> |
+    Observable<boolean> |
+    Stream<boolean> |
+    (() => boolean);
   ```
 
 - Details
 
-  Execute fetch only when condition is true
+  Execute fetch only when condition is true, supports reactive data, Observable, Stream and functions
 
   Default: `true`
 
@@ -214,10 +233,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Whether to automatically refetch when the following occurs:
-
-  - URL is a ref and changes
-  - payload is a ref and changes
+  Whether to automatically refetch when `url` or `payload` changes, only supports reactive data, Observable, Stream changes
 
   Default: `false`
 
@@ -488,7 +504,7 @@ interface UseFetchReturn<T> {
   /**
    * promise stream
    */
-  promise$: Readonly<Subjection>;
+  promise$: Stream<T | undefined, true>;
   /**
    * Abort the fetch request
    */
@@ -518,29 +534,31 @@ interface UseFetchReturn<T> {
    * Fires after a fetch has completed
    */
   onFetchFinally: EventHookOn;
-  get: (payload?: MaybeRefOrGetter<unknown>) => UseFetchResult<T>;
+  get: (
+    payload?: MaybeRefOrGetter<unknown> | Stream<unknown> | Observable<unknown>,
+  ) => UseFetchResult<T>;
   post: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   put: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   delete: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   patch: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   head: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   options: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   json: <JSON = any>() => UseFetchReturn<JSON> &
@@ -658,7 +676,7 @@ interface UseFetchReturn<T> {
 - Type
 
   ```typescript
-  Readonly<Subjection>;
+  Stream<T | undefined, true>;
   ```
 
 - Details
@@ -755,24 +773,24 @@ interface UseFetchReturn<T> {
 - Type
 
   ```typescript
-  type get: (payload?: MaybeRefOrGetter<unknown>) => UseFetchResult<T>;
+  type get: (payload?: MaybeRefOrGetter<unknown> | Stream<unknown> | Observable<unknown>) => UseFetchResult<T>;
   ```
 
 - Details
 
-  Set the fetch request method to `GET` and provide payload. The payload will be parsed as query parameters and appended to the URL. The payload can be reactive data.
+  Set the fetch request method to `GET` and provide payload. The payload will be parsed as query parameters and appended to the URL. The payload can be reactive data, Observable or Stream.
 
 #### post
 
 - Type
 
   ```typescript
-  type post: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type post: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - Details
 
-  - Set the fetch request method to `POST` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - Set the fetch request method to `POST` and provide payload. The payload will be passed in the body. The payload can be reactive data, Observable or Stream.
   - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### put
@@ -780,12 +798,12 @@ interface UseFetchReturn<T> {
 - Type
 
   ```typescript
-  type put: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type put: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - Details
 
-  - Set the fetch request method to `PUT` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - Set the fetch request method to `PUT` and provide payload. The payload will be passed in the body. The payload can be reactive data, Observable or Stream.
   - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### delete
@@ -793,12 +811,12 @@ interface UseFetchReturn<T> {
 - Type
 
   ```typescript
-  type delete: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type delete: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - Details
 
-  - Set the fetch request method to `DELETE` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - Set the fetch request method to `DELETE` and provide payload. The payload will be passed in the body. The payload can be reactive data, Observable or Stream.
   - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### patch
@@ -806,12 +824,12 @@ interface UseFetchReturn<T> {
 - Type
 
   ```typescript
-  type patch: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type patch: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - Details
 
-  - Set the fetch request method to `PATCH` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - Set the fetch request method to `PATCH` and provide payload. The payload will be passed in the body. The payload can be reactive data, Observable or Stream.
   - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### head
@@ -819,12 +837,12 @@ interface UseFetchReturn<T> {
 - Type
 
   ```typescript
-  type head: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type head: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - Details
 
-  - Set the fetch request method to `HEAD` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - Set the fetch request method to `HEAD` and provide payload. The payload will be passed in the body. The payload can be reactive data, Observable or Stream.
   - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### options
@@ -832,12 +850,12 @@ interface UseFetchReturn<T> {
 - Type
 
   ```typescript
-  type options: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type options: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - Details
 
-  - Set the fetch request method to `OPTIONS` and provide payload. The payload will be passed in the body. The payload can be reactive data.
+  - Set the fetch request method to `OPTIONS` and provide payload. The payload will be passed in the body. The payload can be reactive data, Observable or Stream.
   - type can specify the header's `Content-Type`, commonly set to json or text
 
 #### json

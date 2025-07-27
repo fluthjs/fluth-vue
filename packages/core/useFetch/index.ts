@@ -182,11 +182,14 @@ export function useFetch<T>(
   let cacheKey: string | null = null;
 
   const execute = async (throwOnFailed = true) => {
-    if (!getValue(options.condition)) return Promise.resolve(null);
+    const conditionResult =
+      typeof options.condition === "function"
+        ? options.condition()
+        : getValue(options.condition);
+    if (!conditionResult) return Promise.resolve(null);
 
     abort(REPEAT_REQUEST);
 
-    setLoading(true);
     // cache process
     cacheKey =
       cacheSetting?.cacheResolve?.({ url: getValue(url), ...config }) || null;
@@ -195,9 +198,12 @@ export function useFetch<T>(
       if (cacheData !== undefined) {
         data.value = cacheData;
         setLoading(false);
+        promise$.next(cacheData);
         return Promise.resolve(cacheData);
       }
     }
+
+    setLoading(true);
 
     error.value = null;
     statusCode.value = null;

@@ -39,6 +39,7 @@ export default {
             {
               text: "useFetch",
               items: [
+                { text: "API", link: "/cn/useFetch/api.html" },
                 { text: "介绍", link: "/cn/useFetch/introduce.html" },
                 { text: "用法", link: "/cn/useFetch/use.html" },
                 { text: "缓存", link: "/cn/useFetch/cache.html" },
@@ -48,7 +49,6 @@ export default {
                 { text: "防抖", link: "/cn/useFetch/debounce.html" },
                 { text: "节流", link: "/cn/useFetch/throttle.html" },
                 { text: "推流", link: "/cn/useFetch/stream.html" },
-                { text: "API", link: "/cn/useFetch/api.html" },
               ],
             },
           ],

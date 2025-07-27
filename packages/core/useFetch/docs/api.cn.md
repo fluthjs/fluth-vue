@@ -19,13 +19,25 @@ import CreateFetch from '../../../.vitepress/components/createFetch.vue'
 
   ```typescript
   declare function useFetch<T>(
-    url: MaybeRefOrGetter<string>,
+    url: MaybeRefOrGetter<string> | Observable<string> | Stream<string>,
     fetchOptions?: UseFetchOptions,
   ): UseFetchReturn<T> & PromiseLike<UseFetchReturn<T>>;
   ```
 
 - 详情
   `useFetch` 请求器
+
+### URL
+
+- 类型
+
+  ```typescript
+  MaybeRefOrGetter<string> | Observable<string> | Stream<string>;
+  ```
+
+- 详情
+
+  请求地址的 URL，支持响应式数据、Observable、Stream，当`refetch`为`true`时，URL 发生改变时会自动重新请求
 
 ### UseFetchOptions
 
@@ -49,7 +61,11 @@ interface UseFetchOptions extends RequestInit {
    * execute fetch only when condition is true
    * @default true
    */
-  condition?: MaybeRefOrGetter<boolean>;
+  condition?:
+    | MaybeRefOrGetter<boolean>
+    | Observable<boolean>
+    | Stream<boolean>
+    | (() => boolean);
 
   /**
    * Will automatically refetch when:
@@ -195,12 +211,15 @@ interface UseFetchOptions extends RequestInit {
 - 类型
 
   ```typescript
-  MaybeRefOrGetter<boolean>;
+  MaybeRefOrGetter<boolean> |
+    Observable<boolean> |
+    Stream<boolean> |
+    (() => boolean);
   ```
 
 - 详情
 
-  仅在条件为 true 时执行请求
+  仅在条件为 true 时执行请求，支持响应式数据、Observable、Stream 和函数
 
   默认值: `true`
 
@@ -214,10 +233,7 @@ interface UseFetchOptions extends RequestInit {
 
 - 详情
 
-  当以下情况发生时是否自动重新请求：
-
-  - URL 是 ref 且发生改变时
-  - payload 是 ref 且发生改变时
+  当`url`或者`payload`发生改变时是否自动重新请求，只支持响应式数据、Observable、Stream变化
 
   默认值: `false`
 
@@ -488,7 +504,7 @@ interface UseFetchReturn<T> {
   /**
    * promise stream
    */
-  promise$: Readonly<Subjection>;
+  promise$: Stream<T | undefined, true>;
   /**
    * Abort the fetch request
    */
@@ -518,29 +534,31 @@ interface UseFetchReturn<T> {
    * Fires after a fetch has completed
    */
   onFetchFinally: EventHookOn;
-  get: (payload?: MaybeRefOrGetter<unknown>) => UseFetchResult<T>;
+  get: (
+    payload?: MaybeRefOrGetter<unknown> | Stream<unknown> | Observable<unknown>,
+  ) => UseFetchResult<T>;
   post: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   put: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   delete: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   patch: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   head: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   options: (
-    payload?: MaybeRefOrGetter<unknown>,
+    payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>,
     type?: string,
   ) => UseFetchResult<T>;
   json: <JSON = any>() => UseFetchReturn<JSON> &
@@ -656,7 +674,7 @@ interface UseFetchReturn<T> {
 - 类型
 
   ```typescript
-  Readonly<Subjection>;
+  Stream<T | undefined, true>;
   ```
 
 - 详情
@@ -753,42 +771,37 @@ interface UseFetchReturn<T> {
 - 类型
 
   ```typescript
-  type get: (payload?: MaybeRefOrGetter<unknown>) => UseFetchResult<T>;
+  type get: (payload?: MaybeRefOrGetter<unknown> | Stream<unknown> | Observable<unknown>) => UseFetchResult<T>;
   ```
 
 - 详情
 
-  设置 fetch 请求的方法为 `GET`，并提供 payload，payload 会被解析成 query 参数覆盖到 url 上，payload 可以为响应式数据
+  设置 fetch 请求的方法为 `GET`，并提供 payload，payload 会被解析成 query 参数覆盖到 url 上，payload 可以为响应式数据、Observable 或 Stream
 
 #### post
 
 - 类型
 
   ```typescript
-  type post: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type post: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - 详情
 
-  - 设置 fetch 请求的方法为 `POST`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据
+  - 设置 fetch 请求的方法为 `POST`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据、Observable 或 Stream
   - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
 
 #### put
 
-- 详情
-
-  - 设置 fetch 请求的方法为 `PUT`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据
-  - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
-
 - 类型
 
   ```typescript
-  type put: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type put: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - 详情
 
-  - 设置 fetch 请求的方法为 `PUT`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据
+  - 设置 fetch 请求的方法为 `PUT`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据、Observable 或 Stream
   - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
 
 #### delete
@@ -796,25 +809,25 @@ interface UseFetchReturn<T> {
 - 类型
 
   ```typescript
-  type delete: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type delete: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - 详情
 
-  - 设置 fetch 请求的方法为 `DELETE`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据
-    - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
+  - 设置 fetch 请求的方法为 `DELETE`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据、Observable 或 Stream
+  - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
 
 #### patch
 
 - 类型
 
   ```typescript
-  type patch: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type patch: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - 详情
 
-  - 设置 fetch 请求的方法为 `PATCH`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据
+  - 设置 fetch 请求的方法为 `PATCH`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据、Observable 或 Stream
   - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
 
 #### head
@@ -822,12 +835,12 @@ interface UseFetchReturn<T> {
 - 类型
 
   ```typescript
-  type head: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type head: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - 详情
 
-  - 设置 fetch 请求的方法为 `HEAD`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据
+  - 设置 fetch 请求的方法为 `HEAD`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据、Observable 或 Stream
   - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
 
 #### options
@@ -835,12 +848,12 @@ interface UseFetchReturn<T> {
 - 类型
 
   ```typescript
-  type options: (payload?: MaybeRefOrGetter<unknown>, type?: string) => UseFetchResult<T>;
+  type options: (payload?: MaybeRefOrGetter<unknown> | Observable<unknown> | Stream<unknown>, type?: string) => UseFetchResult<T>;
   ```
 
 - 详情
 
-  - 设置 fetch 请求的方法为 `OPTIONS`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据
+  - 设置 fetch 请求的方法为 `OPTIONS`，并提供 payload，payload 会被传入 body 中，payload 可以为响应式数据、Observable 或 Stream
   - type 可以指定 header 的 `Content-Type`，常见设置为 json 或者 text
 
 #### json

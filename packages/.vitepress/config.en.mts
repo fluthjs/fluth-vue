@@ -39,6 +39,7 @@ export default {
             {
               text: "useFetch",
               items: [
+                { text: "API", link: "/en/useFetch/api.html" },
                 { text: "Introduction", link: "/en/useFetch/introduce.html" },
                 { text: "Usage", link: "/en/useFetch/use.html" },
                 { text: "Cache", link: "/en/useFetch/cache.html" },
@@ -48,7 +49,6 @@ export default {
                 { text: "Debounce", link: "/en/useFetch/debounce.html" },
                 { text: "Throttle", link: "/en/useFetch/throttle.html" },
                 { text: "Stream", link: "/en/useFetch/stream.html" },
-                { text: "API", link: "/en/useFetch/api.html" },
               ],
             },
           ],

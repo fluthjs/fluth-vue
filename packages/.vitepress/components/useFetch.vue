@@ -21,7 +21,9 @@
           ><span style="color: #79b8ff"> fetch</span
           ><span style="color: #f97583"> =</span
           ><span style="color: #b392f0"> useFetch </span
-          ><span style="color: #fcaa6f">(url, fetchOptions)</span></span
+          ><span style="color: #fcaa6f"
+            >(<a style="color: #fcaa6f" href="#url">url</a>, fetchOptions)</span
+          ></span
         >
       </div>
     </div>
@@ -43,8 +45,9 @@
           border-radius: 4px;
         "
       >
-        <span
-          class="type"
+        <a
+          class="type item-function"
+          href="#usefetchreturn"
           style="
             position: absolute;
             left: -12px;
@@ -54,7 +57,7 @@
           "
         >
           UseFetchReturn
-        </span>
+        </a>
         <a
           :class="['item', { 'item-function': item.type === 'function' }]"
           :href="item.address"
@@ -87,8 +90,9 @@
           border-radius: 4px;
         "
       >
-        <span
-          class="type"
+        <a
+          class="type item-function"
+          href="#usefetchoptions"
           style="
             position: absolute;
             left: -5px;
@@ -98,7 +102,7 @@
           "
         >
           UseFetchOptions
-        </span>
+        </a>
         <a
           :class="['item', { 'item-function': item.type === 'function' }]"
           :href="item.address"
