@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.18](https://github.com/fluthjs/fluth-vue/compare/v0.2.17...v0.2.18) (2025-07-29)
+
+
+### Features
+
+* optimize Stream type ([a678180](https://github.com/fluthjs/fluth-vue/commit/a678180c9f9e6e696201566a7de3216458b38210))
+
 ### [0.2.17](https://github.com/fluthjs/fluth-vue/compare/v0.2.16...v0.2.17) (2025-07-29)
 
 
