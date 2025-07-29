@@ -34,13 +34,9 @@ export const vuePlugin = {
  * @param arg$ stream
  * @returns computed ref
  */
-export function toComp<T>(arg$: Stream<T, true>): ComputedRef<T>;
-export function toComp<T>(
-  arg: Stream<T, false> | Observable<T>,
-): ComputedRef<T | undefined>;
-export function toComp<T, I extends boolean>(
-  arg$: Stream<T, I> | Observable<T>,
-) {
+export function toComp<T>(arg$: Stream<T>): ComputedRef<T>;
+export function toComp<T>(arg: Observable<T>): ComputedRef<T | undefined>;
+export function toComp<T>(arg$: Stream<T> | Observable<T>) {
   // check input type
   if (!(arg$ instanceof Stream) && !(arg$ instanceof Observable)) {
     throw new Error("toComp only accepts Stream or Observable as input");
@@ -61,7 +57,7 @@ export function toComp<T, I extends boolean>(
 export function toComps<T extends Record<string, any>>(
   target: T,
 ): {
-  [K in keyof T]: T[K] extends Stream<infer U, any> | Observable<infer U>
+  [K in keyof T]: T[K] extends Stream<infer U> | Observable<infer U>
     ? ComputedRef<U | undefined>
     : T[K];
 } {
@@ -82,9 +78,7 @@ export function toComps<T extends Record<string, any>>(
  * @param arg vue ref or computed ref or reactive
  * @returns stream
  */
-export function to$<T>(
-  arg: Ref<T> | ComputedRef<T> | Reactive<T>,
-): Stream<T, true> {
+export function to$<T>(arg: Ref<T> | ComputedRef<T> | Reactive<T>): Stream<T> {
   const getClonedValue = (arg: Ref<T> | ComputedRef<T> | Reactive<T>) => {
     if (isRef(arg)) {
       return cloneDeep(arg.value);
@@ -136,10 +130,10 @@ export const render$: Directive = {
 /**
  * create stream factory with default plugin
  */
-export function $<T = any>(): Stream<T, false>;
-export function $<T = any>(data: T): Stream<T, true>;
+export function $<T = any>(): Stream<T | undefined>;
+export function $<T = any>(data: T): Stream<T>;
 export function $<T = any>(data?: T) {
-  const stream$ = new Stream<T, boolean>(data);
+  const stream$ = new Stream<T>(data);
   (stream$ as any)[skipKey] = true;
   return stream$.use(vuePlugin);
 }

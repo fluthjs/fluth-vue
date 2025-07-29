@@ -201,7 +201,7 @@ export interface UseFetchReturn<T> {
   /**
    * promise stream
    */
-  promise$: Stream<T | undefined, true>;
+  promise$: Stream<T | undefined>;
 
   /**
    * Manually call the fetch

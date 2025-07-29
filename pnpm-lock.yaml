@@ -12,8 +12,8 @@ importers:
         specifier: ^11.1.0
         version: 11.3.0(vue@3.5.15(typescript@5.8.3))
       fluth:
-        specifier: ^0.3.19
-        version: 0.3.19
+        specifier: ^0.3.20
+        version: 0.3.20
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -1849,8 +1849,8 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
-  fluth@0.3.19:
-    resolution: {integrity: sha512-iiGj0a29Tud7PMxC9NlpfpQJwgZGP8j9PQ3FJf68oQv1Ff2RlvRxsmrNPZ9uyTKGpotyYy+VKeeFc712TqNPLA==}
+  fluth@0.3.20:
+    resolution: {integrity: sha512-lNdbSPooRFYZIAEGtOTT4kpOaSsc8JdDIguG8uhW009HZXODP2U7aippZu4MUdc4DdTHAHbTVM27TqZkYf4nwg==}
 
   focus-trap@7.6.4:
     resolution: {integrity: sha512-xx560wGBk7seZ6y933idtjJQc1l+ck+pI3sKvhKozdBV1dRZoKhkW5xoCaFv9tQiX5RH1xfSxjuNu6g+lmN/gw==}
@@ -5428,7 +5428,7 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  fluth@0.3.19:
+  fluth@0.3.20:
     dependencies:
       limu: 3.13.2
 
