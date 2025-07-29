@@ -109,7 +109,7 @@ describe("render$ directive", () => {
   });
 
   it("should properly unsubscribe when component unmounts", async () => {
-    const stream$ = $("initial").use(consoleAll());
+    const stream$ = $("initial").use(consoleAll("resolve", "reject", false));
     const TestComponent = createTestComponent(stream$);
 
     const wrapper = mount(TestComponent);
