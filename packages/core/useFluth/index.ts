@@ -137,3 +137,22 @@ export function $<T = any>(data?: T) {
   (stream$ as any)[skipKey] = true;
   return stream$.use(vuePlugin);
 }
+
+/**
+ * set global factory
+ */
+if (typeof globalThis !== "undefined") {
+  // @ts-expect-error globalThis is not defined in browser
+  globalThis.__fluth_global_factory__ = $;
+} else if (typeof window !== "undefined") {
+  // @ts-expect-error window is not defined in node
+  window.__fluth_global_factory__ = $;
+}
+// @ts-expect-error global is not defined in browser
+else if (typeof global !== "undefined") {
+  // @ts-expect-error global is not defined in browser
+  global.__fluth_global_factory__ = $;
+} else if (typeof self !== "undefined") {
+  // @ts-expect-error self is not defined in browser
+  self.__fluth_global_factory__ = $;
+}
