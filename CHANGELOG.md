@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.19](https://github.com/fluthjs/fluth-vue/compare/v0.2.18...v0.2.19) (2025-07-30)
+
+
+### Features
+
+* add fluth global factory ([2ede3b6](https://github.com/fluthjs/fluth-vue/commit/2ede3b62affdb2ece40150f69b070890fd45313b))
+
 ### [0.2.18](https://github.com/fluthjs/fluth-vue/compare/v0.2.17...v0.2.18) (2025-07-29)
 
 
