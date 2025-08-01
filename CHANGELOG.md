@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.22](https://github.com/fluthjs/fluth-vue/compare/v0.2.21...v0.2.22) (2025-08-01)
+
+
+### Features
+
+* add render$ function ([dcf19fc](https://github.com/fluthjs/fluth-vue/commit/dcf19fc418346928143352f5958e94bc300ad521))
+
 ### [0.2.21](https://github.com/fluthjs/fluth-vue/compare/v0.2.20...v0.2.21) (2025-07-30)
 
 
