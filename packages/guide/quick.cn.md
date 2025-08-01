@@ -13,9 +13,17 @@ pnpm install fluth-vue
 在你的 Vue 项目中引入并使用 fluth-vue:
 
 ```ts
-import { useFetch, Stream } from "fluth-vue";
+import { useFetch, $ } from "fluth-vue";
 
-const promise$ = new Stream();
+const payload$ = $({});
 
-const { loading, error, data } = useFetch(url);
+const url = $("https://api.example.com/users");
+
+const { loading, error, data, promise$ } = useFetch(url, {
+  refetch: true,
+}).post(payload$);
+
+promise$.then((data) => {
+  console.log(data.data);
+});
 ```

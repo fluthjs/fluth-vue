@@ -12,8 +12,13 @@ import {
   isRef,
   isReactive,
   toRaw,
-  DirectiveBinding,
-  Directive,
+  VNodeChild,
+  defineComponent,
+  h,
+  DefineComponent,
+  effectScope,
+  RenderFunction,
+  EffectScope,
 } from "vue-demi";
 
 export * from "fluth";
@@ -106,26 +111,114 @@ export function to$<T>(arg: Ref<T> | ComputedRef<T> | Reactive<T>): Stream<T> {
 }
 
 /**
- * vue directive, convert stream value to dom element content
+ * create a component that render the stream value with render function or define component
+ * @param arg$ stream
+ * @param render render function, if not provided, the stream value will be rendered as a span element
+ * @returns component
  */
-export const render$: Directive = {
-  mounted(el: HTMLElement, binding: DirectiveBinding) {
-    const stream$ = binding.value;
-    if (!(stream$ instanceof Stream) && !(stream$ instanceof Observable)) {
-      throw new Error("$render only accepts Stream or Observable as input");
-    }
+export function render$<T>(
+  arg$: Stream<T> | Observable<T>,
+  render?: (value: T) => VNodeChild | DefineComponent,
+): DefineComponent {
+  return defineComponent({
+    name: "Render$",
+    setup() {
+      const value = toComp(arg$);
+      // vue-devtool friendly
+      return { value };
+    },
+    render() {
+      if (typeof render === "function") {
+        try {
+          // Safer type handling - handle undefined case
+          const safeValue =
+            this.value !== undefined ? this.value : (undefined as unknown as T);
+          const result = render(safeValue);
 
-    const observable$ = stream$.thenImmediate((v) => {
-      el.textContent = v?.toString() ?? "";
+          // Handle null/undefined results
+          if (result === null || result === undefined) {
+            return ""; // Return empty string for null/undefined
+          }
+
+          // Check if it's a Vue component with improved detection (inline)
+          const isComponent = (() => {
+            if (typeof result === "function") {
+              return true; // Function component
+            }
+
+            if (typeof result === "object" && result !== null) {
+              // More strict component detection to avoid false positives
+              const hasSetup =
+                "setup" in result && typeof result.setup === "function";
+              const hasRender =
+                "render" in result && typeof result.render === "function";
+              const hasTemplate =
+                "template" in result && typeof result.template === "string";
+
+              // Only consider it a component if it has functional properties, not just a name
+              return hasSetup || hasRender || hasTemplate;
+            }
+
+            return false;
+          })();
+
+          if (isComponent) {
+            return h(result as any);
+          }
+
+          // Otherwise return VNode directly
+          return result;
+        } catch (error) {
+          // Error handling: render fallback content
+          console.error("render$ render function error:", error);
+          return "";
+        }
+      } else {
+        // Use textContent instead of innerHTML for better security (inline safeToString)
+        const safeText = (() => {
+          if (this.value === null || this.value === undefined) {
+            return "";
+          }
+          return String(this.value);
+        })();
+        return safeText;
+      }
+    },
+  });
+}
+
+/**
+ * create a render effect scope wrapper that will clean up previous and last effect when render function is called
+ * @param render render function
+ * @returns render function
+ */
+export function effect$(render: RenderFunction): () => VNodeChild {
+  let currentScope: EffectScope | null = null;
+
+  //  remove last render effect when component unmount
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      currentScope?.stop();
+    });
+  }
+
+  return function () {
+    // remove previous render effect when render function is called again
+    currentScope?.stop();
+
+    // create a new effect scope
+    const scope = effectScope();
+    currentScope = scope;
+
+    let result: VNodeChild | null = null;
+    // Execute the render function within the new scope
+    scope.run(() => {
+      result = render();
     });
 
-    (el as any).__fluth_unsubscribe = () => observable$.unsubscribe();
-  },
-  beforeUnmount(el: HTMLElement) {
-    (el as any).__fluth_unsubscribe?.();
-    (el as any).__fluth_unsubscribe = null;
-  },
-};
+    return result;
+  };
+}
 
 /**
  * create stream factory with default plugin

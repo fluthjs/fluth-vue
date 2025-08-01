@@ -21,6 +21,7 @@ export default {
           items: [
             { text: "简介", link: "/cn/guide/introduce" },
             { text: "动机", link: "/cn/guide/motion" },
+            { text: "进阶", link: "/cn/guide/advance" },
             { text: "快速开始", link: "/cn/guide/quick" },
           ],
         },
