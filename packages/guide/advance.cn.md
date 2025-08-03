@@ -6,7 +6,7 @@ import Immutable from '../.vitepress/components/immutable.vue'
 
 ## 不可变数据
 
-`fluth` 底层采用不可变数据，在修改数据时为了后续渲染性能考虑，尽量采用不可变数据。
+`fluth` 底层采用 [limu](https://tnfe.github.io/limu/) 不可变数据，并且只有通过 `set`、`then$`、`thenOnce$`、`thenImmediate$`等方法才能 immutable 的修改数据，为了后续的性能考虑，尽量采用不可变数据。
 
 ### 修改对象数据
 
@@ -91,9 +91,81 @@ watch(
 
 :::
 
-::: info 注意
-`fluth` 只有通过 `set`、`then$`、`thenOnce$`、`thenImmediate$`等方法才能不可变修改数据
-:::
+## 响应式和数据的解耦
+
+使用 `ref` 或者 `reactive` 的时候，数据和响应式是一体的，修改了数据就会触发响应式，没有办法做到条件响应式，比如：
+
+```typescript
+// wineList 会被外部频繁的修改
+const wineList = ref(["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine"]);
+
+const age = ref(0);
+const availableWineList = computed(() => {
+  age.value > 18 ? wineList.value : [];
+});
+```
+
+如果想只有在年龄发生变化的时候获取一下 `wineList` 的最新值，年龄不变的时候不响应 `wineList` 的修改，`computed`则无法做到。
+
+当然可以采用 `watch` + 缓存来达到这个效果：
+
+```typescript
+// wineList 会被外部频繁的修改
+const wineList = ref(["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine"]);
+
+const age = ref(0);
+const availableWineList = ref<string[]>([]);
+
+watch(
+  () => age.value,
+  (newVal) => {
+    if (newVal > 18) {
+      availableWineList.value = wineList.value.slice();
+    }
+  },
+);
+```
+
+但是这样写代码丑陋还需要额外的缓存 `availableWineList`，使用 `fluth` 流式编程则可以很好的对数据和响应式进行解耦：
+
+```typescript
+const wineList = $(["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine"]);
+
+const age = $(0);
+const availableWineList = toComp(
+  age
+    .thenImmediate()
+    .pipe(filter((age) => age > 18))
+    .then(() => wineList.value),
+);
+```
+
+## 缩小响应式范围
+
+`fluth` 采用 `immutable` 数据，所以修改数据后整个数据对象的引用会发生改变。
+
+在使用`toComp` 方法将数据转换为计算属性后，只要数据对象的任何属性发生变化都会导致 `toComp` 重新计算，为了避免这种情况，可以尽量缩小响应式范围：
+
+```typescript
+const data$ = $({
+  id: 1,
+  info: {
+    name: "fluth",
+    age: 0,
+    address: {
+      city: "shenzheng",
+      street: "nanshan",
+    },
+  },
+});
+
+// 任何属性的变化都会触发 toComp 重新计算，并进一步触发组件的重新渲染
+const city = toComp(data$).value.info.address.city;
+
+// 缩小响应式范围，只有 info.address.city 变化时才会触发 toComp 重新计算
+// 其他属性变化不会触发 toComp 重新计算，也不会触发组件的重新渲染
+const city = toComp(data$.pipe(get((value) => value.info.address.city))).value;
+```
 
 ## 开发者工具
 

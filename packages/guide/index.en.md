@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: fluth-vue
-  text: Fluth Composition Utilities Vue
-  tagline: Composition Collection Based on Fluth
+  text: Streaming Reactive Programming For Vue
+  tagline: Revolutionary programming paradigm
   image:
     src: /logo.svg
     alt: fluth
@@ -29,4 +29,3 @@ features:
     title: Powerful
     details: Reactivity + Flow
 ---
-

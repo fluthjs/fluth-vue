@@ -19,11 +19,15 @@ import {
   effectScope,
   RenderFunction,
   EffectScope,
+  shallowRef,
 } from "vue-demi";
 
 export * from "fluth";
 
 const skipKey = "__v_skip";
+const isRefKey = "__v_isRef";
+const isShallowRefKey = "__v_isShallow";
+
 /**
  * vue plugin for fluth
  */
@@ -31,6 +35,17 @@ export const vuePlugin = {
   thenAll: (unsubscribe: () => void, observable: Observable) => {
     if (getCurrentScope()) onScopeDispose(unsubscribe);
     if (!(observable as any)[skipKey]) (observable as any)[skipKey] = true;
+    if (!(observable as any)[isRefKey]) {
+      (observable as any)[isRefKey] = true;
+      (observable as any)[isShallowRefKey] = true;
+      const r = shallowRef<any>(observable.value);
+      Object.defineProperty(observable, "value", {
+        get: () => r.value,
+        set: (v) => (r.value = v),
+        enumerable: true,
+        configurable: true,
+      });
+    }
   },
 };
 
@@ -123,9 +138,8 @@ export function render$<T>(
   return defineComponent({
     name: "Render$",
     setup() {
-      const value = toComp(arg$);
       // vue-devtool friendly
-      return { value };
+      return { value: arg$ };
     },
     render() {
       if (typeof render === "function") {
@@ -133,7 +147,7 @@ export function render$<T>(
           // Safer type handling - handle undefined case
           const safeValue =
             this.value !== undefined ? this.value : (undefined as unknown as T);
-          const result = render(safeValue);
+          const result = render(safeValue as T);
 
           // Handle null/undefined results
           if (result === null || result === undefined) {
@@ -207,14 +221,15 @@ export function effect$(render: RenderFunction): () => VNodeChild {
     currentScope?.stop();
 
     // create a new effect scope
-    const scope = effectScope();
+    const scope = effectScope?.();
     currentScope = scope;
 
     let result: VNodeChild | null = null;
     // Execute the render function within the new scope
-    scope.run(() => {
-      result = render();
-    });
+    scope &&
+      scope.run(() => {
+        result = render();
+      });
 
     return result;
   };
@@ -228,6 +243,17 @@ export function $<T = any>(data: T): Stream<T>;
 export function $<T = any>(data?: T) {
   const stream$ = new Stream<T>(data);
   (stream$ as any)[skipKey] = true;
+  if (!(stream$ as any)[isRefKey]) {
+    (stream$ as any)[isRefKey] = true;
+    (stream$ as any)[isShallowRefKey] = true;
+    const r = shallowRef<any>(stream$.value);
+    Object.defineProperty(stream$, "value", {
+      get: () => r.value,
+      set: (v) => (r.value = v),
+      enumerable: true,
+      configurable: true,
+    });
+  }
   return stream$.use(vuePlugin);
 }
 

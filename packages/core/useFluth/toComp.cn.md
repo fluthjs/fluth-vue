@@ -18,74 +18,74 @@ function toComp<T>(
 ): ComputedRef<T | undefined>;
 ```
 
-## 使用场景
-
-当在`Vue`组件中使用 `fluth` 的流式数据，并希望将其作为响应式数据在模板中使用时，`toComp` 提供了一种简便的方式将流转换为计算属性。
-
 ## 基本用法
 
-```javascript
-import { $, toComp } from "fluth-vue";
+```vue
+<template>
+  <div>
+    <div>{{ computedStream }}</div>
+    <button @click="stream$.next('新值')">更新流</button>
+  </div>
+</template>
 
-// 在组件的 setup 函数中
-const stream = $("初始值");
-const computedValue = toComp(stream);
+<script setup>
+import { $, render$ } from "fluth-vue";
 
-// 在模板中使用
-<div>{{ computedValue }}</div>;
-
-// 当流更新时，计算属性也会更新
-stream.next("新值");
-// 此时模板会自动更新显示 "新值"
+const stream$ = $("初始值");
+const computedStream = toComp(stream$);
+</script>
 ```
 
-## 示例
+## 注意事项!!!
 
-### 有初始值的 Stream
+### vue 单文件
 
-```javascript
+请不要在在 vue 单文件组件的 `<template>` 中使用 toComp，否则会导致内存泄漏：
+
+```vue
+<template>
+  <div>
+    <!-- ✅ 正确使用 -->
+    <div>{{ computedInfo }}</div>
+    <!-- ❌ 不要在 template 中使用 toComp -->
+    <div>{{ toComp(info$) }}</div>
+  </div>
+</template>
+
+<script setup>
 import { $, toComp } from "fluth-vue";
 
-const stream = $("初始值");
-const result = toComp(stream);
-
-console.log(result.value); // 输出: "初始值"
-
-stream.next("新值");
-console.log(result.value); // 输出: "新值"
+const info$ = $({ name: "fluth", age: 18 });
+const computedInfo = toComp(info$);
+</script>
 ```
 
-### 没有初始值的 Stream
+toComp 对流进行了订阅，只有在 setup 中使用 toComp 时，流会自动取消订阅，在 `<template>` 中使用 toComp 时，流不会自动取消订阅。
 
-```javascript
-import { $, toComp } from "fluth-vue";
+### vue tsx 文件
 
-const stream = $<string>();
-const result = toComp(stream);
+在 vue tsx 文件中，采用 effect$ 包裹渲染函数后，可以正常的使用 toComp 而不会导致内存泄漏：
 
-console.log(result.value); // 输出: undefined
+```tsx
+import { defineComponent, SetupContext } from "vue";
+import { $, effect$, render$ } from "fluth-vue";
 
-stream.next("新值");
-console.log(result.value); // 输出: "新值"
+type Props = {};
+type Emits = {};
+export default defineComponent(
+  (props: Props, { emit }: SetupContext<Emits>) => {
+    const info$ = $({ name: "fluth", age: 18 });
+
+    return effect$(() => {
+      return (
+        <div>{toComp(info$).value.name}</div> //✅ 正确
+      );
+    });
+  },
+  {
+    name: "",
+    props: [],
+    emits: [],
+  },
+);
 ```
-
-### 使用 Observable
-
-```javascript
-import { $, toComp } from "fluth-vue";
-
-const stream = $(1);
-const observable = stream.then((value) => value + 1);
-const result = toComp(observable);
-
-console.log(result.value); // 输出: undefined
-
-stream.next(2);
-console.log(result.value); // 输出: 3
-```
-
-## 注意事项
-
-- `toComp` 会自动处理组件销毁时的清理工作，无需手动取消订阅
-- 对于没有初始值的 Stream 或 Observable，计算属性的初始值为 `undefined`
-- 当流的值更新时，计算属性会自动更新，并触发视图更新

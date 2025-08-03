@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: fluth-vue
-  text: Fluth Composition Utilities Vue
-  tagline: 基于fluth的组合式集合
+  text: Streaming Reactive Programming For Vue
+  tagline: 革命性的编程范式
   image:
     src: /logo.svg
     alt: fluth

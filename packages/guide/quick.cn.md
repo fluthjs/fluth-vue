@@ -3,27 +3,32 @@
 ## 安装
 
 ```bash
-
 pnpm install fluth-vue
 
 ```
 
 ## 引用
 
-在你的 Vue 项目中引入并使用 fluth-vue:
+在你的 Vue 项目中使用 fluth-vue:
 
 ```ts
 import { useFetch, $ } from "fluth-vue";
 
-const payload$ = $({});
+const user$ = $({ name: "fluth", age: 18 });
+const home$ = $({ city: "shenzhen", address: "tech park" });
 
-const url = $("https://api.example.com/users");
+const payload$ = combine(user$, home$).then(([user, home]) => ({
+  name: user.name,
+  age: user.age,
+  city: home.city,
+  address: home.address,
+}));
 
-const { loading, error, data, promise$ } = useFetch(url, {
+const { promise$: info$ } = useFetch("https://api.example.com/find", {
   refetch: true,
 }).post(payload$);
 
-promise$.then((data) => {
-  console.log(data.data);
+info$.then((data) => {
+  console.log(data);
 });
 ```
