@@ -33,10 +33,30 @@ const isShallowRefKey = "__v_isShallow";
 declare module "fluth" {
   interface Stream<T> {
     ref: DeepReadonly<Ref<T>>;
+    toCompt: () => ComputedRef<T>;
   }
   interface Observable<T> {
     ref: DeepReadonly<Ref<T | undefined>>;
+    toCompt: () => ComputedRef<T | undefined>;
   }
+}
+
+/**
+ * convert stream or observable to computed ref
+ * @param arg$ stream
+ * @returns computed ref
+ */
+function toCompt<T>(this: Stream<T> | Observable<T>): ComputedRef<T> {
+  // check input type
+  if (!(this instanceof Stream) && !(this instanceof Observable)) {
+    throw new Error("toComp only accepts Stream or Observable as input");
+  }
+
+  const value = ref(this.value);
+  this.then((v: T) => {
+    value.value = v;
+  });
+  return computed(() => value.value);
 }
 
 /**
@@ -63,6 +83,7 @@ function enhanceFluthStream(arg$: Stream | Observable) {
   });
 
   (arg$ as any).ref = ref;
+  (arg$ as any).toCompt = toCompt;
 }
 
 /**
@@ -75,50 +96,6 @@ export const vuePlugin = {
     enhanceFluthStream(observable);
   },
 };
-
-/**
- * convert stream or observable to computed ref
- * @param arg$ stream
- * @returns computed ref
- */
-export function toComp<T>(arg$: Stream<T>): ComputedRef<T>;
-export function toComp<T>(arg: Observable<T>): ComputedRef<T | undefined>;
-export function toComp<T>(arg$: Stream<T> | Observable<T>) {
-  // check input type
-  if (!(arg$ instanceof Stream) && !(arg$ instanceof Observable)) {
-    throw new Error("toComp only accepts Stream or Observable as input");
-  }
-
-  const value = ref(arg$.value);
-  arg$.then((v: T) => {
-    value.value = v;
-  });
-  return computed(() => value.value);
-}
-
-/**
- * convert an object with Stream/Observable properties to an object with ComputedRef properties
- * @param target the object to convert
- * @returns an object with ComputedRef properties
- */
-export function toComps<T extends Record<string, any>>(
-  target: T,
-): {
-  [K in keyof T]: T[K] extends Stream<infer U> | Observable<infer U>
-    ? ComputedRef<U | undefined>
-    : T[K];
-} {
-  if (Object.prototype.toString.call(target) === "[object Object]") {
-    return Object.keys(target).reduce((acc, key) => {
-      if (target[key] instanceof Stream || target[key] instanceof Observable)
-        acc[key] = toComp(target[key]);
-      else acc[key] = target[key];
-      return acc;
-    }, {} as any);
-  } else {
-    throw new Error("comComps param must be object");
-  }
-}
 
 /**
  * convert vue ref or computed ref or reactive to stream
@@ -165,7 +142,7 @@ export function render$<T>(
   return defineComponent({
     name: "Render$",
     setup() {
-      const value = toComp(arg$);
+      const value = arg$.toCompt();
       // vue-devtool friendly
       return { value };
     },

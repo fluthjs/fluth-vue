@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
-import { $, render$, effect$, consoleAll, toComp, debugAll } from "../index";
+import { $, render$, effect$, consoleAll, debugAll } from "../index";
 
 const consoleSpy = vi.spyOn(console, "log");
 const consoleErrorSpy = vi.spyOn(console, "error");
@@ -20,13 +20,13 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const trigger = toComp(trigger$);
+          const trigger$Compt = trigger$.toCompt();
 
           return () =>
             h("div", null, [
               h(render$(stream$.thenImmediate((v) => v))),
               h("span", null, "-"),
-              h("span", null, trigger.value),
+              h("span", null, trigger$Compt.value),
             ]);
         },
       });
@@ -73,13 +73,13 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const trigger = toComp(trigger$);
+          const trigger$Compt = trigger$.toCompt();
 
           return effect$(() =>
             h("div", null, [
               h(render$(stream$.thenImmediate((v) => v))),
               h("span", null, "-"),
-              h("span", null, trigger.value),
+              h("span", null, trigger$Compt.value),
             ]),
           );
         },
@@ -129,13 +129,13 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const trigger = toComp(trigger$);
+          const trigger$Compt = trigger$.toCompt();
 
           return effect$(() =>
             h("div", null, [
-              h("span", null, toComp(stream$).value),
+              h("span", null, stream$.toCompt().value),
               h("span", null, "-"),
-              h("span", null, trigger.value),
+              h("span", null, trigger$Compt.value),
             ]),
           );
         },
