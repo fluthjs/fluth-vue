@@ -34,16 +34,22 @@ declare module "fluth" {
   interface Stream<T> {
     ref: DeepReadonly<Ref<T>>;
     toCompt: () => ComputedRef<T>;
+    render: (
+      renderFn?: (value: T) => VNodeChild | DefineComponent,
+    ) => DefineComponent;
   }
   interface Observable<T> {
     ref: DeepReadonly<Ref<T | undefined>>;
     toCompt: () => ComputedRef<T | undefined>;
+    render: (
+      renderFn?: (value: T | undefined) => VNodeChild | DefineComponent,
+    ) => DefineComponent;
   }
 }
 
 /**
  * convert stream or observable to computed ref
- * @param arg$ stream
+ * @param this stream or observable
  * @returns computed ref
  */
 function toCompt<T>(this: Stream<T> | Observable<T>): ComputedRef<T> {
@@ -57,6 +63,85 @@ function toCompt<T>(this: Stream<T> | Observable<T>): ComputedRef<T> {
     value.value = v;
   });
   return computed(() => value.value);
+}
+
+/**
+ * create a component that render the stream value with render function or define component
+ * @param this stream or observable
+ * @param renderFn render function, if not provided, the stream value will be rendered as a span element
+ * @returns component
+ */
+function render<T>(
+  this: Stream<T> | Observable<T>,
+  renderFn?: (value: T) => VNodeChild | DefineComponent,
+): DefineComponent {
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  const arg$ = this;
+  return defineComponent({
+    name: "Render$",
+    setup() {
+      const value = arg$.toCompt();
+      // vue-devtool friendly
+      return { value };
+    },
+    render() {
+      if (typeof renderFn === "function") {
+        try {
+          // Safer type handling - handle undefined case
+          const safeValue =
+            this.value !== undefined ? this.value : (undefined as unknown as T);
+          const result = renderFn(safeValue as T);
+
+          // Handle null/undefined results
+          if (result === null || result === undefined) {
+            return ""; // Return empty string for null/undefined
+          }
+
+          // Check if it's a Vue component with improved detection (inline)
+          const isComponent = (() => {
+            if (typeof result === "function") {
+              return true; // Function component
+            }
+
+            if (typeof result === "object" && result !== null) {
+              // More strict component detection to avoid false positives
+              const hasSetup =
+                "setup" in result && typeof result.setup === "function";
+              const hasRender =
+                "render" in result && typeof result.render === "function";
+              const hasTemplate =
+                "template" in result && typeof result.template === "string";
+
+              // Only consider it a component if it has functional properties, not just a name
+              return hasSetup || hasRender || hasTemplate;
+            }
+
+            return false;
+          })();
+
+          if (isComponent) {
+            return h(result as any);
+          }
+
+          // Otherwise return VNode directly
+          return result;
+        } catch (error) {
+          // Error handling: render fallback content
+          console.error("fluth render function run error:", error);
+          return "";
+        }
+      } else {
+        // Use textContent instead of innerHTML for better security (inline safeToString)
+        const safeText = (() => {
+          if (this.value === null || this.value === undefined) {
+            return "";
+          }
+          return String(this.value);
+        })();
+        return safeText;
+      }
+    },
+  });
 }
 
 /**
@@ -84,6 +169,7 @@ function enhanceFluthStream(arg$: Stream | Observable) {
 
   (arg$ as any).ref = ref;
   (arg$ as any).toCompt = toCompt;
+  (arg$ as any).render = render;
 }
 
 /**
@@ -127,83 +213,6 @@ export function to$<T>(arg: Ref<T> | ComputedRef<T> | Reactive<T>): Stream<T> {
   });
 
   return stream$;
-}
-
-/**
- * create a component that render the stream value with render function or define component
- * @param arg$ stream
- * @param render render function, if not provided, the stream value will be rendered as a span element
- * @returns component
- */
-export function render$<T>(
-  arg$: Stream<T> | Observable<T>,
-  render?: (value: T) => VNodeChild | DefineComponent,
-): DefineComponent {
-  return defineComponent({
-    name: "Render$",
-    setup() {
-      const value = arg$.toCompt();
-      // vue-devtool friendly
-      return { value };
-    },
-    render() {
-      if (typeof render === "function") {
-        try {
-          // Safer type handling - handle undefined case
-          const safeValue =
-            this.value !== undefined ? this.value : (undefined as unknown as T);
-          const result = render(safeValue as T);
-
-          // Handle null/undefined results
-          if (result === null || result === undefined) {
-            return ""; // Return empty string for null/undefined
-          }
-
-          // Check if it's a Vue component with improved detection (inline)
-          const isComponent = (() => {
-            if (typeof result === "function") {
-              return true; // Function component
-            }
-
-            if (typeof result === "object" && result !== null) {
-              // More strict component detection to avoid false positives
-              const hasSetup =
-                "setup" in result && typeof result.setup === "function";
-              const hasRender =
-                "render" in result && typeof result.render === "function";
-              const hasTemplate =
-                "template" in result && typeof result.template === "string";
-
-              // Only consider it a component if it has functional properties, not just a name
-              return hasSetup || hasRender || hasTemplate;
-            }
-
-            return false;
-          })();
-
-          if (isComponent) {
-            return h(result as any);
-          }
-
-          // Otherwise return VNode directly
-          return result;
-        } catch (error) {
-          // Error handling: render fallback content
-          console.error("render$ render function error:", error);
-          return "";
-        }
-      } else {
-        // Use textContent instead of innerHTML for better security (inline safeToString)
-        const safeText = (() => {
-          if (this.value === null || this.value === undefined) {
-            return "";
-          }
-          return String(this.value);
-        })();
-        return safeText;
-      }
-    },
-  });
 }
 
 /**

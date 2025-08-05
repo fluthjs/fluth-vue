@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
-import { $, render$, effect$, consoleAll, debugAll } from "../index";
+import { $, effect$, consoleAll, debugAll } from "../index";
 
 const consoleSpy = vi.spyOn(console, "log");
 const consoleErrorSpy = vi.spyOn(console, "error");
 
-describe("render$ function comprehensive tests", () => {
+describe("render function comprehensive tests", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     consoleSpy.mockClear();
@@ -24,7 +24,7 @@ describe("render$ function comprehensive tests", () => {
 
           return () =>
             h("div", null, [
-              h(render$(stream$.thenImmediate((v) => v))),
+              h(stream$.thenImmediate((v) => v).render()),
               h("span", null, "-"),
               h("span", null, trigger$Compt.value),
             ]);
@@ -77,7 +77,7 @@ describe("render$ function comprehensive tests", () => {
 
           return effect$(() =>
             h("div", null, [
-              h(render$(stream$.thenImmediate((v) => v))),
+              h(stream$.thenImmediate((v) => v).render()),
               h("span", null, "-"),
               h("span", null, trigger$Compt.value),
             ]),

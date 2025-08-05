@@ -22,7 +22,10 @@ export default {
             { text: "简介", link: "/cn/guide/introduce" },
             { text: "动机", link: "/cn/guide/motion" },
             { text: "上手", link: "/cn/guide/quick" },
-            { text: "进阶", link: "/cn/guide/advance" },
+            { text: "调试", link: "/cn/guide/quick" },
+            { text: "响应式", link: "/cn/guide/reactive" },
+            { text: "流式渲染", link: "/cn/guide/render" },
+            // { text: "进阶", link: "/cn/guide/advance" },
           ],
         },
         {
