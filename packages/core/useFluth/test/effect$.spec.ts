@@ -40,9 +40,8 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("World-trigger");
       expect(consoleSpy).toHaveBeenNthCalledWith(2, "resolve", "World"); // root node trigger consoleAll plugin
       expect(consoleSpy).toHaveBeenNthCalledWith(3, "resolve", "World"); // thenImmediate trigger consoleAll plugin
-      expect(consoleSpy).toHaveBeenNthCalledWith(4, "resolve", "World"); // render again, thenImmediate trigger consoleAll plugin
 
-      expect(consoleSpy).toHaveBeenCalledTimes(4);
+      expect(consoleSpy).toHaveBeenCalledTimes(3);
 
       // trigger render function run three times
       trigger$.next("trigger1");
@@ -53,21 +52,19 @@ describe("render$ function comprehensive tests", () => {
       await vi.runAllTimersAsync();
 
       // trigger thenImmediate run three times
+      expect(consoleSpy).toHaveBeenNthCalledWith(4, "resolve", "World");
       expect(consoleSpy).toHaveBeenNthCalledWith(5, "resolve", "World");
       expect(consoleSpy).toHaveBeenNthCalledWith(6, "resolve", "World");
-      expect(consoleSpy).toHaveBeenNthCalledWith(7, "resolve", "World");
 
       stream$.next("test");
       await vi.runAllTimersAsync();
+      expect(consoleSpy).toHaveBeenNthCalledWith(7, "resolve", "test");
       expect(consoleSpy).toHaveBeenNthCalledWith(8, "resolve", "test");
       expect(consoleSpy).toHaveBeenNthCalledWith(9, "resolve", "test");
       expect(consoleSpy).toHaveBeenNthCalledWith(10, "resolve", "test");
       expect(consoleSpy).toHaveBeenNthCalledWith(11, "resolve", "test");
-      expect(consoleSpy).toHaveBeenNthCalledWith(12, "resolve", "test");
-      expect(consoleSpy).toHaveBeenNthCalledWith(13, "resolve", "test");
-      expect(consoleSpy).toHaveBeenNthCalledWith(14, "resolve", "test"); // trigger render again
 
-      expect(consoleSpy).toHaveBeenCalledTimes(14);
+      expect(consoleSpy).toHaveBeenCalledTimes(11);
     });
 
     it("with effect$ wrapper render, stream subscribe will auto unsubscribe when render function is called again or component unmount", async () => {
@@ -97,9 +94,8 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("World-trigger");
       expect(consoleSpy).toHaveBeenNthCalledWith(2, "resolve", "World"); // root node trigger consoleAll plugin
       expect(consoleSpy).toHaveBeenNthCalledWith(3, "resolve", "World"); // thenImmediate trigger consoleAll plugin
-      expect(consoleSpy).toHaveBeenNthCalledWith(4, "resolve", "World");
 
-      expect(consoleSpy).toHaveBeenCalledTimes(4);
+      expect(consoleSpy).toHaveBeenCalledTimes(3);
 
       trigger$.next("trigger1");
       await vi.runAllTimersAsync();
@@ -111,23 +107,20 @@ describe("render$ function comprehensive tests", () => {
       expect(consoleSpy).toHaveBeenNthCalledWith(4, "resolve", "World");
       expect(consoleSpy).toHaveBeenNthCalledWith(5, "resolve", "World");
       expect(consoleSpy).toHaveBeenNthCalledWith(6, "resolve", "World");
-      expect(consoleSpy).toHaveBeenNthCalledWith(7, "resolve", "World"); // render again
 
       stream$.next("test");
       await vi.runAllTimersAsync();
+      expect(consoleSpy).toHaveBeenNthCalledWith(7, "resolve", "test");
       expect(consoleSpy).toHaveBeenNthCalledWith(8, "resolve", "test");
-      expect(consoleSpy).toHaveBeenNthCalledWith(9, "resolve", "test");
-      expect(consoleSpy).toHaveBeenNthCalledWith(10, "resolve", "test"); // render again
-
-      expect(consoleSpy).toHaveBeenCalledTimes(10);
+      expect(consoleSpy).toHaveBeenCalledTimes(8);
 
       wrapper.unmount();
 
       stream$.next("test1");
       await vi.runAllTimersAsync();
-      expect(consoleSpy).toHaveBeenNthCalledWith(11, "resolve", "test1");
+      expect(consoleSpy).toHaveBeenNthCalledWith(9, "resolve", "test1");
 
-      expect(consoleSpy).toHaveBeenCalledTimes(11);
+      expect(consoleSpy).toHaveBeenCalledTimes(9);
     });
 
     it("with effect$ wrapper render, toComp will auto unsubscribe when render function is called again or component unmount", async () => {

@@ -109,11 +109,8 @@ Fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的
 ### 框架集成
 
 - 对于 Vue 框架来说，ref、reactive、computed响应式的数据可以通过 [to$](/cn/useFluth/to$.html) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
-- 对于 Fluth 流来说，流可以通过 [toComp](/cn/useFluth/toComp.html)、[toComps](/cn/useFluth/toComps.html) 等方法转换为 Vue computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过`vue-devtools` 直接查看流的数据
 
-- 如果需要直接渲染流的数据，可以通过 [render$](/cn/useFluth/render$.html) 方法绕过框架来响应式渲染流的数据，不触发当前组件的更新，实现类似 signal 元素级的更新颗粒
-
-- 如果采用 tsx 开发，还可以通过 [effect$](/cn/useFluth/effect$.html)、[render$](/cn/useFluth/render$.html) 方法实现类似 block signal 代码块级的更新颗粒
+- 对于 Fluth 流来说，流的值就是响应式数据，这样框架就可以直接消费流的数据，并可以通过`vue-devtools` 直接查看流的数据
 
 ### 调试能力
 
@@ -127,7 +124,7 @@ Fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的
 
 - 通过 [debugAll](https://fluthjs.github.io/fluth-doc/cn/api/plugin/debugAll.html)插件可以方便的调试流所有的节点数据，并可以查看流节点的调用栈
 
-两项能力让 fluth 流**可以像 ref、reactive 响应式数据一样在 vue 框架中获得广泛使用，并可以像 signal 一样在 tsx 中获得元素级、代码块级等更细的更新颗粒**。
+两项能力让 fluth 流**可以像 ref、reactive 响应式数据一样在 vue 框架中获得广泛使用**。
 
 ## 示例
 

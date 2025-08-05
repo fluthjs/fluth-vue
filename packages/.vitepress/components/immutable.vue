@@ -9,21 +9,17 @@
     "
   >
     <div></div>
-    <button
-      class="immutable-button"
-      @click="data$.set((value) => value.nest.age++)"
-    >
-      add age for fluth: {{ computedData.nest.age }}
+    <button class="immutable-button" @click="data$.set((v) => v.nest.age++)">
+      add age for fluth: {{ data$.ref.value.nest.age }}
     </button>
     <button class="immutable-button" @click="data.nest.age++">
       add age for ref: {{ data.nest.age }}
     </button>
-    <div></div>
   </div>
 </template>
 
 <script setup lang="tsx">
-import { $, toComp, consoleNode } from "../../core/useFluth/index";
+import { $, consoleNode } from "../../core/useFluth/index";
 import { ref, watch } from "vue";
 
 defineOptions({
@@ -31,6 +27,7 @@ defineOptions({
 });
 
 const data = ref({ nest: { name: "fluth", age: 0 } });
+
 watch(
   data,
   (newVal) => {
@@ -42,7 +39,6 @@ watch(
 const data$ = $({ nest: { name: "fluth", age: 0 } }).use(
   consoleNode("fluth value"),
 );
-const computedData = toComp(data$);
 </script>
 
 <style lang="scss" scoped>

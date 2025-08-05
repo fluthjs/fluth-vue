@@ -33,20 +33,8 @@ export default {
               link: "/cn/useFluth/index.html",
               items: [
                 { text: "to$", link: "/cn/useFluth/to$.html" },
-                {
-                  text: "tsx",
-                  items: [
-                    { text: "render$", link: "/cn/useFluth/render$.html" },
-                    { text: "effect$", link: "/cn/useFluth/effect$.html" },
-                  ],
-                },
-                {
-                  text: "vue < 2.7",
-                  items: [
-                    { text: "toComp", link: "/cn/useFluth/toComp.html" },
-                    { text: "toComps", link: "/cn/useFluth/toComps.html" },
-                  ],
-                },
+                { text: "toComp", link: "/cn/useFluth/toComp.html" },
+                { text: "toComps", link: "/cn/useFluth/toComps.html" },
               ],
             },
             {

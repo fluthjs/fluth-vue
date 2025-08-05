@@ -20,6 +20,7 @@ import {
   RenderFunction,
   EffectScope,
   shallowRef,
+  DeepReadonly,
 } from "vue-demi";
 
 export * from "fluth";
@@ -28,6 +29,42 @@ const skipKey = "__v_skip";
 const isRefKey = "__v_isRef";
 const isShallowRefKey = "__v_isShallow";
 
+// enhance fluth stream and observable to have ref property
+declare module "fluth" {
+  interface Stream<T> {
+    ref: DeepReadonly<Ref<T>>;
+  }
+  interface Observable<T> {
+    ref: DeepReadonly<Ref<T | undefined>>;
+  }
+}
+
+/**
+ * enhance fluth stream and observable to have ref property
+ * @param arg$ fluth stream
+ */
+function enhanceFluthStream(arg$: Stream | Observable) {
+  const r = shallowRef<any>(arg$.value);
+
+  // update ref value when observable value changes
+  arg$.afterSetValue((v) => {
+    r.value = v;
+  });
+
+  // set ref value to observable value
+  const ref = {
+    [isRefKey]: true,
+    [isShallowRefKey]: true,
+  };
+  Object.defineProperty(ref, "value", {
+    get: () => r.value,
+    enumerable: true,
+    configurable: true,
+  });
+
+  (arg$ as any).ref = ref;
+}
+
 /**
  * vue plugin for fluth
  */
@@ -35,17 +72,7 @@ export const vuePlugin = {
   thenAll: (unsubscribe: () => void, observable: Observable) => {
     if (getCurrentScope()) onScopeDispose(unsubscribe);
     if (!(observable as any)[skipKey]) (observable as any)[skipKey] = true;
-    if (!(observable as any)[isRefKey]) {
-      (observable as any)[isRefKey] = true;
-      (observable as any)[isShallowRefKey] = true;
-      const r = shallowRef<any>(observable.value);
-      Object.defineProperty(observable, "value", {
-        get: () => r.value,
-        set: (v) => (r.value = v),
-        enumerable: true,
-        configurable: true,
-      });
-    }
+    enhanceFluthStream(observable);
   },
 };
 
@@ -138,8 +165,9 @@ export function render$<T>(
   return defineComponent({
     name: "Render$",
     setup() {
+      const value = toComp(arg$);
       // vue-devtool friendly
-      return { value: arg$ };
+      return { value };
     },
     render() {
       if (typeof render === "function") {
@@ -240,20 +268,11 @@ export function effect$(render: RenderFunction): () => VNodeChild {
  */
 export function $<T = any>(): Stream<T | undefined>;
 export function $<T = any>(data: T): Stream<T>;
+
 export function $<T = any>(data?: T) {
   const stream$ = new Stream<T>(data);
   (stream$ as any)[skipKey] = true;
-  if (!(stream$ as any)[isRefKey]) {
-    (stream$ as any)[isRefKey] = true;
-    (stream$ as any)[isShallowRefKey] = true;
-    const r = shallowRef<any>(stream$.value);
-    Object.defineProperty(stream$, "value", {
-      get: () => r.value,
-      set: (v) => (r.value = v),
-      enumerable: true,
-      configurable: true,
-    });
-  }
+  enhanceFluthStream(stream$);
   return stream$.use(vuePlugin);
 }
 
