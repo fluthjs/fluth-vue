@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.23](https://github.com/fluthjs/fluth-vue/compare/v0.2.22...v0.2.23) (2025-08-06)
+
+
+### Features
+
+* add render method for stream and observable ([69d66b3](https://github.com/fluthjs/fluth-vue/commit/69d66b3e2b7e91ed13a49c199c11844fec06edcc))
+* add toCompt method for stream and observable ([cd69ef3](https://github.com/fluthjs/fluth-vue/commit/cd69ef397a8bf429b3f6e3081c0d4c0894550e7b))
+* enhance stream reactivity with ref property ([e1f637c](https://github.com/fluthjs/fluth-vue/commit/e1f637cc2cd9e9c9a44c733c6cca767880d8e1c6))
+* stream value can have reactive capability ([41a801d](https://github.com/fluthjs/fluth-vue/commit/41a801dd1f5d3653f39f4c441368d7b0de9d6cf7))
+
 ### [0.2.22](https://github.com/fluthjs/fluth-vue/compare/v0.2.21...v0.2.22) (2025-08-01)
 
 
