@@ -8,7 +8,7 @@ pnpm install fluth-vue
 
 ## 示例
 
-下面以一个表单提页来展示流式编程范式
+下面以一个表单提交页来展示流式编程范式
 
 ## 第一步：创建流
 
@@ -29,7 +29,7 @@ const form$ = $({
 
 ## 第二步：添加模板渲染
 
-流可以直接在 Vue 模板中使用，注意不要使用 `v-model` 来绑定流，因为流底层数据是 immutable 的，使用 `v-model` 会破坏流的不可变性。
+流可以直接在 Vue 模板中使用，注意不要使用 v-model 来绑定流，因为流底层数据是 immutable 的，使用 v-model 会破坏流的不可变性。
 
 ```vue
 <template>
@@ -38,21 +38,21 @@ const form$ = $({
       <div>
         <label>商品：</label>
         <input
-          :value="form$.item"
+          :value="form$.ref.value.item"
           @input="(value) => form$.set((v) => (v.item = value))"
         />
       </div>
       <div>
         <label>数量：</label>
         <input
-          :value="form$.number"
+          :value="form$.ref.value.number"
           @input="(value) => form$.set((v) => (v.number = value))"
         />
       </div>
       <div>
         <label>大小：</label>
         <input
-          :value="form$.size"
+          :value="form$.ref.value.size"
           @input="(value) => form$.set((v) => (v.size = value))"
         />
       </div>
@@ -81,21 +81,21 @@ const form$ = $({
       <div>
         <label>商品：</label>
         <input
-          :value="form$.item"
+          :value="form$.ref.value.item"
           @input="(value) => form$.set((v) => (v.item = value))"
         />
       </div>
       <div>
         <label>数量：</label>
         <input
-          :value="form$.number"
+          :value="form$.ref.value.number"
           @input="(value) => form$.set((v) => (v.number = value))"
         />
       </div>
       <div>
         <label>大小：</label>
         <input
-          :value="form$.size"
+          :value="form$.ref.value.size"
           @input="(value) => form$.set((v) => (v.size = value))"
         />
       </div>
@@ -126,7 +126,7 @@ const submit$ = form$.pipe(audit(trigger$.pipe(debounce(300))));
 const validate$ = submit$.then((value) => validateForm(value));
 const payload$ = validate$
   .pipe(filter((value) => !!value))
-  .then((value) => ({ ...value, address: "北京市朝阳区XX路88号" }));
+  .then((value) => ({ ...value, user: 'fluth', address: "北京市朝阳区 XX 路 88 号" }));
 const addOrder$ = useFetchAddOrder(payload$)
 </script>
 ```

@@ -2,7 +2,7 @@
 
 ## Basic Usage
 
-The `useFetch` function can be used by simply providing a URL. The URL can be a string or a `ref`. The `data` object will contain the result of the request, the `error` object will contain any error information, and the `loading` object will indicate whether the request is loading.
+The useFetch function can be used by simply providing a URL. The URL can be a string or a ref. The data object will contain the result of the request, the error object will contain any error information, and the loading object will indicate whether the request is loading.
 
 ```ts
 import { useFetch } from "fluth-vue";
@@ -12,7 +12,7 @@ const { loading, error, data } = useFetch(url);
 
 ## Async Usage
 
-`useFetch` can also be awaited like a normal fetch. Note that when a component is async, any component using it must be wrapped with `<Suspense>` tags. You can learn more about the suspense API in the [Vue 3 official documentation](https://vuejs.org/guide/built-ins/suspense.html).
+useFetch can also be awaited like a normal fetch. Note that when a component is async, any component using it must be wrapped with `<Suspense>` tags. You can learn more about the suspense API in the [Vue 3 official documentation](https://vuejs.org/guide/built-ins/suspense.html).
 
 ```ts
 import { useFetch } from "fluth-vue";
@@ -22,7 +22,7 @@ const { loading, error, data } = await useFetch(url);
 
 ## Refetch on URL Change
 
-Using a `ref` as the url parameter will allow the `useFetch` function to automatically trigger another request when the url changes.
+Using a `ref` as the url parameter will allow the useFetch function to automatically trigger another request when the url changes.
 
 ```ts
 const url = ref("https://my-api.com/user/1");
@@ -34,7 +34,7 @@ url.value = "https://my-api.com/user/2"; // Will trigger another request
 
 ## Prevent Request from Firing Immediately
 
-Setting the `immediate` option to false will prevent the request from firing immediately until the `execute` function is called.
+Setting the immediate option to false will prevent the request from firing immediately until the execute function is called.
 
 ```ts
 const { execute } = useFetch(url, { immediate: false });
@@ -44,7 +44,7 @@ execute();
 
 ## Aborting Requests
 
-The `abort` function from the `useFetch` function can be used to abort the request. The `canAbort` property indicates whether the request can be aborted.
+The `abort` function from the useFetch function can be used to abort the request. The `canAbort` property indicates whether the request can be aborted.
 
 ```ts
 const { abort, canAbort } = useFetch(url);
@@ -114,7 +114,7 @@ console.log(data.value); // { title: 'Hunter x Hunter' }
 
 ## Setting Request Method and Return Type
 
-The request method and return type can be set by adding the appropriate method after `useFetch`
+The request method and return type can be set by adding the appropriate method after useFetch
 
 ```ts
 // Request will be sent using GET method, data will be parsed as JSON

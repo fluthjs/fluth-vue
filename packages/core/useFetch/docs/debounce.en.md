@@ -19,9 +19,9 @@ debounce?:
 
 ::: warning Important Notes
 
-- After setting `debounce`, `execute()` no longer returns a Promise
-- Use `promise$.then()` to handle request results
-- Use reactive states like `data`, `error`, `loading` to get results
+- After setting debounce, execute() no longer returns a Promise
+- Use promise$.then() to handle request results
+- Use reactive states like data, error, loading to get results
   :::
 
 ```ts
@@ -52,7 +52,7 @@ execute(); // Trigger debounced request
 
 ### Basic Usage
 
-Control `useFetch` debounce behavior through the `debounce` parameter to avoid frequent request triggers:
+Control useFetch debounce behavior through the debounce parameter to avoid frequent request triggers:
 
 ```ts
 const { execute } = useFetch(url, {

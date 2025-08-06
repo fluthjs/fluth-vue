@@ -1,0 +1,63 @@
+# Reactivity
+
+fluth provides powerful reactive functionality, allowing streams to seamlessly integrate with Vue's reactive system
+
+fluth provides the [to$](/en/useFluth/#to$) method, which can convert Vue's reactive data to streams.
+
+Streams provide the [ref](/en/useFluth/#ref) property, which can trigger Vue template dynamic rendering, computed recalculation, and watch callback execution like native ref.
+
+Streams provide the [toCompt](/en/useFluth/#tocompt) method, which can convert stream values to computed objects.
+
+::: tip Note
+
+You should not use v-model to bind stream reactive data. Modifying stream reactive data will not trigger stream subscriptions, and when the stream's upstream pushes data, it will also overwrite the modified data.
+
+:::
+
+## Decoupling of Reactivity and Data
+
+When using ref or reactive, data and reactivity are integrated. Modifying data will trigger reactivity, and there's no way to achieve conditional reactivity. For example:
+
+```typescript
+// wineList will be frequently modified externally
+const wineList = ref(["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine"]);
+
+const age = ref(0);
+const availableWineList = computed(() => {
+  age.value > 18 ? wineList.value : [];
+});
+```
+
+If you want to only get the latest value of wineList when age changes, and not respond to wineList modifications when age doesn't change, computed cannot achieve this.
+
+Of course, you can use watch + cache to achieve this effect:
+
+```typescript
+// wineList will be frequently modified externally
+const wineList = ref(["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine"]);
+
+const age = ref(0);
+const availableWineList = ref<string[]>([]);
+
+watch(
+  () => age.value,
+  (newVal) => {
+    if (newVal > 18) {
+      availableWineList.value = wineList.value.slice();
+    }
+  },
+);
+```
+
+But writing code this way is ugly and requires additional cache availableWineList. Using fluth stream programming can well decouple data and reactivity:
+
+```typescript
+const wineList = $(["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine"]);
+
+const age$ = $(0);
+const availableWineList = age$
+  .pipe(filter((age) => age > 18))
+  .then(() => wineList.value).ref;
+```
+
+Only when age is greater than 18 can you get the latest value of wineList, but subsequent immutable modifications to wineList will not trigger recalculation and value changes of availableWineList.

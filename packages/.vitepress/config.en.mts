@@ -22,7 +22,10 @@ export default {
             { text: "Introduction", link: "/en/guide/introduce" },
             { text: "Why", link: "/en/guide/motion" },
             { text: "Quick", link: "/en/guide/quick" },
-            { text: "Advance", link: "/en/guide/advance" },
+            { text: "Debug", link: "/en/guide/debug" },
+            { text: "Reactive", link: "/en/guide/reactive" },
+            { text: "Render", link: "/en/guide/render" },
+            { text: "Immutable", link: "/en/guide/immutable" },
           ],
         },
         {
@@ -31,12 +34,6 @@ export default {
             {
               text: "fluth",
               link: "/en/useFluth/index.html",
-              items: [
-                { text: "to$", link: "/en/useFluth/to$.html" },
-                { text: "render$", link: "/en/useFluth/render$.html" },
-                { text: "toComp", link: "/en/useFluth/toComp.html" },
-                { text: "toComps", link: "/en/useFluth/toComps.html" },
-              ],
             },
             {
               text: "useFetch",

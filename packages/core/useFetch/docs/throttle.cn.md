@@ -18,9 +18,9 @@ throttle?:
 
 ::: warning 重要提示
 
-- 设置 `throttle` 后，`execute()` 不再返回 Promise
-- 使用 `promise$.then()` 来处理请求结果
-- 使用 `data`、`error`、`loading` 等响应式状态获取结果
+- 设置 throttle 后，execute() 不再返回 Promise
+- 使用 promise$.then() 来处理请求结果
+- 使用 data、error、loading 等响应式状态获取结果
   :::
 
 ```ts
@@ -51,7 +51,7 @@ execute(); // 触发节流请求
 
 ### 基础用法
 
-通过 `throttle` 参数控制 `useFetch` 的节流行为，限制请求频率：
+通过 throttle 参数控制 useFetch 的节流行为，限制请求频率：
 
 ```ts
 const { execute } = useFetch(url, {

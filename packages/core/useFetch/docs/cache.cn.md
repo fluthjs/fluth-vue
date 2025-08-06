@@ -11,7 +11,7 @@ cacheSetting?: {
 
 ## 基础用法
 
-通过 `cacheSetting` 参数启用请求缓存功能：
+通过 cacheSetting 参数启用请求缓存功能：
 
 ```javascript
 import { useFetch } from "fluth-vue";
@@ -64,7 +64,7 @@ const { data } = useFetch(url, {
 
 ### 实例缓存清除
 
-每个 `useFetch` 实例都有独立的 `clearCache` 方法：
+每个 useFetch 实例都有独立的 clearCache 方法：
 
 ```javascript
 const { clearCache } = useFetch(url, {
@@ -77,7 +77,7 @@ clearCache();
 
 ### 全局缓存清除
 
-清除所有 `useFetch` 实例的缓存：
+清除所有 useFetch 实例的缓存：
 
 ```javascript
 import { clearFetchCache } from "fluth-vue";
@@ -94,12 +94,12 @@ clearFetchCache();
 
 - ✅ 直接返回缓存数据，不发起网络请求
 - ✅ `execute()` 返回 `Promise.resolve(cacheData)`
-- ✅ `data` 状态立即更新
-- ✅ `promise$` 会推送缓存数据流
+- ✅ data 状态立即更新
+- ✅ promise$ 会推送缓存数据流
 
 ### 缓存存储
 
-- **存储位置**：内存中的 `Map` 对象
+- **存储位置**：内存中的 Map 对象
 - **生命周期**：页面刷新后清除
 - **容量限制**：无硬性限制，受浏览器内存约束
 
@@ -136,5 +136,5 @@ const { data: list } = useFetch("/api/posts", {
 - 缓存仅存储在内存中，页面刷新后会丢失
 - 缓存键相同的请求会共享缓存数据
 - 过期时间到达后缓存会自动清除
-- 命中缓存时不会触发 `loading` 状态变化
+- 命中缓存时不会触发 loading 状态变化
   :::

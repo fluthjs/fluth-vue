@@ -25,7 +25,7 @@ import CreateFetch from '../../../.vitepress/components/createFetch.vue'
   ```
 
 - Details
-  `useFetch` requester
+  useFetch requester
 
 ### URL
 
@@ -37,7 +37,7 @@ import CreateFetch from '../../../.vitepress/components/createFetch.vue'
 
 - Details
 
-  The URL for the request, supports reactive data, Observable, Stream. When `refetch` is `true`, the request will automatically be re-executed when the URL changes.
+  The URL for the request, supports reactive data, Observable, Stream. When refetch is true, the request will automatically be re-executed when the URL changes.
 
 ### UseFetchOptions
 
@@ -51,7 +51,7 @@ interface UseFetchOptions extends RequestInit {
   initialData?: any;
 
   /**
-   * Will automatically run fetch when `useFetch` is used
+   * Will automatically run fetch when useFetch is used
    *
    * @default true
    */
@@ -142,7 +142,7 @@ interface UseFetchOptions extends RequestInit {
   fetch?: typeof window.fetch;
 
   /**
-   * Allow update the `data` ref when fetch error whenever provided, or mutated in the `onFetchError` callback
+   * Allow update the data ref when fetch error whenever provided, or mutated in the onFetchError callback
    *
    * @default false
    */
@@ -202,7 +202,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Whether to automatically execute the request when `useFetch` is used
+  Whether to automatically execute the request when useFetch is used
 
   Default: `true`
 
@@ -233,7 +233,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Whether to automatically refetch when `url` or `payload` changes, only supports reactive data, Observable, Stream changes
+  Whether to automatically refetch when url or payload changes, only supports reactive data, Observable, Stream changes
 
   Default: `false`
 
@@ -371,7 +371,7 @@ interface UseFetchOptions extends RequestInit {
 
 - Details
 
-  Whether to allow updating the `data` ref when a request error occurs
+  Whether to allow updating the data ref when a request error occurs
 
   Default: `false`
 
@@ -574,7 +574,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Return type of `useFetch`, containing the following properties and methods:
+  Return type of useFetch, containing the following properties and methods:
 
 #### data
 
@@ -694,7 +694,7 @@ interface UseFetchReturn<T> {
 - Details
 
   - Manually trigger fetch request (default not throwing error)
-  - When `debounce` or `throttle` is set, returns void after execution
+  - When debounce or throttle is set, returns void after execution
 
 #### abort
 
@@ -933,7 +933,7 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Create `useFetch` with preset configuration
+  Create useFetch with preset configuration
 
 ## clearFetchCache
 
@@ -945,4 +945,4 @@ interface UseFetchReturn<T> {
 
 - Details
 
-  Clear all `useFetch` caches
+  Clear all useFetch caches

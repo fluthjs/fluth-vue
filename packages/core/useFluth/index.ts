@@ -36,14 +36,14 @@ declare module "fluth" {
     toCompt: () => ComputedRef<T>;
     render: (
       renderFn?: (value: T) => VNodeChild | DefineComponent,
-    ) => DefineComponent;
+    ) => VNodeChild;
   }
   interface Observable<T> {
     ref: DeepReadonly<Ref<T | undefined>>;
     toCompt: () => ComputedRef<T | undefined>;
     render: (
       renderFn?: (value: T | undefined) => VNodeChild | DefineComponent,
-    ) => DefineComponent;
+    ) => VNodeChild;
   }
 }
 
@@ -74,11 +74,11 @@ function toCompt<T>(this: Stream<T> | Observable<T>): ComputedRef<T> {
 function render<T>(
   this: Stream<T> | Observable<T>,
   renderFn?: (value: T) => VNodeChild | DefineComponent,
-): DefineComponent {
+): VNodeChild {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const arg$ = this;
-  return defineComponent({
-    name: "Render$",
+  const component = defineComponent({
+    name: "FluthRender",
     setup() {
       const value = arg$.toCompt();
       // vue-devtool friendly
@@ -142,6 +142,8 @@ function render<T>(
       }
     },
   });
+
+  return h(component);
 }
 
 /**
@@ -220,7 +222,7 @@ export function to$<T>(arg: Ref<T> | ComputedRef<T> | Reactive<T>): Stream<T> {
  * @param render render function
  * @returns render function
  */
-export function effect$(render: RenderFunction): () => VNodeChild {
+export function effect(render: RenderFunction): () => VNodeChild {
   let currentScope: EffectScope | null = null;
 
   //  remove last render effect when component unmount

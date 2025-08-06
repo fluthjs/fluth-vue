@@ -14,7 +14,7 @@ condition?:
 
 ## Usage
 
-Control whether `useFetch` makes a request through the `condition` parameter. Requests will only execute when the condition is `true`.
+Control whether useFetch makes a request through the condition parameter. Requests will only execute when the condition is true.
 
 ### Basic Usage
 
@@ -51,14 +51,14 @@ payload.value.id = null; // ❌ Will not trigger request (condition is false)
 ```
 
 ::: warning Note
-The `condition` applies to all of the following operations:
+The condition applies to all of the following operations:
 
-- Reactive updates `refetch`
-- Auto refresh `refresh`
-- Manual execution `execute`
-- Initial request `immediate`
+- Reactive updates refetch
+- Auto refresh refresh
+- Manual execution execute
+- Initial request immediate
   :::
 
 ## Return Value
 
-When `condition` is `false`, the `execute()` method returns `Promise.resolve(null)` without making an actual network request.
+When condition is false, the execute() method returns Promise.resolve(null) without making an actual network request.

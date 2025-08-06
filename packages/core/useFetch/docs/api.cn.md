@@ -37,7 +37,7 @@ import CreateFetch from '../../../.vitepress/components/createFetch.vue'
 
 - 详情
 
-  请求地址的 URL，支持响应式数据、Observable、Stream，当`refetch`为`true`时，URL 发生改变时会自动重新请求
+  请求地址的 URL，支持响应式数据、Observable、Stream，当 refetch 为 true 时，URL 发生改变时会自动重新请求
 
 ### UseFetchOptions
 
@@ -142,7 +142,7 @@ interface UseFetchOptions extends RequestInit {
   fetch?: typeof window.fetch;
 
   /**
-   * Allow update the `data` ref when fetch error whenever provided, or mutated in the `onFetchError` callback
+   * Allow update the data ref when fetch error whenever provided, or mutated in the onFetchError callback
    *
    * @default false
    */
@@ -202,9 +202,9 @@ interface UseFetchOptions extends RequestInit {
 
 - 详情
 
-  是否在使用 `useFetch` 时自动执行请求
+  是否在使用 useFetch 时自动执行请求
 
-  默认值: `true`
+  默认值: true
 
 #### condition
 
@@ -221,7 +221,7 @@ interface UseFetchOptions extends RequestInit {
 
   仅在条件为 true 时执行请求，支持响应式数据、Observable、Stream 和函数
 
-  默认值: `true`
+  默认值: true
 
 #### refetch
 
@@ -233,9 +233,9 @@ interface UseFetchOptions extends RequestInit {
 
 - 详情
 
-  当`url`或者`payload`发生改变时是否自动重新请求，只支持响应式数据、Observable、Stream变化
+  当 url 或者 payload 发生改变时是否自动重新请求，只支持响应式数据、Observable、Stream 变化
 
-  默认值: `false`
+  默认值: false
 
 #### refresh
 
@@ -371,9 +371,9 @@ interface UseFetchOptions extends RequestInit {
 
 - 详情
 
-  当请求发生错误时，是否允许更新 `data` ref
+  当请求发生错误时，是否允许更新 data ref
 
-  默认值: `false`
+  默认值: false
 
 #### beforeFetch
 
@@ -692,7 +692,7 @@ interface UseFetchReturn<T> {
 - 详情
 
   - 手动触发 fetch 请求（默认不抛出错误）
-  - 当设置 `debounce` 或 `throttle` 时，执行后返回 void
+  - 当设置 debounce 或 throttle 时，执行后返回 void
 
 #### abort
 

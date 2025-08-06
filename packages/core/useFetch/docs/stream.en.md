@@ -1,4 +1,4 @@
-# Data Stream
+# Data Stream (Stream)
 
 ## Type Definition
 
@@ -9,7 +9,7 @@ promise$: Stream<T | undefined, true>;
 
 ## Background
 
-After `useFetch` executes a request, in addition to providing reactive `data`, it also provides data stream support based on [fluth](https://fluthjs.github.io/fluth-doc/). Through `promise$`, you can subscribe to the results of each request, enabling more flexible asynchronous data processing.
+After useFetch executes a request, in addition to providing reactive data, it also provides a data stream promise$ based on [fluth](https://fluthjs.github.io/fluth-doc/). Through promise$, you can subscribe to the result of each request, enabling more flexible asynchronous data processing.
 
 ## Basic Usage
 
@@ -20,17 +20,17 @@ const { execute, promise$ } = useFetch("https://api.example.com/data", {
   immediate: false,
 });
 
-// Subscribe to success results
+// Subscribe to success result
 promise$.then((data) => {
   console.log("Request successful:", data);
 });
 
-// Subscribe to error results
+// Subscribe to error result
 promise$.catch((error) => {
   console.log("Request failed:", error);
 });
 
-execute(); // Trigger request, promise$ will push results
+execute(); // Trigger request, promise$ will push result
 ```
 
 ### Handling Success and Failure
@@ -69,7 +69,7 @@ await execute(); // First request
 await execute(); // Second request
 await execute(); // Third request
 
-console.log(results.length); // 3 - Each execute pushes a result
+console.log(results.length); // 3 - Each execute will push a result
 ```
 
 ### Cache Hits Also Push
@@ -90,7 +90,7 @@ promise$.then((data) => {
 await execute(); // First request, fetch from server
 await execute(); // Cache hit, promise$ still pushes cached data
 
-console.log(streamData.length); // 2 - Cache hits also push
+console.log(streamData.length); // 2 - Cache hit also pushes
 ```
 
 ### Error Handling
@@ -105,7 +105,7 @@ promise$
     console.log("Success:", data);
   })
   .catch((error) => {
-    console.log("Error:", error); // 4xx/5xx errors are pushed to catch
+    console.log("Error:", error); // 4xx/5xx errors will be pushed to catch
   });
 
 try {
@@ -134,7 +134,7 @@ await execute(); // data.value updates, triggers watch
 
 ### Data Stream (promise$)
 
-With the powerful operators provided by [fluth](https://fluthjs.github.io/fluth-doc/), complex data processing can be implemented in a very simple way.
+With the powerful operators provided by [fluth](https://fluthjs.github.io/fluth-doc/), you can implement complex data processing in a very simple way.
 
 ```ts
 import { promiseAll, map } from "fluth-vue";

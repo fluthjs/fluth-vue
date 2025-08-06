@@ -19,9 +19,9 @@ debounce?:
 
 ::: warning 重要提示
 
-- 设置 `debounce` 后，`execute()` 不再返回 Promise
-- 使用 `promise$.then()` 来处理请求结果
-- 使用 `data`、`error`、`loading` 等响应式状态获取结果
+- 设置 debounce 后，execute() 不再返回 Promise
+- 使用 promise$.then() 来处理请求结果
+- 使用 data、error、loading 等响应式状态获取结果
   :::
 
 ```ts
@@ -52,7 +52,7 @@ execute(); // 触发防抖请求
 
 ### 基础用法
 
-通过 `debounce` 参数控制 `useFetch` 的防抖行为，避免频繁触发请求：
+通过 debounce 参数控制 useFetch 的防抖行为，避免频繁触发请求：
 
 ```ts
 const { execute } = useFetch(url, {

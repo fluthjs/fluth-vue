@@ -18,7 +18,7 @@
 
 ## 前端框架的演化
 
-为了应对前端应用中**高度异步、事件驱动、多输入多输出**的复杂环境，前端开发社区逐步演化出基于框架的编程范式，其中最具代表性的是 `MVVM（Model-View-ViewModel）` 架构模式。
+为了应对前端应用中**高度异步、事件驱动、多输入多输出**的复杂环境，前端开发社区逐步演化出基于框架的编程范式，其中最具代表性的是 MVVM（Model-View-ViewModel）架构模式。
 
 这一范式的核心思想是：将页面的显示逻辑与状态逻辑解耦，并通过**响应式绑定**让它们自动协同。
 
@@ -108,13 +108,13 @@ Fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的
 
 ### 框架集成
 
-- 对于 Vue 框架来说，ref、reactive、computed响应式的数据可以通过 [to$](/cn/useFluth/to$.html) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
+- 对于 Vue 框架来说，ref、reactive、computed 响应式的数据可以通过 [to$](/cn/useFluth/to$.html) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
 
-- 对于 Fluth 流来说，流的值就是响应式数据，这样框架就可以直接消费流的数据，并可以通过`vue-devtools` 直接查看流的数据
+- 对于 Fluth 流来说，流的 [ref](/cn/useFluth/#ref) 属性就是响应式数据，也可以采用 [toCompt](/cn/useFluth/#tocompt) 方法转换为 computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过 vue-devtools 直接查看流的数据
 
 ### 调试能力
 
-`fluth` 流底层采用 immutable 数据结构，并提供了丰富的调试插件：
+fluth 流底层采用 immutable 数据结构，并提供了丰富的调试插件：
 
 - 通过 [consoleNode](https://fluthjs.github.io/fluth-doc/cn/api/plugin/consoleNode.html)插件可以方便的打印流节点数据
 
@@ -136,14 +136,14 @@ Fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的
 
 传统的前端开发采用**命令式编程模式**：
 
-- 点击按钮后，调用 `handleSubmit` 方法
-- `handleSubmit` 先 `validateForm` 方法，如果验证不通过，则提示报错
+- 点击按钮后，调用 handleSubmit 方法
+- handleSubmit 先 validateForm 方法，如果验证不通过，则提示报错
 - 验证通过拼装后台需要的数据
-- 调用后台 `fetchAddOrderApi` 方法
-  - 如果调用成功，则继续调用 `handleDataB` 方法、`handleDataC` 方法
+- 调用后台 fetchAddOrderApi 方法
+  - 如果调用成功，则继续调用 handleDataB 方法、handleDataC 方法
 - 如果调用失败，则提示报错
 
-这应该是大部分前端开发者的日常，开发日常不代表天经地义，这种命令式开发模式、夹杂同步逻辑异步操作，**随着业务复杂度增长，`handleSubmit` 方法会变得越来越臃肿，也将变得越来越难以复用**。
+这应该是大部分前端开发者的日常，开发日常不代表天经地义，这种命令式开发模式、夹杂同步逻辑异步操作，**随着业务复杂度增长，handleSubmit 方法会变得越来越臃肿，也将变得越来越难以复用**。
 
 下面采用流的**声明式编程方式**重新实现：
 
@@ -151,40 +151,42 @@ Fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的
   <img src="/stream-code.drawio.svg" alt="motion" />
 </div>
 
-按照业务逻辑，代码实现为六条流：`form$`、`trigger$`、`submit$`、`validate$`、`payload$`、`addOrderApi$`，**每一条流都承载着独立的逻辑，流的先后顺序按照业务真实顺序进行组织**。`form$`、`trigger$` 负责将用户的输入转换为流，`validate$`、`addOrderApi$` 则将流的处理结果传递用户。
+按照业务逻辑，代码实现为六条流：form$、trigger$、submit$、validate$、payload$、addOrderApi$，**每一条流都承载着独立的逻辑，流的先后顺序按照业务真实顺序进行组织**。form$、trigger$ 负责将用户的输入转换为流，validate$、addOrderApi$ 则将流的处理结果传递用户。
 
 通过代码可以发现：
 
 - **复用性提升**，采用流式编程范式后**逻辑充分的原子化了**，而流既可以**分流又可以合流**可以轻易的对这些逻辑原子进行逻辑组合，代码的复用性空前的提高
-- **维护性提升** ，代码从上到下是按照业务真实顺序进行组织的，当前只有一个 `handleSubmit` 方法可能还不明显，当业务逻辑复杂后，按照业务事实顺序组织代码将对阅读性、维护性有极大的提升
+- **维护性提升** ，代码从上到下是按照业务真实顺序进行组织的，当前只有一个 handleSubmit 方法可能还不明显，当业务逻辑复杂后，按照业务事实顺序组织代码将对阅读性、维护性有极大的提升
 - **表达力提升**，[audit](https://fluthjs.github.io/fluth-doc/cn/api/operator/audit.html)、[debounce](https://fluthjs.github.io/fluth-doc/cn/api/operator/debounce.html)、[filter](https://fluthjs.github.io/fluth-doc/cn/api/operator/debounce.html) 等操作符以声明式的方式处理了触发器、节流、条件过滤等复杂的异步控制逻辑，通过流的操作符，代码的表达力显著提升。
 - **控制反转**，相对于方法调用这种”拉“的方式，流式编程范式是”推“的方式，可以实现数据、修改数据的方法、触发数据修改的行为都放置在同一个文件夹内，再也无需全局搜索哪里的调用改变了模块内部的数据。
 
 ### 复用性和可维护性说明
 
-对于命令式的编程，在 `handleSubmit` 后续的迭代中可能需要分场景：
+对于命令式的编程，在 handleSubmit 后续的迭代中可能需要分场景：
 
-- 场景 A 调用 `fetchAddOrderApi` 成功后只需要调用 `handleDataB` 方法
-- 场景 B 调用 `fetchAddOrderApi` 成功后只需要调用 `handleDataC` 方法
+- 场景 A 调用 fetchAddOrderApi 成功后只需要调用 handleDataB 方法
+- 场景 B 调用 fetchAddOrderApi 成功后只需要调用 handleDataC 方法
 
-此时 `handleSubmit` 只能将场景变为参数交由 if - else 来处理，随着越来越多的分支逻辑，函数逐渐膨胀。如果用流式编程范式来实现，这个问题可以轻松解决：
+此时 handleSubmit 只能将场景变为参数交由 if - else 来处理，随着越来越多的分支逻辑，函数逐渐膨胀。如果用流式编程范式来实现，这个问题可以轻松解决：
 
-- 如果场景是流的话，通过流的组合就可以轻松解决
+- 如果场景是流的话，通过组合流就可以轻松解决
 
   ```typescript
   // 场景 A 流
   const caseA$ = $();
   addOrderApi$.pipe(audit(caseA$)).then(handleDataB);
+  caseA$.next();
 
   // 场景 B 流
   const caseB$ = $();
   addOrderApi$.pipe(audit(caseB$)).then(handleDataC);
+  caseB$.next();
   ```
 
 - 如果场景是数据的话，既可以通过分流也可以通过过滤来处理，两种方式都可以轻松解决
 
   ```typescript
-  // 场景流，可能是A，也可能是B
+  // 场景流，可能是 A，也可能是 B
   const case$ = $<"A" | "B">();
 
   // 方法1: 分流
@@ -204,10 +206,10 @@ Fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的
 
 ## 延伸
 
-上面是一个简单的示例，如果业务逻辑复杂传统开发模式下，一个 `setup` 函数下面可能有几十个 `ref`和几十个 `methods`，如果认为`setup`是一个`class`，那么这个`class`将拥有几十属性和方法以及的丑陋的`watch`，阅读和维护成本将非常的高。
+上面是一个简单的示例，如果业务逻辑复杂传统开发模式下，一个 setup 函数下面可能有几十个 ref 和几十个 methods，如果认为 setup 是一个 class，那么这个 class 将拥有几十属性和方法以及的丑陋的 watch，阅读和维护成本将非常的高。
 
-虽然更小粒度的的抽离组件以及`hooks`的开发理念可以解决部分问题，但现实是当前大量现存业务就是由无数个这样的臃肿的`setup`函数构造的组件组装的（心疼前端开发一秒），因为种种原因（懒或者没有心智）一旦`setup`成为这个臃肿的`class`，那么后续的开发者只能在这个`setup`上持续“深耕”。
+虽然更小粒度的的抽离组件以及 hooks 的开发理念可以解决部分问题，但现实是当前大量现存业务就是由无数个这样的臃肿的 setup 函数构造的组件组装的（心疼前端开发一秒），因为种种原因（懒或者没有心智）一旦 setup 成为这个臃肿的 class，那么后续的开发者只能在这个 setup 上持续“深耕”。
 
-而流式编程范式可以很好的解决这个问题，随着业务持续迭代，代码也会也来也长；但是**流式编程是按照业务真实顺序进行声明式组织代码**，相当于一条线不断延伸，此时要抽离逻辑只需要将线剪成几段分别放入`hook`就好了，完全没有心智负担，相当于有一个很重的业务，只需要几分钟就可以解决重构好。
+而流式编程范式可以很好的解决这个问题，随着业务持续迭代，代码也会也来也长；但是**流式编程是按照业务真实顺序进行声明式组织代码**，相当于一条线不断延伸，此时要抽离逻辑只需要将线剪成几段分别放入 hook 就好了，完全没有心智负担，相当于有一个很重的业务，只需要几分钟就可以解决重构好。
 
 通过这个示例和延伸可以看出，**流式编程范式与前端业务的异步、事件驱动特性天然契合，是组织前端业务逻辑的理想选择**。

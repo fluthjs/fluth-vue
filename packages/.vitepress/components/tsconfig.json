@@ -2,6 +2,7 @@
   "compilerOptions": {
     "jsx": "preserve",
     "jsxFactory": "h",
+    "jsxImportSource": "vue",
     "jsxFragmentFactory": "Fragment"
   }
 }

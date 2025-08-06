@@ -4,11 +4,11 @@ import refRender from "../.vitepress/components/refRender.tsx";
 import mixRender from "../.vitepress/components/mixRender.tsx";
 </script>
 
-# 流式渲染
+# Streaming Rendering
 
-除了利用流的响应式数据来做渲染，fluth 提供了强大的流式渲染 [render](/cn/useFluth/#render) 功能，可以实现元素级渲染或者块级渲染，整体效果类似 signal 或者 block signal 的渲染。
+In addition to using stream reactive data for rendering, fluth provides powerful streaming rendering [render](/en/useFluth/#render) functionality that can achieve element-level rendering or block-level rendering, with overall effects similar to signal or block signal rendering.
 
-## 元素级渲染
+## Element-level Rendering
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
@@ -19,15 +19,15 @@ export default defineComponent(
     const name$ = $(hello);
 
     onUpdated(() => {
-      console.log("Example 组件更新");
+      console.log("Example component updated");
     });
 
     return effect(() => (
       <div>
         <div>
-          名字：{name$.render()}
+          Name: {name$.render()}
         </div>
-        <button onClick={() => name$.set((v) => v + " world")}>更新</button>
+        <button onClick={() => name$.set((v) => v + " world")}>Update</button>
       </div>
     );
   },
@@ -38,9 +38,9 @@ export default defineComponent(
 );
 ```
 
-点击更新按钮更新文案的时候，不会触发组件的 onUpdated 生命周期。
+When clicking the update button to update the text, the component's onUpdated lifecycle will not be triggered.
 
-## 块级渲染
+## Block-level Rendering
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
@@ -51,22 +51,22 @@ export default defineComponent(
     const info$ = $({ name: "", age: 0, address: "" });
 
     onUpdated(() => {
-      console.log("Example 组件更新");
+      console.log("Example component updated");
     });
 
     return effect(() => (
       <div>
-        <div>用户信息</div>
+        <div>User Information</div>
         {user$.render((v) => (
           <div>
-            <div>名字：{v.name}</div>
-            <div>年龄：{v.age}</div>
-            <div>地址：{v.address}</div>
+            <div>Name: {v.name}</div>
+            <div>Age: {v.age}</div>
+            <div>Address: {v.address}</div>
           </div>
         ))}
 
         <button onClick={() => user$.set((v) => (v.age += 1))}>
-          更新用户信息
+          Update User Information
         </button>
       </div>
     );
@@ -77,11 +77,11 @@ export default defineComponent(
 );
 ```
 
-不管是用户信息还是订单信息，点击更新按钮后，都不会触发组件的 onUpdated 生命周期。
+Whether it's user information or order information, after clicking the update button, the component's onUpdated lifecycle will not be triggered.
 
-## 对比
+## Comparison
 
-采用 fluth render 和 ref 渲染的对比：
+Comparison between fluth render and ref rendering:
 
 ::: code-group
 
@@ -243,14 +243,14 @@ export default defineComponent(
 
 :::
 
-### 流式渲染效果
+### Streaming Rendering Effect
 
 <streamingRender />
 
-### ref 渲染效果
+### Ref Rendering Effect
 
 <refRender />
 
-### 流式 + ref 混合渲染效果
+### Streaming + Ref Mixed Rendering Effect
 
 <mixRender />

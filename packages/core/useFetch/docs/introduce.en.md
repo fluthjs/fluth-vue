@@ -16,7 +16,7 @@ const { data, loading, error, promise$ } = useFetch("https://example.com");
 
 ## Use Cases
 
-`useFetch` is used to handle relationships between asynchronous data, generally with the following three use cases:
+useFetch is used to handle relationships between asynchronous data, generally with the following three use cases:
 
 ### Declarative + Reactive Relationship
 
@@ -70,4 +70,4 @@ const { data: data2 } = await useFetchApi(data1.value);
 
 ## Stream
 
-`useFetch` provides not only reactive data returns but also `fluth` stream support. You can get the async data stream through [promise$](/en/useFetch/stream) and combine it with `fluth` operators to implement complex data flow processing
+useFetch provides not only reactive data returns but also fluth stream support. You can get the async data stream through [promise$](/en/useFetch/stream) and combine it with fluth operators to implement complex data flow processing

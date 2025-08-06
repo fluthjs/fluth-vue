@@ -1,0 +1,42 @@
+.card {
+  background-color: #eeeeee;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 5px;
+  animation-name: zoomIn;
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
+
+  &-light {
+    background-color: #f7f7f7;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 10px;
+  }
+}
+
+.operator {
+  display: flex;
+  justify-content: space-between;
+}
+
+.immutable-button {
+  padding: 10px 20px;
+  margin: 10px 50px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  &:hover {
+    background-color: #f0f0f0;
+  }
+}
+
+@keyframes zoomIn {
+  0% {
+    opacity: 0;
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+  50% {
+    opacity: 1;
+  }
+}

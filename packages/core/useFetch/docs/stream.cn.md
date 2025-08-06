@@ -9,7 +9,7 @@ promise$: Stream<T | undefined, true>;
 
 ## 背景
 
-`useFetch` 在执行请求后，除了提供响应式的 `data` 数据外，还提供了基于 [fluth](https://fluthjs.github.io/fluth-doc/) 的数据流支持。通过 `promise$` 可以订阅每次请求的结果，实现更灵活的异步数据处理。
+useFetch 在执行请求后，除了提供响应式的 data 数据外，还提供了基于 [fluth](https://fluthjs.github.io/fluth-doc/) 的数据流 promise$。通过 promise$ 可以订阅每次请求的结果，实现更灵活的异步数据处理。
 
 ## 基础用法
 

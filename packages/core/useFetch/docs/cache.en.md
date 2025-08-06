@@ -64,7 +64,7 @@ const { data } = useFetch(url, {
 
 ### Instance Cache Clearing
 
-Each `useFetch` instance has its own `clearCache` method:
+Each useFetch instance has its own `clearCache` method:
 
 ```javascript
 const { clearCache } = useFetch(url, {
@@ -77,7 +77,7 @@ clearCache();
 
 ### Global Cache Clearing
 
-Clear cache for all `useFetch` instances:
+Clear cache for all useFetch instances:
 
 ```javascript
 import { clearFetchCache } from "fluth-vue";
@@ -94,8 +94,8 @@ When cache is hit:
 
 - ✅ Returns cached data directly without network request
 - ✅ `execute()` returns `Promise.resolve(cacheData)`
-- ✅ `data` state updates immediately
-- ✅ `promise$` will push cached data stream
+- ✅ data state updates immediately
+- ✅ promise$ will push cached data stream
 
 ### Cache Storage
 
@@ -136,5 +136,5 @@ const { data: list } = useFetch("/api/posts", {
 - Cache is only stored in memory and will be lost after page refresh
 - Requests with the same cache key will share cached data
 - Cache will be automatically cleared when expiration time is reached
-- Cache hits do not trigger `loading` state changes
+- Cache hits do not trigger loading state changes
   :::

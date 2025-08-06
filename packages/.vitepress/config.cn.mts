@@ -22,10 +22,10 @@ export default {
             { text: "简介", link: "/cn/guide/introduce" },
             { text: "动机", link: "/cn/guide/motion" },
             { text: "上手", link: "/cn/guide/quick" },
-            { text: "调试", link: "/cn/guide/quick" },
+            { text: "调试", link: "/cn/guide/debug" },
             { text: "响应式", link: "/cn/guide/reactive" },
             { text: "流式渲染", link: "/cn/guide/render" },
-            // { text: "进阶", link: "/cn/guide/advance" },
+            { text: "不可变数据", link: "/cn/guide/immutable" },
           ],
         },
         {
@@ -34,11 +34,6 @@ export default {
             {
               text: "fluth",
               link: "/cn/useFluth/index.html",
-              items: [
-                { text: "to$", link: "/cn/useFluth/to$.html" },
-                { text: "toComp", link: "/cn/useFluth/toComp.html" },
-                { text: "toComps", link: "/cn/useFluth/toComps.html" },
-              ],
             },
             {
               text: "useFetch",

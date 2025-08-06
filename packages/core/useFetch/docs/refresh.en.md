@@ -2,11 +2,11 @@
 
 ## Reactive Updates (refetch)
 
-By setting `refetch` to `true`, `useFetch` automatically triggers new requests when reactive data `url` or `payload` changes.
+By setting refetch to true, useFetch automatically triggers new requests when reactive data url or payload changes.
 
 ### URL Updates
 
-Using a `ref` as the URL parameter to automatically trigger requests when the URL changes:
+Using a ref as the URL parameter to automatically trigger requests when the URL changes:
 
 ```ts
 const url = ref("https://my-api.com/user/1");
@@ -18,7 +18,7 @@ url.value = "https://my-api.com/user/2"; // ✅ Triggers new request
 
 ### URL Stream Updates
 
-Using `Stream` or `Observable` as URL parameter:
+Using Stream or Observable as URL parameter:
 
 ```ts
 import { $, useFetch } from "fluth-vue";
@@ -114,7 +114,7 @@ refresh?: number; // Refresh interval (milliseconds)
 
 ### Basic Usage
 
-Set the `refresh` parameter to make `useFetch` automatically send requests at regular intervals:
+Set the refresh parameter to make useFetch automatically send requests at regular intervals:
 
 ```ts
 // Auto refresh data every 5 seconds

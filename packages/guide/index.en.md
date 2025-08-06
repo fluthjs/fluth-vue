@@ -20,7 +20,7 @@ hero:
 features:
   - icon:
       src: "/fluth.svg"
-    title: Flow
+    title: Fluth
     details: Based on fluth flow
   - icon: 😋
     title: Simple

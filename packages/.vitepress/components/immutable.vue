@@ -4,7 +4,8 @@
       display: flex;
       justify-content: space-between;
       border: 1px solid #ccc;
-      padding: 10px;
+      padding: 30px;
+      margin: 30px 0;
       border-radius: 5px;
     "
   >
@@ -15,6 +16,7 @@
     <button class="immutable-button" @click="data.nest.age++">
       add age for ref: {{ data.nest.age }}
     </button>
+    <div></div>
   </div>
 </template>
 

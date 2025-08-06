@@ -2,11 +2,11 @@
 
 ## 响应式更新 (refetch)
 
-通过设置 `refetch` 为 `true`，当响应式数据 `url` 或者 `payload` 发生变化时，`useFetch` 会自动触发新的请求。
+通过设置 refetch 为 true，当响应式数据 url 或者 payload 发生变化时，useFetch 会自动触发新的请求。
 
 ### URL 更新
 
-使用 `ref` 作为 URL 参数，当 URL 发生变化时自动触发请求：
+使用 ref 作为 URL 参数，当 URL 发生变化时自动触发请求：
 
 ```ts
 const url = ref("https://my-api.com/user/1");
@@ -18,7 +18,7 @@ url.value = "https://my-api.com/user/2"; // ✅ 触发新请求
 
 ### URL Stream 更新
 
-使用 `Stream` 或 `Observable` 作为 URL 参数：
+使用 Stream 或 Observable 作为 URL 参数：
 
 ```ts
 import { $, useFetch } from "fluth-vue";
@@ -114,7 +114,7 @@ refresh?: number; // 刷新间隔（毫秒）
 
 ### 基础用法
 
-设置 `refresh` 参数使 `useFetch` 定时自动发起请求：
+设置 refresh 参数使 useFetch 定时自动发起请求：
 
 ```ts
 // 每 5 秒自动刷新数据

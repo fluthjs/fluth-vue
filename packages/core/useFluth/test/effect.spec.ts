@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
-import { $, effect$, consoleAll, debugAll } from "../index";
+import { $, effect, consoleAll, debugAll } from "../index";
 
 const consoleSpy = vi.spyOn(console, "log");
 const consoleErrorSpy = vi.spyOn(console, "error");
@@ -14,7 +14,7 @@ describe("render function comprehensive tests", () => {
   });
 
   describe("Basic Functionality", () => {
-    it("without effect$ wrapper render, stream subscribe will not auto unsubscribe when render function is called again", async () => {
+    it("without effect wrapper render, stream subscribe will not auto unsubscribe when render function is called again", async () => {
       const stream$ = $("Hello").use(consoleAll());
       const trigger$ = $("trigger");
 
@@ -67,7 +67,7 @@ describe("render function comprehensive tests", () => {
       expect(consoleSpy).toHaveBeenCalledTimes(11);
     });
 
-    it("with effect$ wrapper render, stream subscribe will auto unsubscribe when render function is called again or component unmount", async () => {
+    it("with effect wrapper render, stream subscribe will auto unsubscribe when render function is called again or component unmount", async () => {
       const stream$ = $("Hello").use(consoleAll(), debugAll());
       const trigger$ = $("trigger");
 
@@ -75,7 +75,7 @@ describe("render function comprehensive tests", () => {
         setup() {
           const trigger$Compt = trigger$.toCompt();
 
-          return effect$(() =>
+          return effect(() =>
             h("div", null, [
               h(stream$.thenImmediate((v) => v).render()),
               h("span", null, "-"),
@@ -123,7 +123,7 @@ describe("render function comprehensive tests", () => {
       expect(consoleSpy).toHaveBeenCalledTimes(9);
     });
 
-    it("with effect$ wrapper render, toComp will auto unsubscribe when render function is called again or component unmount", async () => {
+    it("with effect wrapper render, toComp will auto unsubscribe when render function is called again or component unmount", async () => {
       const stream$ = $("Hello").use(consoleAll("resolve", "reject", false));
       const trigger$ = $("trigger");
 
@@ -131,7 +131,7 @@ describe("render function comprehensive tests", () => {
         setup() {
           const trigger$Compt = trigger$.toCompt();
 
-          return effect$(() =>
+          return effect(() =>
             h("div", null, [
               h("span", null, stream$.toCompt().value),
               h("span", null, "-"),

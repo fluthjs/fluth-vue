@@ -18,9 +18,9 @@ throttle?:
 
 ::: warning Important Notes
 
-- After setting `throttle`, `execute()` no longer returns a Promise
-- Use `promise$.then()` to handle request results
-- Use reactive states like `data`, `error`, `loading` to get results
+- After setting throttle, execute() no longer returns a Promise
+- Use promise$.then() to handle request results
+- Use reactive states like data, error, loading to get results
   :::
 
 ```ts
@@ -51,7 +51,7 @@ execute(); // Trigger throttled request
 
 ### Basic Usage
 
-Control `useFetch` throttle behavior through the `throttle` parameter to limit request frequency:
+Control useFetch throttle behavior through the throttle parameter to limit request frequency:
 
 ```ts
 const { execute } = useFetch(url, {

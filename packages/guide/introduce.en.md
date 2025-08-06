@@ -1,21 +1,21 @@
 # Introduction
 
-`fluth-vue` is a Vue Composition toolkit based on the [fluth](https://fluthjs.github.io/fluth-doc/index.html). It provides a collection of practical composable functions to help you better handle asynchronous processes and state management in Vue projects.
+fluth-vue is a streaming programming library based on [fluth](https://fluthjs.github.io/fluth-doc/index.html). It provides a series of practical stream methods and composable functions, deeply integrating the streaming programming paradigm with Vue's reactive system, fully enjoying the smooth development experience brought by streaming programming.
 
 ## Features
 
-- 🌊 **Stream-based Programming** - Elegantly handle asynchronous operations using `fluth`'s powerful stream programming capabilities
-- 🎯 **Vue-focused** - Composition API specifically designed for Vue 3, perfectly integrated with Vue's reactivity system
+- 🌀 **Perfect Ecosystem Integration**: Seamlessly integrates with Vue's reactivity, enjoying Vue's ecosystem and development tools
+- 🌊 **Stream-based Programming**: Leverages fluth's powerful streaming programming capabilities to implement reactive programming for logic
+- 🤖 **Development Experience**: Achieves ultimate debugging experience through plugins, enjoying the development experience brought by streaming programming
 
-## Why fluth-vue?
+## Applicable Versions
 
-- **Simplified Async Logic** - Make complex asynchronous operations clear and understandable through stream programming paradigm
-- **Reactive Integration** - Deep integration with Vue's reactivity system for seamless state management
-- **Type Support** - Complete TypeScript type support for an excellent development experience
-
-## Use Cases
-
-- Complex asynchronous data flow processing
-- State management and data synchronization
-- Real-time data updates
-- User interaction responses
+- **Vue 3.2.0 and above**:
+  - ✅ All stream subscription behaviors in Vue setup will automatically cancel subscriptions when components are destroyed
+  - ✅ Stream data has reactive capabilities and can seamlessly integrate with Vue's reactive system.
+- **Vue 2.7 ~ 3.1.x versions**:
+  - ❌ Stream [subscription behaviors](https://fluthjs.github.io/fluth-doc/en/guide/base.html#subscription-nodes) need to be manually [canceled](https://fluthjs.github.io/fluth-doc/en/guide/base.html#cancel-subscription), cannot automatically cancel subscriptions.
+  - ✅ Stream data has reactive capabilities and can seamlessly integrate with Vue's reactive system.
+- **Vue versions below 2.7**:
+  - ❌ Stream subscription behaviors need to be manually [canceled](https://fluthjs.github.io/fluth-doc/en/guide/base.html#cancel-subscription), cannot automatically cancel subscriptions.
+  - ❌ Stream data doesn't have reactive capabilities, need to use [toComp](https://fluthjs.github.io/fluth-vue/en/useFluth/toComp.html) to convert to reactive data.

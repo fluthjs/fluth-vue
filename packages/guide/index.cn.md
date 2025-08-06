@@ -5,7 +5,7 @@ layout: home
 hero:
   name: fluth-vue
   text: Streaming Reactive Programming For Vue
-  tagline: 革命性的编程范式
+  tagline: 体验流式编程范式之美
   image:
     src: /logo.svg
     alt: fluth
@@ -21,7 +21,7 @@ features:
   - icon:
       src: "/fluth.svg"
     title: 流
-    details: 基于fluth流
+    details: 基于 fluth 流
   - icon: 😋
     title: 简单
     details: 简单易用

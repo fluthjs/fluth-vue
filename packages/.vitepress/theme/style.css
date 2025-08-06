@@ -170,3 +170,14 @@ code {
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
+
+.vp-doc a {
+  color: var(--vp-c-brand-1);
+  padding: 0 3px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.vp-doc a:hover {
+  color: var(--vp-c-brand-3);
+}
