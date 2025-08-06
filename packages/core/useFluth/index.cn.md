@@ -212,7 +212,8 @@ export default defineComponent(
 </template>
 
 <script setup lang="tsx">
-import { $, Component } from "fluth";
+import { $ } from "fluth-vue";
+import { onUpdated } from "vue";
 
 const user$ = $({ name: "", age: 0, address: "" });
 const order$ = $({ item: "", price: 0, count: 0 });

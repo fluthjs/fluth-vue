@@ -5,6 +5,14 @@ import enConfig from "./config.en.mjs";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  vite: {
+    optimizeDeps: {
+      include: ["fluth"],
+    },
+    ssr: {
+      noExternal: ["fluth"],
+    },
+  },
   title: "fluth-vue",
   description: "Fluth Composition Utilities Collection For Vue",
   base: "/fluth-vue/",

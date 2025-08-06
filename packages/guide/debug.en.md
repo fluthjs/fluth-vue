@@ -9,7 +9,7 @@ fluth provides a print plugin that can print data modification processes
 Single node printing:
 
 ```typescript
-import { $, consoleNode } from "fluth";
+import { $, consoleNode } from "fluth-vue";
 
 const data$ = $().use(consoleNode());
 

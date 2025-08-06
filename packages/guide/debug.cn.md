@@ -9,7 +9,7 @@ fluth 提供打印插件，可以打印数据修改过程
 单节点打印：
 
 ```typescript
-import { $, consoleNode } from "fluth";
+import { $, consoleNode } from "fluth-vue";
 
 const data$ = $().use(consoleNode());
 
