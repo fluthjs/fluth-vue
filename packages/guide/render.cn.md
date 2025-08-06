@@ -16,7 +16,7 @@ import { $, effect } from "fluth-vue";
 
 export default defineComponent(
   () => {
-    const name$ = $(hello);
+    const name$ = $("hello");
 
     onUpdated(() => {
       console.log("Example 组件更新");
@@ -33,7 +33,6 @@ export default defineComponent(
   },
   {
     name: "Example",
-    props: [],
   },
 );
 ```
@@ -77,7 +76,7 @@ export default defineComponent(
 );
 ```
 
-不管是用户信息还是订单信息，点击更新按钮后，都不会触发组件的 onUpdated 生命周期。
+点击更新按钮后，只会触发 user$.render 内部的重新渲染，不会触发组件的 onUpdated 生命周期。
 
 ## 对比
 
