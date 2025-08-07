@@ -32,13 +32,13 @@ const isShallowRefKey = "__v_isShallow";
 declare module "fluth" {
   interface Stream<T> extends Readonly<Ref<T>> {
     toCompt: () => ComputedRef<T>;
-    render: (
+    render$: (
       renderFn?: (value: T) => VNodeChild | DefineComponent,
     ) => VNodeChild;
   }
   interface Observable<T> extends Readonly<Ref<T | undefined>> {
     toCompt: () => ComputedRef<T | undefined>;
-    render: (
+    render$: (
       renderFn?: (value: T | undefined) => VNodeChild | DefineComponent,
     ) => VNodeChild;
   }
@@ -68,7 +68,7 @@ function toCompt<T>(this: Stream<T> | Observable<T>): ComputedRef<T> {
  * @param renderFn render function, if not provided, the stream value will be rendered as a span element
  * @returns component
  */
-function render<T>(
+function render$<T>(
   this: Stream<T> | Observable<T>,
   renderFn?: (value: T) => VNodeChild | DefineComponent,
 ): VNodeChild {
@@ -155,7 +155,7 @@ function enhanceFluthStream(arg$: Stream | Observable) {
   (arg$ as any)[isShallowRefKey] = true;
   // add toCompt and render method to stream
   (arg$ as any).toCompt = toCompt;
-  (arg$ as any).render = render;
+  (arg$ as any).render$ = render$;
 
   const value = shallowRef<any>(arg$.value);
   // update ref value when observable value changes
@@ -218,7 +218,7 @@ export function to$<T>(arg: Ref<T> | ComputedRef<T> | Reactive<T>): Stream<T> {
  * @param render render function
  * @returns render function
  */
-export function effect(render: RenderFunction): () => VNodeChild {
+export function effect$(render: RenderFunction): () => VNodeChild {
   let currentScope: EffectScope | null = null;
 
   //  remove last render effect when component unmount

@@ -14,12 +14,12 @@ describe("render$ function comprehensive tests", () => {
   });
 
   describe("Basic Functionality", () => {
-    it("should render stream value without custom render function", () => {
+    it("should render stream value without custom render$ function", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -28,12 +28,12 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("Hello World");
     });
 
-    it("should render VNode returned from render function", () => {
+    it("should render VNode returned from render$ function", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             h("div", { class: "custom-vnode" }, `VNode: ${value}`),
           );
           return () => streamComponent;
@@ -47,13 +47,13 @@ describe("render$ function comprehensive tests", () => {
       expect(divElement.text()).toBe("VNode: Hello World");
     });
 
-    it("should render stream value with custom render function", () => {
+    it("should render stream value with custom render$ function", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         template: '<div><component :is="streamComponent" /></div>',
         setup() {
-          const streamComponent = stream$.render((value) => h("div", value));
+          const streamComponent = stream$.render$((value) => h("div", value));
           return { streamComponent };
         },
       });
@@ -62,12 +62,12 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("Hello World");
     });
 
-    it("should render DefineComponent returned from render function", () => {
+    it("should render DefineComponent returned from render$ function", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             defineComponent({
               setup() {
                 return () =>
@@ -95,7 +95,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -116,7 +116,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -134,7 +134,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -152,7 +152,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -163,12 +163,12 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("");
     });
 
-    it("should handle render function returning null", () => {
+    it("should handle render$ function returning null", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render(() => null as any);
+          const streamComponent = stream$.render$(() => null as any);
           return () => streamComponent;
         },
       });
@@ -178,12 +178,12 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("");
     });
 
-    it("should handle render function returning undefined", () => {
+    it("should handle render$ function returning undefined", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render(() => undefined as any);
+          const streamComponent = stream$.render$(() => undefined as any);
           return () => streamComponent;
         },
       });
@@ -200,7 +200,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) => {
+          const streamComponent = stream$.render$((value) => {
             // Return a function component directly instead of using defineComponent with setup
             const FunctionComponent = () =>
               h("div", { class: "function-component" }, value);
@@ -222,7 +222,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             defineComponent({
               template: '<div class="options-component">{{ message }}</div>',
               data() {
@@ -241,12 +241,12 @@ describe("render$ function comprehensive tests", () => {
       expect(divElement.text()).toBe("Hello World");
     });
 
-    it("should detect components with render function", () => {
+    it("should detect components with render$ function", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             defineComponent({
               render() {
                 return h(
@@ -273,7 +273,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             defineComponent({
               template: '<div class="template-component">{{ message }}</div>',
               data() {
@@ -298,7 +298,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         template: '<div><component :is="streamComponent" /></div>',
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             h(
               "div",
               { class: "plain-object" },
@@ -323,7 +323,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -337,7 +337,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -351,7 +351,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -365,7 +365,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -381,7 +381,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -404,8 +404,8 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const component1 = stream1$.render();
-          const component2 = stream2$.render();
+          const component1 = stream1$.render$();
+          const component2 = stream2$.render$();
           return () => h("div", null, [component1, component2]);
         },
       });
@@ -421,7 +421,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render();
+          const streamComponent = stream$.render$();
           return () => streamComponent;
         },
       });
@@ -431,12 +431,12 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe('<script>alert("xss")</script>');
     });
 
-    it("should allow safe HTML rendering with custom render function", () => {
+    it("should allow safe HTML rendering with custom render$ function", () => {
       const stream$ = $("<strong>Bold Text</strong>");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             h("div", {
               class: "safe-html",
               innerHTML: value,
@@ -457,7 +457,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render(
+          const streamComponent = stream$.render$(
             (value) => h("div", { class: "text-only" }, value), // Using textContent implicitly
           );
           return () => streamComponent;
@@ -482,7 +482,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = transformed$.render();
+          const streamComponent = transformed$.render$();
           return () => streamComponent;
         },
       });
@@ -508,7 +508,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = errorObservable$.render();
+          const streamComponent = errorObservable$.render$();
           return () => streamComponent;
         },
       });
@@ -523,13 +523,13 @@ describe("render$ function comprehensive tests", () => {
   });
 
   describe("Error Handling", () => {
-    it("should handle render function throwing errors gracefully", () => {
+    it("should handle render$ function throwing errors gracefully", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render(() => {
-            throw new Error("Render function error");
+          const streamComponent = stream$.render$(() => {
+            throw new Error("render$ function error");
           });
           return () => streamComponent;
         },
@@ -540,12 +540,12 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("");
     });
 
-    it("should handle render function returning null gracefully", () => {
+    it("should handle render$ function returning null gracefully", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render(() => null as any);
+          const streamComponent = stream$.render$(() => null as any);
           return () => streamComponent;
         },
       });
@@ -555,12 +555,12 @@ describe("render$ function comprehensive tests", () => {
       expect(wrapper.text()).toBe("");
     });
 
-    it("should handle render function returning undefined gracefully", () => {
+    it("should handle render$ function returning undefined gracefully", () => {
       const stream$ = $("Hello World");
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render(() => undefined as any);
+          const streamComponent = stream$.render$(() => undefined as any);
           return () => streamComponent;
         },
       });
@@ -575,7 +575,7 @@ describe("render$ function comprehensive tests", () => {
 
       // Should not crash during component creation
       expect(() => {
-        stream$.render(() => ({ invalid: "vnode" }) as any);
+        stream$.render$(() => ({ invalid: "vnode" }) as any);
       }).not.toThrow();
     });
 
@@ -584,7 +584,7 @@ describe("render$ function comprehensive tests", () => {
 
       // Should handle gracefully when render is not a function
       expect(() => {
-        stream$.render("not a function" as any);
+        stream$.render$("not a function" as any);
       }).not.toThrow();
     });
   });
@@ -595,7 +595,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) => {
+          const streamComponent = stream$.render$((value) => {
             // Return an object with name but no functional component properties
             const plainObject = { name: "NotAComponent", data: value };
             return h(
@@ -620,7 +620,7 @@ describe("render$ function comprehensive tests", () => {
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render((value) =>
+          const streamComponent = stream$.render$((value) =>
             defineComponent({
               setup() {
                 return () =>

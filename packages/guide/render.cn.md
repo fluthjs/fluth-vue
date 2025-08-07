@@ -6,7 +6,7 @@ import mixRender from "../.vitepress/components/mixRender.tsx";
 
 # 流式渲染
 
-除了利用流的响应式数据来做渲染，fluth 提供了强大的流式渲染 [render](/cn/useFluth/#render) 功能，可以实现元素级渲染或者块级渲染，整体效果类似 signal 或者 block signal 的渲染。
+除了利用流的响应式数据来做渲染，fluth 提供了强大的流式渲染 [render$](/cn/useFluth/#render) 功能，可以实现元素级渲染或者块级渲染，整体效果类似 signal 或者 block signal 的渲染。
 
 ## 元素级渲染
 
@@ -25,7 +25,7 @@ export default defineComponent(
     return effect(() => (
       <div>
         <div>
-          名字：{name$.render()}
+          名字：{name$.render$()}
         </div>
         <button onClick={() => name$.set((v) => v + " world")}>更新</button>
       </div>
@@ -56,7 +56,7 @@ export default defineComponent(
     return effect(() => (
       <div>
         <div>用户信息</div>
-        {user$.render((v) => (
+        {user$.render$((v) => (
           <div>
             <div>名字：{v.name}</div>
             <div>年龄：{v.age}</div>
@@ -76,15 +76,15 @@ export default defineComponent(
 );
 ```
 
-点击更新按钮后，只会触发 user$.render 内部的重新渲染，不会触发组件的 onUpdated 生命周期。
+点击更新按钮后，只会触发 user$.render$ 内部的重新渲染，不会触发组件的 onUpdated 生命周期。
 
 ## 对比
 
-采用 fluth render 和 ref 渲染的对比：
+采用 fluth render$ 和 ref 渲染的对比：
 
 ::: code-group
 
-```tsx [fluth render]
+```tsx [fluth render$]
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, onUpdated, h } from "vue";
 import { $, effect } from "fluth-vue";
@@ -100,7 +100,7 @@ export default defineComponent(
         <div>render time: {Date.now()}</div>
         <section style={{ display: "flex", justifyContent: "space-between" }}>
           {/* use$ emit data only trigger render content update*/}
-          {user$.render((v) => (
+          {user$.render$((v) => (
             <div key={Date.now()} class="card">
               <div>user$ render</div>
               <div>name：{v.name}</div>
@@ -110,7 +110,7 @@ export default defineComponent(
             </div>
           ))}
           {/* order$ emit data only trigger render content update*/}
-          {order$.render((v) => (
+          {order$.render$((v) => (
             <div key={Date.now()} class="card">
               <div>order$ render</div>
               <div>item：{v.item}</div>
@@ -205,7 +205,7 @@ export default defineComponent(
         <div>render time: {Date.now()}</div>
         <section style={{ display: "flex", justifyContent: "space-between" }}>
           {/* use$ emit data only trigger render content update*/}
-          {user$.render((v) => (
+          {user$.render$((v) => (
             <div key={Date.now()} class="card">
               <div>user$ render</div>
               <div>name：{v.name}</div>

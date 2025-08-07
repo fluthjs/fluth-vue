@@ -44,13 +44,13 @@ fluth-vue 对 fluth 的 Stream 和 Observable 进行了增强，增加了 ref、
 declare module "fluth" {
   interface Stream<T> extends Readonly<Ref<T>> {
     toCompt: () => ComputedRef<T>;
-    render: (
+    render$: (
       renderFn?: (value: T) => VNodeChild | DefineComponent,
     ) => VNodeChild;
   }
   interface Observable<T> extends Readonly<Ref<T | undefined>> {
     toCompt: () => ComputedRef<T | undefined>;
-    render: (
+    render$: (
       renderFn?: (value: T | undefined) => VNodeChild | DefineComponent,
     ) => VNodeChild;
   }
@@ -64,7 +64,7 @@ toCompt 方法用于将流的值转换为 computed 对象。
 ::: tip 注意
 
 - toCompt 不能在 template 中直接使用
-- toCompt 在组件的 render 函数中使用的时候，组件的 render 函数必须用 [effect](#effect) 包裹，否则流在组件渲染的副作用不会被清理，造成内存泄漏。
+- toCompt 在组件的 render 函数中使用的时候，组件的 render 函数必须用 [effect$](#effect) 包裹，否则流在组件渲染的副作用不会被清理，造成内存泄漏。
 
 :::
 
@@ -87,21 +87,21 @@ const stream$Compt = stream$.toCompt();
 </script>
 ```
 
-### render
+### render$
 
-在组件中使用 render 方法会将流的值渲染到新组件中，当流推流时，新组件会自动更新且不会触发组件的 onUpdated 生命周期，推荐在 tsx 中使用：
+在组件中使用 render$ 方法会将流的值渲染到新组件中，当流推流时，新组件会自动更新且不会触发组件的 onUpdated 生命周期，推荐在 tsx 中使用：
 
 ::: tip 注意
 
-render 在 组件的 render 函数中使用的时候，组件的 render 函数必须用 [effect](#effect) 包裹，否则流在组件渲染的副作用不会被清理，造成内存泄漏。
+render$ 在 组件的 render 函数中使用的时候，组件的 render 函数必须用 [effect$](#effect$) 包裹，否则流在组件渲染的副作用不会被清理，造成内存泄漏。
 
 :::
 
-在 setup 中使用定义流的 render 方法，可以直接放入组件的 render 函数中
+在 setup 中使用定义流的 render$ 方法，可以直接放入组件的 render 函数中
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
@@ -112,8 +112,8 @@ export default defineComponent(
       console.log("Example 组件更新");
     });
 
-    // use$ 推流后只会触发 userRender 的更新，不会触发组件的 onUpdated 生命周期
-    const user$Render = user$.render((v) => (
+    // use$ 推流后只会触发 render$ 的更新，不会触发组件的 onUpdated 生命周期
+    const user$Render = user$.render$((v) => (
       <div>
         <div>名字：{v.name}</div>
         <div>年龄：{v.age}</div>
@@ -121,8 +121,8 @@ export default defineComponent(
       </div>
     ));
 
-    // order$ 推流后只会触发 orderRender 的更新，不会触发组件的 onUpdated 生命周期
-    const order$Render = order$.render((v) => (
+    // order$ 推流后只会触发 render$ 的更新，不会触发组件的 onUpdated 生命周期
+    const order$Render = order$.render$((v) => (
       <div>
         <div>商品：{v.item}</div>
         <div>价格：{v.price}</div>
@@ -153,7 +153,7 @@ export default defineComponent(
 );
 ```
 
-想在 template 中使用流的 render 能力，则需要将 script 的 lang 设置为 tsx，并在 setup 中设置定义好流的 render 方法，最后通过 `<Component :is="" />` 来渲染流。
+想在 template 中使用流的 render$ 能力，则需要将 script 的 lang 设置为 tsx，并在 setup 中设置定义好流的 render$ 方法，最后通过 `<Component :is="" />` 来渲染流。
 
 ```vue
 <template>
@@ -180,7 +180,7 @@ onUpdated(() => {
 });
 
 // use$ 推流后只会触发 userRender 的更新，不会触发组件的 onUpdated 生命周期
-const user$Render = user$.render((v) => (
+const user$Render = user$.render$((v) => (
   <div>
     <div>名字：{v.name}</div>
     <div>年龄：{v.age}</div>
@@ -189,7 +189,7 @@ const user$Render = user$.render((v) => (
 ));
 
 // order$ 推流后只会触发 orderRender 的更新，不会触发组件的 onUpdated 生命周期
-const order$Render = order$.render((v) => (
+const order$Render = order$.render$((v) => (
   <div>
     <div>商品：{v.item}</div>
     <div>价格：{v.price}</div>
@@ -199,25 +199,25 @@ const order$Render = order$.render((v) => (
 </script>
 ```
 
-## effect
+## effect$
 
 **类型**
 
 ```typescript
-function effect(render: RenderFunction): () => VNodeChild;
+function effect$(render: RenderFunction): () => VNodeChild;
 ```
 
-effect 方法用于清理流在组件渲染的副作用
+effect$ 方法用于清理流在组件渲染的副作用
 
 ::: tip 注意
 
-effect 方法只适用于 vue >= 3.2.0 的版本，对于低于 3.2.0 的版本，不建议在组件的 render 函数中使用 [render](#render)、[toCompt](#toCompt)以及流的所有订阅方法和操作符。
+effect$ 方法只适用于 vue >= 3.2.0 的版本，对于低于 3.2.0 的版本，不建议在组件的 render 函数中使用 [render$](#render$)、[toCompt](#toCompt)以及流的所有订阅方法和操作符。
 
 :::
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
@@ -228,11 +228,11 @@ export default defineComponent(
       console.log("Example 组件更新");
     });
 
-    return effect(() => (
+    return effect$(() => (
       <div>
         <div>用户信息</div>
-        {/* use$ 推流后只会触发 render 内容更新，不会触发组件的 onUpdated 生命周期 */}
-        {user$.render((v) => (
+        {/* use$ 推流后只会触发 render$ 内容更新，不会触发组件的 onUpdated 生命周期 */}
+        {user$.render$((v) => (
           <div>
             <div>名字：{v.name}</div>
             <div>年龄：{v.age}</div>
@@ -240,8 +240,8 @@ export default defineComponent(
           </div>
         ))}
         <div>订单信息</div>
-        {/* order$ 推流后只会触发 render 内容更新，不会触发组件的 onUpdated 生命周期 */}
-        {order$.render((v) => (
+        {/* order$ 推流后只会触发 render$ 内容更新，不会触发组件的 onUpdated 生命周期 */}
+        {order$.render$((v) => (
           <div>
             <div>商品：{v.item}</div>
             <div>价格：{v.price}</div>

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, ref, h } from "vue";
-import { effect } from "../../core/useFluth/index";
 
 import "./index.scss";
 
@@ -9,7 +8,7 @@ export default defineComponent(
     const user = ref({ name: "", age: 0, address: "" });
     const order = ref({ item: "", price: 0, count: 0 });
 
-    return effect(() => (
+    return () => (
       <div class="card-light" key={Date.now()}>
         <div> example component </div>
         <div>render time: {Date.now()}</div>
@@ -45,7 +44,7 @@ export default defineComponent(
           </button>
         </div>
       </div>
-    ));
+    );
   },
   {
     name: "RefRender",

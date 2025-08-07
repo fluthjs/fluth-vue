@@ -20,7 +20,7 @@
 <script setup lang="tsx">
 import { $, debugAll } from "../../core/useFluth/index";
 
-const data$ = $().use(debugAll());
+const data$ = $<number>().use(debugAll());
 
 data$.then((value) => value + 1).then((value) => value + 1);
 
