@@ -93,11 +93,4 @@ watch(
 You can open the console and click the button to see the effect
 
 <Immutable />
-
-Final results are as follows:
-
-| fluth print results                           | ref print results                           |
-| --------------------------------------------- | ------------------------------------------- |
-| <img src="/fluth-console.png" alt="motion" /> | <img src="/ref-console.png" alt="motion" /> |
-
 :::

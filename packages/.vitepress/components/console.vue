@@ -39,6 +39,7 @@ const updateData$ = () => {
   border: 1px solid #ccc;
   border-radius: 5px;
   cursor: pointer;
+  background: #fff;
   &:hover {
     background-color: #f0f0f0;
   }

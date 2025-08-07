@@ -93,11 +93,4 @@ watch(
 可以打开控制台并点击按钮查看效果
 
 <Immutable />
-
-最后结果如下：
-
-| fluth 打印结果                                | ref 打印结果                                |
-| --------------------------------------------- | ------------------------------------------- |
-| <img src="/fluth-console.png" alt="motion" /> | <img src="/ref-console.png" alt="motion" /> |
-
 :::

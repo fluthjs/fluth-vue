@@ -52,6 +52,7 @@ const updateAge = () => {
   padding: 10px 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  background: #fff;
   cursor: pointer;
   &:hover {
     background-color: #f0f0f0;
@@ -59,10 +60,10 @@ const updateAge = () => {
 }
 .dark {
   .immutable-button {
-    background-color: #292d3e;
-    border: 1px solid #292d3e;
+    background-color: #3a3f54;
+    border: 1px solid #3a3f54;
     &:hover {
-      background-color: #242424;
+      background-color: #35394a;
     }
   }
 }
