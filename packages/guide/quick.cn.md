@@ -29,7 +29,7 @@ const form$ = $({
 
 ## 第二步：添加模板渲染
 
-流可以直接在 Vue 模板中使用，注意不要使用 v-model 来绑定流，因为流底层数据是 immutable 的，使用 v-model 会破坏流的不可变性。
+流可以直接在 Vue 模板中使用，注意不要使用 v-model 来绑定流的数据，因为流的响应式数据是 Readonly 的。
 
 ```vue
 <template>
@@ -38,22 +38,22 @@ const form$ = $({
       <div>
         <label>商品：</label>
         <input
-          :value="form$.ref.value.item"
-          @input="(value) => form$.set((v) => (v.item = value))"
+          :value="form$.item"
+          @input="(value) => updateForm(value, 'item')"
         />
       </div>
       <div>
         <label>数量：</label>
         <input
-          :value="form$.ref.value.number"
-          @input="(value) => form$.set((v) => (v.number = value))"
+          :value="form$.number"
+          @input="(value) => updateForm(value, 'number')"
         />
       </div>
       <div>
         <label>大小：</label>
         <input
-          :value="form$.ref.value.size"
-          @input="(value) => form$.set((v) => (v.size = value))"
+          :value="form$.size"
+          @input="(value) => updateForm(value, 'size')"
         />
       </div>
     </form>
@@ -69,6 +69,10 @@ const form$ = $({
   number: 1,
   size: "large",
 });
+
+const updateForm = (value, key) => {
+  form$.set((v) => (v[key] = value));
+};
 </script>
 ```
 
@@ -81,22 +85,22 @@ const form$ = $({
       <div>
         <label>商品：</label>
         <input
-          :value="form$.ref.value.item"
-          @input="(value) => form$.set((v) => (v.item = value))"
+          :value="form$.item"
+          @input="(value) => updateForm(value, 'item')"
         />
       </div>
       <div>
         <label>数量：</label>
         <input
-          :value="form$.ref.value.number"
-          @input="(value) => form$.set((v) => (v.number = value))"
+          :value="form$.number"
+          @input="(value) => updateForm(value, 'number')"
         />
       </div>
       <div>
         <label>大小：</label>
         <input
-          :value="form$.ref.value.size"
-          @input="(value) => form$.set((v) => (v.size = value))"
+          :value="form$.size"
+          @input="(value) => updateForm(value, 'size')"
         />
       </div>
     </form>
@@ -105,7 +109,7 @@ const form$ = $({
 </template>
 
 <script setup>
-import { $, audit, debounce, useFetch } from "fluth-vue";
+import { $, audit, debounce, useFetch, filter } from "fluth-vue";
 
 const useFetchAddOrder =  () => {
   const { promise$ } =  useFetch({
@@ -120,6 +124,10 @@ const form$ = $({
   number: 1,
   size: "large",
 });
+
+const updateForm = (value, key) => {
+  form$.set((v) => (v[key] = value));
+};
 
 const trigger$ = $();
 const submit$ = form$.pipe(audit(trigger$.pipe(debounce(300))));

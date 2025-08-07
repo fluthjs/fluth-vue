@@ -1,5 +1,6 @@
 <script setup>
 import Console from "../.vitepress/components/console.vue";
+import Debug from "../.vitepress/components/debug.vue";
 </script>
 
 # 调试
@@ -27,46 +28,16 @@ data$.next(Promise.reject(4)); // 打印 reject 4
 整条流打印：
 
 ```typescript
-import { $, consoleAll } from "fluth";
-
-const data$ = $().use(consoleAll());
-data$
-  .then((value) => Promise.reject(value + 1))
-  .then((undefined, (value) => ({ current: value })));
-
-data$.next(1);
-// 打印 resolve 1
-// 打印 reject 2
-// 打印 resolve { current: 2 }
-```
-
-::: code-group
-
-```vue [fluth]
-<template>
-  <div>
-    <button class="immutable-button" @click="updateData$">data$ + 1</button>
-  </div>
-</template>
-
-<script setup lang="tsx">
-import { $, consoleAll, debounce } from "../../core/useFluth/index";
+import { $, consoleAll } from "fluth-vue";
 
 const data$ = $().use(consoleAll());
 data$
   .pipe(debounce(300))
   .then((value) => {
-    throw new Error(String(value + 1));
+    throw new Error(value + 1);
   })
-  .then(undefined, (value) => ({ current: value }));
-
-const updateData$ = () => {
-  data$.next(1);
-};
-</script>
+  .then(undefined, (error) => ({ current: error.message }));
 ```
-
-:::
 
 ::: details 效果
 可以打开控制台并点击按钮查看效果
@@ -87,7 +58,7 @@ consoleAll 会打印整条流指的是通过 then、thenOnce、thenImmediate、t
 fluth 提供调试插件，可以调试流式数据
 
 ```typescript
-import { $, debugNode } from "fluth";
+import { $, debugNode } from "fluth-vue";
 
 const stream$ = $(0);
 
@@ -100,8 +71,8 @@ stream$.next(1);
 条件调试
 
 ```typescript
-import { $ } from "fluth";
-import { debugAll } from "fluth";
+import { $ } from "fluth-vue";
+import { debugAll } from "fluth-vue";
 
 // 只对字符串类型触发调试器
 const conditionFn = (value) => typeof value === "string";
@@ -114,12 +85,21 @@ stream$.next(42); // 不触发调试器
 整条流调试：
 
 ```typescript
-import { $, debugAll } from "fluth";
+import { $, debugAll } from "fluth-vue";
 
-const stream$ = $().use(debugAll());
+const data$ = $().use(debugAll());
 
-stream$.then((value) => value + 1);
+data$.then((value) => value + 1).then((value) => value + 1);
 
-stream$.next(1);
-// 在浏览器开发者工具中会在每个节点触发调试器断点，由于当前只有两个节点，所以会触发两次断点
+const updateData$ = () => {
+  data$.next(data$.value + 1);
+};
+// 在浏览器开发者工具中会在每个节点触发调试器断点
+// 当前有三个节点，所以会触发三次断点
 ```
+
+::: details 效果
+可以打开控制台并点击按钮查看效果
+
+<Debug />
+:::

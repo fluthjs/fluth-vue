@@ -11,25 +11,21 @@
   >
     <div></div>
     <button class="immutable-button" @click="updateData$">
-      data$ value +1
+      data$ value + 1
     </button>
     <div></div>
   </div>
 </template>
 
 <script setup lang="tsx">
-import { $, consoleAll, debounce } from "../../core/useFluth/index";
+import { $, debugAll } from "../../core/useFluth/index";
 
-const data$ = $().use(consoleAll());
-data$
-  .pipe(debounce(300))
-  .then((value) => {
-    throw new Error(value + 1);
-  })
-  .then(undefined, (error) => ({ current: error.message }));
+const data$ = $().use(debugAll());
+
+data$.then((value) => value + 1).then((value) => value + 1);
 
 const updateData$ = () => {
-  data$.next(1);
+  data$.next(data$.value + 1);
 };
 </script>
 

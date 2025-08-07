@@ -80,7 +80,7 @@ The toCompt method has no version restrictions for Vue.
 </template>
 
 <script setup>
-import { $ } from "fluth";
+import { $ } from "fluth-vue";
 
 const stream$ = $("Hello");
 const stream$Compt = stream$.toCompt();

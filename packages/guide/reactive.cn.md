@@ -10,11 +10,34 @@ fluth 提供了强大的响应式功能，让流能够与 Vue 的响应式系统
 
 - 流的响应式只能在 vue >= 2.7.0 的版本中使用，低于 2.7.0 的版本可以使用 [toCompt](#tocompt) 方法替代。
 
-- 不应该使用 v-model 来绑定流的响应式数据，通过这种方式修改流的响应式数据不会触发页面更新、流的订阅，当流的上游推送数据后，也会将修改的数据覆盖了。
+- 不应该使用 v-model 来绑定流的响应式数据,因为流的响应式数据是 Readonly 的。直接修改流的响应式数据不会触发页面更新、流的订阅，当流的上游推送数据后，也会将修改的数据覆盖了。
 
 :::
 
-## 设置响应式数据
+## 响应式数据渲染
+
+流的响应式可以直接在 Vue 模板中使用，可以直接被模板正确解构。
+
+```vue
+<template>
+  <div>
+    <p>{{ name$ }}</p>
+    <button @click="updateName">修改</button>
+  </div>
+</template>
+
+<script setup>
+import { $ } from "fluth-vue";
+
+const name$ = $("fluth");
+
+const updateName = () => {
+  name$.set("fluth-vue");
+};
+</script>
+```
+
+## 响应式数据更新
 
 fluth 提供 [next](https://fluthjs.github.io/fluth-doc/cn/api/stream.html#next) 和 [set](https://fluthjs.github.io/fluth-doc/cn/api/stream.html#set) 来修改流的数据，详见：[不可变数据](/cn/guide/immutable)
 
@@ -25,6 +48,28 @@ const stream$ = $({ obj: { name: "fluth", age: 0 } });
 
 // 无需使用扩展符{...value, obj: {...value.obj, age: value.obj.age + 1}j}
 stream$.set((value) => (value.obj.age += 1));
+```
+
+## 响应式数据融合
+
+fluth 流可以无缝地用于 Vue 的 watch、computed 等响应式场景。由于流的数据本身就是响应式的 Readonly 数据，因此你可以像使用 ref 或 reactive 一样，将流直接传递给 watch、computed、watchEffect 等 API，无需额外转换。
+
+```typescript
+import { $ } from "fluth-vue";
+
+const stream$ = $({ obj: { name: "fluth", age: 0 } });
+
+const computed = computed(() => stream$.value.obj.name);
+
+watch(stream$, (value) => {
+  console.log(value);
+});
+
+// 修改流的数据，会触发 computed、watch 的重新计算
+stream$.set((value) => {
+  value.obj.name = "fluth-vue";
+  value.obj.age += 1;
+});
 ```
 
 ## 响应式和数据的解耦
@@ -70,7 +115,7 @@ const wineList = $(["Red Wine", "White Wine", "Sparkling Wine", "Rosé Wine"]);
 const age$ = $(0);
 const availableWineList = age$
   .pipe(filter((age) => age > 18))
-  .then(() => wineList.value).ref;
+  .then(() => wineList.value);
 ```
 
 只有 age 大于 18 的时候，才可以获取到 wineList 的最新值，但是后续 wineList 的 immutable 修改不会触发 availableWineList 的重新计算以及值。

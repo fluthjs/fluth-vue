@@ -20,16 +20,16 @@ import { $ } from "fluth-vue";
 
 // Create a stream with initial value
 const form$ = $({
-  name: "Alice",
-  age: 25,
-  email: "alice@example.com",
+  item: "apple",
+  number: 1,
+  size: "large",
 });
 </script>
 ```
 
 ## Step 2: Add Template Rendering
 
-Streams can be used directly in Vue templates. Note that you should not use v-model to bind streams, because stream underlying data is immutable, using v-model will break the immutability of streams.
+Streams can be used directly in Vue templates. Note that you should not use v-model to bind streams, because the reactive data of the stream is Readonly.
 
 ```vue
 <template>
@@ -38,22 +38,22 @@ Streams can be used directly in Vue templates. Note that you should not use v-mo
       <div>
         <label>Product:</label>
         <input
-          :value="form$.ref.value.item"
-          @input="(value) => form$.set((v) => (v.item = value))"
+          :value="form$.item"
+          @input="(value) => updateForm(value, 'item')"
         />
       </div>
       <div>
         <label>Quantity:</label>
         <input
-          :value="form$.ref.value.number"
-          @input="(value) => form$.set((v) => (v.number = value))"
+          :value="form$.number"
+          @input="(value) => updateForm(value, 'number')"
         />
       </div>
       <div>
         <label>Size:</label>
         <input
-          :value="form$.ref.value.size"
-          @input="(value) => form$.set((v) => (v.size = value))"
+          :value="form$.size"
+          @input="(value) => updateForm(value, 'size')"
         />
       </div>
     </form>
@@ -69,6 +69,10 @@ const form$ = $({
   number: 1,
   size: "large",
 });
+
+const updateForm = (value, key) => {
+  form$.set((v) => (v[key] = value));
+};
 </script>
 ```
 
@@ -81,22 +85,22 @@ const form$ = $({
       <div>
         <label>Product:</label>
         <input
-          :value="form$.ref.value.item"
-          @input="(value) => form$.set((v) => (v.item = value))"
+          :value="form$.item"
+          @input="(value) => updateForm(value, 'item')"
         />
       </div>
       <div>
         <label>Quantity:</label>
         <input
-          :value="form$.ref.value.number"
-          @input="(value) => form$.set((v) => (v.number = value))"
+          :value="form$.number"
+          @input="(value) => updateForm(value, 'number')"
         />
       </div>
       <div>
         <label>Size:</label>
         <input
-          :value="form$.ref.value.size"
-          @input="(value) => form$.set((v) => (v.size = value))"
+          :value="form$.size"
+          @input="(value) => updateForm(value, 'size')"
         />
       </div>
     </form>
@@ -105,7 +109,7 @@ const form$ = $({
 </template>
 
 <script setup>
-import { $, audit, debounce, useFetch } from "fluth-vue";
+import { $, audit, debounce, useFetch, filter } from "fluth-vue";
 
 const useFetchAddOrder =  () => {
   const { promise$ } =  useFetch({
@@ -121,12 +125,16 @@ const form$ = $({
   size: "large",
 });
 
+const updateForm = (value, key) => {
+  form$.set((v) => (v[key] = value));
+};
+
 const trigger$ = $();
 const submit$ = form$.pipe(audit(trigger$.pipe(debounce(300))));
 const validate$ = submit$.then((value) => validateForm(value));
 const payload$ = validate$
   .pipe(filter((value) => !!value))
-  .then((value) => ({ ...value, user: 'fluth', address: "Beijing Chaoyang District XX Road 88" }));
+  .then((value) => ({ ...value, user: 'fluth', address: "No. 88, XX Road, Chaoyang District, Beijing" }));
 const addOrder$ = useFetchAddOrder(payload$)
 </script>
 ```
