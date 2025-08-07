@@ -20,7 +20,6 @@ import {
   RenderFunction,
   EffectScope,
   shallowRef,
-  DeepReadonly,
 } from "vue-demi";
 
 export * from "fluth";
@@ -31,15 +30,13 @@ const isShallowRefKey = "__v_isShallow";
 
 // enhance fluth stream and observable to have ref property
 declare module "fluth" {
-  interface Stream<T> {
-    ref: DeepReadonly<Ref<T>>;
+  interface Stream<T> extends Readonly<Ref<T>> {
     toCompt: () => ComputedRef<T>;
     render: (
       renderFn?: (value: T) => VNodeChild | DefineComponent,
     ) => VNodeChild;
   }
-  interface Observable<T> {
-    ref: DeepReadonly<Ref<T | undefined>>;
+  interface Observable<T> extends Readonly<Ref<T | undefined>> {
     toCompt: () => ComputedRef<T | undefined>;
     render: (
       renderFn?: (value: T | undefined) => VNodeChild | DefineComponent,
@@ -151,27 +148,26 @@ function render<T>(
  * @param arg$ fluth stream
  */
 function enhanceFluthStream(arg$: Stream | Observable) {
-  const r = shallowRef<any>(arg$.value);
+  if ((arg$ as any)[isRefKey]) return;
 
+  // set observable to ref
+  (arg$ as any)[isRefKey] = true;
+  (arg$ as any)[isShallowRefKey] = true;
+  // add toCompt and render method to stream
+  (arg$ as any).toCompt = toCompt;
+  (arg$ as any).render = render;
+
+  const value = shallowRef<any>(arg$.value);
   // update ref value when observable value changes
   arg$.afterSetValue((v) => {
-    r.value = v;
+    value.value = v;
   });
 
-  // set ref value to observable value
-  const ref = {
-    [isRefKey]: true,
-    [isShallowRefKey]: true,
-  };
-  Object.defineProperty(ref, "value", {
-    get: () => r.value,
+  Object.defineProperty(arg$, "value", {
+    get: () => value.value,
     enumerable: true,
     configurable: true,
   });
-
-  (arg$ as any).ref = ref;
-  (arg$ as any).toCompt = toCompt;
-  (arg$ as any).render = render;
 }
 
 /**

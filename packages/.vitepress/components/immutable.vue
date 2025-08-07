@@ -10,8 +10,8 @@
     "
   >
     <div></div>
-    <button class="immutable-button" @click="data$.set((v) => v.nest.age++)">
-      add age for fluth: {{ data$.ref.value.nest.age }}
+    <button class="immutable-button" @click="updateAge">
+      add age for fluth: {{ data$.nest.age }}
     </button>
     <button class="immutable-button" @click="data.nest.age++">
       add age for ref: {{ data.nest.age }}
@@ -41,6 +41,10 @@ watch(
 const data$ = $({ nest: { name: "fluth", age: 0 } }).use(
   consoleNode("fluth value"),
 );
+
+const updateAge = () => {
+  data$.set((v) => v.nest.age++);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -51,6 +55,15 @@ const data$ = $({ nest: { name: "fluth", age: 0 } }).use(
   cursor: pointer;
   &:hover {
     background-color: #f0f0f0;
+  }
+}
+.dark {
+  .immutable-button {
+    background-color: #292d3e;
+    border: 1px solid #292d3e;
+    &:hover {
+      background-color: #242424;
+    }
   }
 }
 </style>

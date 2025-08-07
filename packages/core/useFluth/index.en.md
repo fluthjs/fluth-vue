@@ -42,64 +42,19 @@ fluth-vue enhances fluth's Stream and Observable by adding ref, toCompt and rend
 
 ```typescript
 declare module "fluth" {
-  interface Stream<T> {
-    ref: DeepReadonly<Ref<T>>;
+  interface Stream<T> extends Readonly<Ref<T>> {
     toCompt: () => ComputedRef<T>;
     render: (
       renderFn?: (value: T) => VNodeChild | DefineComponent,
-    ) => DefineComponent;
+    ) => VNodeChild;
   }
-  interface Observable<T> {
-    ref: DeepReadonly<Ref<T | undefined>>;
+  interface Observable<T> extends Readonly<Ref<T | undefined>> {
     toCompt: () => ComputedRef<T | undefined>;
     render: (
       renderFn?: (value: T | undefined) => VNodeChild | DefineComponent,
-    ) => DefineComponent;
+    ) => VNodeChild;
   }
 }
-```
-
-### ref
-
-fluth's Stream and Observable both have a ref property that automatically converts stream data to ref objects. The ref property is of DeepReadonly type, meaning it's a read-only ref object.
-
-::: tip Note
-
-The ref property can only be used in Vue >= 2.7.0 versions. For versions below 2.7.0, you can use the [toCompt](#tocompt) method as an alternative.
-
-:::
-
-**Direct Usage**
-
-```vue
-<template>
-  <div>{{ stream$.ref.value }}</div>
-</template>
-
-<script setup lang="tsx">
-import { $ } from "fluth";
-
-const stream$ = $("Hello");
-</script>
-```
-
-Since Vue's template only destructures reactive data at the first level of setup's return value, you cannot directly use stream$.ref in the template. You must use stream$.ref.value to get the stream's value.
-
-**Reference Usage**
-
-By assigning the stream's ref to a variable, this variable can be used directly in the template and correctly destructure the stream's value.
-
-```vue
-<template>
-  <div>{{ stream$Ref }}</div>
-</template>
-
-<script setup>
-import { $ } from "fluth";
-
-const stream$ = $("Hello");
-const stream$Ref = stream$.ref;
-</script>
 ```
 
 ### toCompt
@@ -109,7 +64,7 @@ The toCompt method is used to convert stream values to computed objects.
 ::: tip Note
 
 - toCompt cannot be used directly in templates
-- When using toCompt in a component's render function, the component's render function must be wrapped with [effect](#effect), otherwise the stream's side effects during component rendering won't be cleaned up, causing memory leaks.
+- When using toCompt in a component's render function, the component's render function must be wrapped with [effect](#effect), otherwise the side effects of the stream in component rendering will not be cleaned up, causing memory leaks.
 
 :::
 
@@ -134,11 +89,11 @@ const stream$Compt = stream$.toCompt();
 
 ### render
 
-Using the render method in a component will render the stream's value to a new component. When the stream pushes data, the new component will automatically update without triggering the component's onUpdated lifecycle. It's recommended to use in tsx:
+Using the render method in a component will render the stream's value to a new component. When the stream emits, the new component will automatically update without triggering the component's onUpdated lifecycle. Recommended for use in tsx:
 
 ::: tip Note
 
-When using render in a component's render function, the component's render function must be wrapped with [effect](#effect), otherwise the stream's side effects during component rendering won't be cleaned up, causing memory leaks.
+When using render in a component's render function, the component's render function must be wrapped with [effect](#effect), otherwise the side effects of the stream in component rendering will not be cleaned up, causing memory leaks.
 
 :::
 
@@ -155,7 +110,7 @@ export default defineComponent(
       console.log("Example component updated");
     });
 
-    // After user$ pushes data, only userRender will be updated, won't trigger component's onUpdated lifecycle
+    // When user$ emits, only userRender will update, not triggering the component's onUpdated lifecycle
     const user$Render = user$.render((v) => (
       <div>
         <div>Name: {v.name}</div>
@@ -164,12 +119,12 @@ export default defineComponent(
       </div>
     ));
 
-    // After order$ pushes data, only orderRender will be updated, won't trigger component's onUpdated lifecycle
+    // When order$ emits, only orderRender will update, not triggering the component's onUpdated lifecycle
     const order$Render = order$.render((v) => (
       <div>
-        <div>Item: {v.item}</div>
+        <div>Product: {v.item}</div>
         <div>Price: {v.price}</div>
-        <div>Count: {v.count}</div>
+        <div>Quantity: {v.count}</div>
       </div>
     ));
 
@@ -196,7 +151,7 @@ export default defineComponent(
 );
 ```
 
-When using the render method in template, you need to set the script's lang to tsx:
+When using the render method in templates, you need to set the script lang to tsx:
 
 ```vue
 <template>
@@ -226,7 +181,7 @@ onUpdated(() => {
   console.log("Example component updated");
 });
 
-// After user$ pushes data, only userRender will be updated, won't trigger component's onUpdated lifecycle
+// When user$ emits, only userRender will update, not triggering the component's onUpdated lifecycle
 const user$Render = user$.render((v) => (
   <div>
     <div>Name: {v.name}</div>
@@ -235,12 +190,12 @@ const user$Render = user$.render((v) => (
   </div>
 ));
 
-// After order$ pushes data, only orderRender will be updated, won't trigger component's onUpdated lifecycle
+// When order$ emits, only orderRender will update, not triggering the component's onUpdated lifecycle
 const order$Render = order$.render((v) => (
   <div>
-    <div>Item: {v.item}</div>
+    <div>Product: {v.item}</div>
     <div>Price: {v.price}</div>
-    <div>Count: {v.count}</div>
+    <div>Quantity: {v.count}</div>
   </div>
 ));
 </script>
@@ -254,11 +209,11 @@ const order$Render = order$.render((v) => (
 function effect(render: RenderFunction): () => VNodeChild;
 ```
 
-The effect method is used to clean up stream side effects during component rendering
+The effect method is used to clean up side effects of streams in component rendering.
 
 ::: tip Note
 
-The effect method only applies to Vue >= 3.2.0 versions. For versions below 3.2.0, it's not recommended to use [render](#render), [toCompt](#tocompt) and all stream subscription methods and operators in component render functions.
+The effect method is only applicable to Vue >= 3.2.0. For versions below 3.2.0, it is not recommended to use [render](#render), [toCompt](#tocompt), and all subscription methods and operators of streams in the component's render function.
 
 :::
 
@@ -278,7 +233,7 @@ export default defineComponent(
     return effect(() => (
       <div>
         <div>User Information</div>
-        {/* After user$ pushes data, only render content will be updated, won't trigger component's onUpdated lifecycle */}
+        {/* When user$ emits, only the render content will update, not triggering the component's onUpdated lifecycle */}
         {user$.render((v) => (
           <div>
             <div>Name: {v.name}</div>
@@ -287,12 +242,12 @@ export default defineComponent(
           </div>
         ))}
         <div>Order Information</div>
-        {/* After order$ pushes data, only render content will be updated, won't trigger component's onUpdated lifecycle */}
+        {/* When order$ emits, only the render content will update, not triggering the component's onUpdated lifecycle */}
         {order$.render((v) => (
           <div>
-            <div>Item: {v.item}</div>
+            <div>Product: {v.item}</div>
             <div>Price: {v.price}</div>
-            <div>Count: {v.count}</div>
+            <div>Quantity: {v.count}</div>
           </div>
         ))}
 
@@ -303,11 +258,10 @@ export default defineComponent(
           Update Order Information
         </button>
       </div>
-    ));
+    );
   },
   {
     name: "Example",
-    props: [],
   },
 );
 ```

@@ -20,7 +20,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -36,7 +36,7 @@ describe("render$ function comprehensive tests", () => {
           const streamComponent = stream$.render((value) =>
             h("div", { class: "custom-vnode" }, `VNode: ${value}`),
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -79,7 +79,7 @@ describe("render$ function comprehensive tests", () => {
               },
             }),
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -96,7 +96,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -117,7 +117,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -135,7 +135,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -153,7 +153,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -169,7 +169,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render(() => null as any);
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -184,7 +184,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render(() => undefined as any);
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -206,7 +206,7 @@ describe("render$ function comprehensive tests", () => {
               h("div", { class: "function-component" }, value);
             return FunctionComponent as any;
           });
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -230,7 +230,7 @@ describe("render$ function comprehensive tests", () => {
               },
             }),
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -257,7 +257,7 @@ describe("render$ function comprehensive tests", () => {
               },
             }),
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -281,7 +281,7 @@ describe("render$ function comprehensive tests", () => {
               },
             }),
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -324,7 +324,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -338,7 +338,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -352,7 +352,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -366,7 +366,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -382,7 +382,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -406,7 +406,7 @@ describe("render$ function comprehensive tests", () => {
         setup() {
           const component1 = stream1$.render();
           const component2 = stream2$.render();
-          return () => h("div", null, [h(component1), h(component2)]);
+          return () => h("div", null, [component1, component2]);
         },
       });
 
@@ -422,7 +422,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -442,7 +442,7 @@ describe("render$ function comprehensive tests", () => {
               innerHTML: value,
             }),
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -460,7 +460,7 @@ describe("render$ function comprehensive tests", () => {
           const streamComponent = stream$.render(
             (value) => h("div", { class: "text-only" }, value), // Using textContent implicitly
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -483,7 +483,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = transformed$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -509,7 +509,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = errorObservable$.render();
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -531,7 +531,7 @@ describe("render$ function comprehensive tests", () => {
           const streamComponent = stream$.render(() => {
             throw new Error("Render function error");
           });
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -546,7 +546,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render(() => null as any);
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -561,7 +561,7 @@ describe("render$ function comprehensive tests", () => {
       const TestComponent = defineComponent({
         setup() {
           const streamComponent = stream$.render(() => undefined as any);
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -604,7 +604,7 @@ describe("render$ function comprehensive tests", () => {
               JSON.stringify(plainObject),
             );
           });
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 
@@ -632,7 +632,7 @@ describe("render$ function comprehensive tests", () => {
               },
             }),
           );
-          return () => h(streamComponent);
+          return () => streamComponent;
         },
       });
 

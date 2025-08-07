@@ -42,64 +42,19 @@ fluth-vue 对 fluth 的 Stream 和 Observable 进行了增强，增加了 ref、
 
 ```typescript
 declare module "fluth" {
-  interface Stream<T> {
-    ref: DeepReadonly<Ref<T>>;
+  interface Stream<T> extends Readonly<Ref<T>> {
     toCompt: () => ComputedRef<T>;
     render: (
       renderFn?: (value: T) => VNodeChild | DefineComponent,
-    ) => DefineComponent;
+    ) => VNodeChild;
   }
-  interface Observable<T> {
-    ref: DeepReadonly<Ref<T | undefined>>;
+  interface Observable<T> extends Readonly<Ref<T | undefined>> {
     toCompt: () => ComputedRef<T | undefined>;
     render: (
       renderFn?: (value: T | undefined) => VNodeChild | DefineComponent,
-    ) => DefineComponent;
+    ) => VNodeChild;
   }
 }
-```
-
-### ref
-
-fluth 的 Stream 和 Observable 都增加了 ref 属性，自动将流的数据转换为 ref 对象，ref 属性是 DeepReadonly 类型，即只读的 ref 对象。
-
-::: tip 注意
-
-ref 属性只能在 vue >= 2.7.0 的版本中使用，低于 2.7.0 的版本可以使用 [toCompt](#tocompt) 方法替代。
-
-:::
-
-**直接使用**
-
-```vue
-<template>
-  <div>{{ stream$.ref.value }}</div>
-</template>
-
-<script setup lang="tsx">
-import { $ } from "fluth";
-
-const stream$ = $("Hello");
-</script>
-```
-
-由于 vue 的 template 只会对 setup 的返回值的第一层级的响应式数据进行解构，所以无法直接在 template 中使用 stream$.ref，必须使用 stream$.ref.value 来获取流的值。
-
-**引用使用**
-
-通过将流的 ref 赋值给一个变量，这个变量在 template 中可以直接使用并正确的解构出流的值。
-
-```vue
-<template>
-  <div>{{ stream$Ref }}</div>
-</template>
-
-<script setup>
-import { $ } from "fluth";
-
-const stream$ = $("Hello");
-const stream$Ref = stream$.ref;
-</script>
 ```
 
 ### toCompt
@@ -141,6 +96,8 @@ const stream$Compt = stream$.toCompt();
 render 在 组件的 render 函数中使用的时候，组件的 render 函数必须用 [effect](#effect) 包裹，否则流在组件渲染的副作用不会被清理，造成内存泄漏。
 
 :::
+
+在 setup 中使用定义流的 render 方法，可以直接放入组件的 render 函数中
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
@@ -196,7 +153,7 @@ export default defineComponent(
 );
 ```
 
-在 template 中使用 render 方法，则需要将 script 的 lang 设置为 tsx：
+想在 template 中使用流的 render 能力，则需要将 script 的 lang 设置为 tsx，并在 setup 中设置定义好流的 render 方法，最后通过 `<Component :is="" />` 来渲染流。
 
 ```vue
 <template>
@@ -303,7 +260,6 @@ export default defineComponent(
   },
   {
     name: "Example",
-    props: [],
   },
 );
 ```

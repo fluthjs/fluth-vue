@@ -1,3 +1,7 @@
+<script setup>
+import Console from "../.vitepress/components/console.vue";
+</script>
+
 # 调试
 
 fluth 提供了一系列强大的开发工具供开发者使用，让使用者可以轻松的对流式数据进行调试。
@@ -35,6 +39,40 @@ data$.next(1);
 // 打印 reject 2
 // 打印 resolve { current: 2 }
 ```
+
+::: code-group
+
+```vue [fluth]
+<template>
+  <div>
+    <button class="immutable-button" @click="updateData$">data$ + 1</button>
+  </div>
+</template>
+
+<script setup lang="tsx">
+import { $, consoleAll, debounce } from "../../core/useFluth/index";
+
+const data$ = $().use(consoleAll());
+data$
+  .pipe(debounce(300))
+  .then((value) => {
+    throw new Error(String(value + 1));
+  })
+  .then(undefined, (value) => ({ current: value }));
+
+const updateData$ = () => {
+  data$.next(1);
+};
+</script>
+```
+
+:::
+
+::: details 效果
+可以打开控制台并点击按钮查看效果
+
+<Console />
+:::
 
 ::: info 注意
 consoleAll 会打印整条流指的是通过 then、thenOnce、thenImmediate、then$、thenOnce$、thenImmediate$等方法创建的子节点

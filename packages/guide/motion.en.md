@@ -110,7 +110,7 @@ For large-scale use and implementation in frameworks, Fluth streams also provide
 
 - For Vue framework, ref, reactive, computed reactive data can be converted to fluth streams through the [to$](/en/useFluth/#to) method. To maintain fluth stream's immutable characteristics, data will be deepCloned before being given to fluth
 
-- For Fluth streams, the [ref](/en/useFluth/#ref) property of streams is reactive data, and can also be converted to computed reactive data using the [toComp](/en/useFluth/#tocompt) method, so frameworks can directly consume stream data and view stream data directly through vue-devtools
+- For Fluth streams, stream data is reactive data that can be used normally in templates, watch, and computed. You can also use the [toCompt](/en/useFluth/#tocompt) method to convert to computed reactive data, so frameworks can directly consume stream data and view stream data directly through vue-devtools
 
 ### Debugging Capabilities
 

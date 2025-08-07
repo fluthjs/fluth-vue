@@ -24,7 +24,7 @@ describe("render function comprehensive tests", () => {
 
           return () =>
             h("div", null, [
-              h(stream$.thenImmediate((v) => v).render()),
+              stream$.thenImmediate((v) => v).render(),
               h("span", null, "-"),
               h("span", null, trigger$Compt.value),
             ]);
@@ -77,7 +77,7 @@ describe("render function comprehensive tests", () => {
 
           return effect(() =>
             h("div", null, [
-              h(stream$.thenImmediate((v) => v).render()),
+              stream$.thenImmediate((v) => v).render(),
               h("span", null, "-"),
               h("span", null, trigger$Compt.value),
             ]),

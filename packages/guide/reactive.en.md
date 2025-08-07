@@ -1,18 +1,31 @@
 # Reactivity
 
-fluth provides powerful reactive functionality, allowing streams to seamlessly integrate with Vue's reactive system
+fluth provides powerful reactive functionality, allowing streams to seamlessly integrate with Vue's reactive system:
 
-fluth provides the [to$](/en/useFluth/#to$) method, which can convert Vue's reactive data to streams.
-
-Streams provide the [ref](/en/useFluth/#ref) property, which can trigger Vue template dynamic rendering, computed recalculation, and watch callback execution like native ref.
-
-Streams provide the [toCompt](/en/useFluth/#tocompt) method, which can convert stream values to computed objects.
+1. Stream data is a Readonly reactive data that can trigger Vue template dynamic rendering, computed recalculation, and watch callback execution like native ref.
+2. fluth provides the [to$](/en/useFluth/#to$) method, which can convert Vue's reactive data to streams.
+3. Streams provide the [toCompt](/en/useFluth/#tocompt) method, which can convert stream values to computed objects.
 
 ::: tip Note
 
-You should not use v-model to bind stream reactive data. Modifying stream reactive data will not trigger stream subscriptions, and when the stream's upstream pushes data, it will also overwrite the modified data.
+- Stream reactivity can only be used in Vue >= 2.7.0. For versions below 2.7.0, you can use the [toCompt](#tocompt) method as an alternative.
+
+- You should not use v-model to bind stream reactive data. Modifying stream reactive data this way will not trigger page updates or stream subscriptions, and when the stream's upstream pushes data, it will also overwrite the modified data.
 
 :::
+
+## Setting Reactive Data
+
+fluth provides [next](https://fluthjs.github.io/fluth-doc/en/api/stream.html#next) and [set](https://fluthjs.github.io/fluth-doc/en/api/stream.html#set) to modify stream data. For details, see: [Immutable Data](/en/guide/immutable)
+
+```typescript
+import { $ } from "fluth-vue";
+
+const stream$ = $({ obj: { name: "fluth", age: 0 } });
+
+// No need to use spread operator {...value, obj: {...value.obj, age: value.obj.age + 1}}
+stream$.set((value) => (value.obj.age += 1));
+```
 
 ## Decoupling of Reactivity and Data
 
