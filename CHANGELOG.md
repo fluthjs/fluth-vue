@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.24](https://github.com/fluthjs/fluth-vue/compare/v0.2.23...v0.2.24) (2025-08-07)
+
+
+### Features
+
+* enhance stream reactivity and remove ref property ([7327d24](https://github.com/fluthjs/fluth-vue/commit/7327d247ef92cdefc6a849dcdb43b653cc5f99a6))
+
 ### [0.2.23](https://github.com/fluthjs/fluth-vue/compare/v0.2.22...v0.2.23) (2025-08-06)
 
 
