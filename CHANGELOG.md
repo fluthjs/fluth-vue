@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.25](https://github.com/fluthjs/fluth-vue/compare/v0.2.24...v0.2.25) (2025-08-08)
+
+
+### Features
+
+* rename render$ and effect$ ([08d7323](https://github.com/fluthjs/fluth-vue/commit/08d7323fcbec60d90c51fcc795ed72fe5fd0f9b1))
+
 ### [0.2.24](https://github.com/fluthjs/fluth-vue/compare/v0.2.23...v0.2.24) (2025-08-07)
 
 
