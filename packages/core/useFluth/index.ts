@@ -1,25 +1,25 @@
 import { Stream, Observable } from "fluth";
 import { cloneDeep } from "lodash-es";
 import {
-  onScopeDispose,
-  getCurrentScope,
   ref,
   computed,
-  watch,
-  Ref,
-  ComputedRef,
-  Reactive,
+  shallowRef,
   isRef,
   isReactive,
   toRaw,
-  VNodeChild,
-  defineComponent,
-  h,
-  DefineComponent,
+  Reactive,
+  Ref,
+  ComputedRef,
+  onScopeDispose,
+  getCurrentScope,
   effectScope,
-  RenderFunction,
   EffectScope,
-  shallowRef,
+  defineComponent,
+  VNodeChild,
+  DefineComponent,
+  RenderFunction,
+  h,
+  watch,
 } from "vue";
 
 export * from "fluth";
@@ -259,19 +259,19 @@ export function effect$(render: RenderFunction): () => VNodeChild {
  *   a$: $("a"),
  *   b$: $("b"),
  * })
- * const { a$, b$ } = recover$(toRaw(obj))
+ * const { a$, b$ } = recover$(obj)
  * a$.next("c") // obj.a$ will be updated to "c"
  * b$.next("d") // obj.b$ will be updated to "d"
  *
- * @param obj object with stream-like properties
+ * @param reactiveObj reactive object
  * @returns object with converted streams
  */
 export function recover$<T extends Record<string, any>>(
-  obj: T,
+  reactiveObj: T,
 ): {
   [K in keyof T]: Stream<T[K]>;
 } {
-  return obj as any;
+  return toRaw(reactiveObj) as any;
 }
 
 /**
