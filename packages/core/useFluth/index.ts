@@ -249,22 +249,27 @@ export function effect$(render: RenderFunction): () => VNodeChild {
 
 /**
  * batch convert object properties to streams
+ * for recover stream or observable type which deconstructed in vue reactive
+ * observable properties will also be converted to Stream
+ * but once used some stream methods, it will be throw error
+ * from a practical point of view, we can just convert all properties to Stream
+ *
+ * example:
+ * const obj = reactive({
+ *   a$: $("a"),
+ *   b$: $("b"),
+ * })
+ * const { a$, b$ } = recover$(toRaw(obj))
+ * a$.next("c") // obj.a$ will be updated to "c"
+ * b$.next("d") // obj.b$ will be updated to "d"
+ *
  * @param obj object with stream-like properties
  * @returns object with converted streams
  */
 export function recover$<T extends Record<string, any>>(
   obj: T,
 ): {
-  [K in keyof T]: T[K] extends {
-    value: unknown;
-    then: unknown;
-    thenOnce: unknown;
-    thenImmediate: unknown;
-  }
-    ? T[K] extends { next: unknown; set: unknown }
-      ? Stream<T[K]["value"]>
-      : Observable<T[K]["value"] | undefined>
-    : T[K];
+  [K in keyof T]: Stream<T[K]>;
 } {
   return obj as any;
 }
