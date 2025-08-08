@@ -108,9 +108,9 @@ fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的
 
 ### 框架集成
 
-- 对于 vue 框架来说，ref、reactive、computed 响应式的数据可以通过 [to$](/cn/usefluth/#to) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
+- 对于 vue 框架来说，ref、reactive、computed 响应式的数据可以通过 [to$](/cn/useFluth/#to$) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
 
-- 对于 fluth-vue 来说，流的数据就是响应式数据，可以正常的在 template、watch、computed 中使用，也可以采用 [toCompt](/cn/usefluth/#tocompt) 方法转换为 computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过 vue-devtools 直接查看流的数据
+- 对于 fluth-vue 来说，流的数据就是响应式数据，可以正常的在 template、watch、computed 中使用，也可以采用 [toCompt](/cn/useFluth/#tocompt) 方法转换为 computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过 vue-devtools 直接查看流的数据
 
 ### 调试能力
 

@@ -6,7 +6,7 @@ import mixRender from "../.vitepress/components/mixRender.tsx";
 
 # 流式渲染
 
-除了利用流的响应式数据来做渲染，fluth 提供了强大的流式渲染 [render$](/cn/useFluth/#render) 功能，可以实现元素级渲染或者块级渲染，整体效果类似 signal 或者 block signal 的渲染。
+除了利用流的响应式数据来做渲染，fluth 提供了强大的流式渲染 [render$](/cn/useFluth/#render$) 功能，可以实现元素级渲染或者块级渲染，整体效果类似 signal 或者 block signal 的渲染。
 
 ## 元素级渲染
 
