@@ -20,7 +20,7 @@ import {
   RenderFunction,
   EffectScope,
   shallowRef,
-} from "vue-demi";
+} from "vue";
 
 export * from "fluth";
 
@@ -248,6 +248,28 @@ export function effect$(render: RenderFunction): () => VNodeChild {
 }
 
 /**
+ * batch convert object properties to streams
+ * @param obj object with stream-like properties
+ * @returns object with converted streams
+ */
+export function recover$<T extends Record<string, any>>(
+  obj: T,
+): {
+  [K in keyof T]: T[K] extends {
+    value: unknown;
+    then: unknown;
+    thenOnce: unknown;
+    thenImmediate: unknown;
+  }
+    ? T[K] extends { next: unknown; set: unknown }
+      ? Stream<T[K]["value"]>
+      : Observable<T[K]["value"] | undefined>
+    : T[K];
+} {
+  return obj as any;
+}
+
+/**
  * create stream factory with default plugin
  */
 export function $<T = any>(): Stream<T | undefined>;
@@ -264,8 +286,7 @@ export function $<T = any>(data?: T) {
  * set global factory
  */
 if (typeof globalThis !== "undefined") {
-  // @ts-expect-error globalThis is not defined in browser
-  globalThis.__fluth_global_factory__ = $;
+  (globalThis as any).__fluth_global_factory__ = $;
 } else if (typeof window !== "undefined") {
   // @ts-expect-error window is not defined in node
   window.__fluth_global_factory__ = $;

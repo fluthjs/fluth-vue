@@ -8,7 +8,7 @@ fluth provides powerful reactive functionality, allowing streams to seamlessly i
 
 ::: tip Note
 
-- Stream reactivity can only be used in Vue >= 2.7.0. For versions below 2.7.0, you can use the [toCompt](#tocompt) method as an alternative.
+- Stream reactivity requires Vue 3.0+ version. We recommend using Vue 3.2.0+ for optimal experience.
 
 - You should not use v-model to bind stream reactive data, because the reactive data of the stream is Readonly. Directly modifying stream reactive data will not trigger page updates or stream subscriptions, and when the stream's upstream pushes data, it will also overwrite the modified data.
 

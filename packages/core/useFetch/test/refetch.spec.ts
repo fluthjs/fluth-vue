@@ -1,4 +1,4 @@
-import { ref, reactive } from "vue-demi";
+import { ref, reactive } from "vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import nodeFetch from "node-fetch";
 import { useFetch } from "../index";

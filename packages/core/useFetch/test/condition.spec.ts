@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ref, computed } from "vue-demi";
+import { ref, computed } from "vue";
 import nodeFetch from "node-fetch";
 
 import { useFetch } from "../index";

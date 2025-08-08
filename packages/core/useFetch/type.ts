@@ -1,5 +1,5 @@
 import type { EventHookOn, Fn, MaybeRefOrGetter } from "@vueuse/shared";
-import type { ComputedRef, Ref } from "vue-demi";
+import type { ComputedRef, Ref } from "vue";
 import { Stream, Observable } from "../useFluth";
 export type * from "../useFluth";
 

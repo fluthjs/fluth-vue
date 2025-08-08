@@ -16,7 +16,7 @@ import {
   shallowRef,
   watch,
   nextTick,
-} from "vue-demi";
+} from "vue";
 import { debounce, throttle } from "lodash-es";
 import { $, Observable, Stream, PromiseStatus } from "../useFluth";
 import type {

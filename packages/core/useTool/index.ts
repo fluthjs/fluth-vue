@@ -1,4 +1,4 @@
-import { getCurrentInstance, type VNode } from "vue-demi";
+import { getCurrentInstance, type VNode } from "vue";
 
 export function useRender(render: () => VNode): void {
   if (!getCurrentInstance)

@@ -1,6 +1,6 @@
 import type { MaybeRefOrGetter } from "@vueuse/shared";
 import { toValue } from "@vueuse/shared";
-import { isRef } from "vue-demi";
+import { isRef } from "vue";
 import { Observable, Stream } from "../useFluth";
 import type { Combination } from "./type";
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { computed, ref } from "vue-demi";
+import { computed, ref } from "vue";
 import nodeFetch from "node-fetch";
 import { useFetch, clearFetchCache } from "../index";
 import "./mockServer";

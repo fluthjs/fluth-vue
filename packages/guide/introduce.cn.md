@@ -10,12 +10,35 @@ fluth-vue 是一个基于 [fluth](https://fluthjs.github.io/fluth-doc/index.html
 
 ## 适用范围
 
-- **vue 3.2.0 及以上版本**：
+- **Vue 3.2.0 及以上版本**：
   - ✅ vue setup 中所有的流的订阅行为会随组件的销毁而自动取消订阅
-  - ✅ 流的数据具备响应式能力，可以与 vue 的响应式系统无缝衔接。
-- **vue 2.7 ~ 3.1.x 版本**：
-  - ❌ 流的[订阅行为](https://fluthjs.github.io/fluth-doc/cn/guide/base.html#%E8%AE%A2%E9%98%85%E8%8A%82%E7%82%B9)都需要手动[取消订阅](https://fluthjs.github.io/fluth-doc/cn/guide/base.html#取消订阅)，无法自动取消订阅。
-  - ✅ 流的数据具备响应式能力，可以与 vue 的响应式系统无缝衔接。
-- **vue 2.7 以下版本**：
-  - ❌ 流的订阅行为都需要手动[取消订阅](https://fluthjs.github.io/fluth-doc/cn/guide/base.html#取消订阅)，无法自动取消订阅。
-  - ❌ 流的数据不具备响应式能力，需要用 [toComp](https://fluthjs.github.io/fluth-vue/cn/useFluth/toComp.html) 转换为响应式数据。
+  - ✅ 流的数据具备响应式能力，可以与 vue 的响应式系统无缝衔接
+- **Vue 2.7.0 ~ 3.1.x 版本**：
+  - ❌ 流的[订阅行为](https://fluthjs.github.io/fluth-doc/cn/guide/base.html#%E8%AE%A2%E9%98%85%E8%8A%82%E7%82%B9)都需要手动[取消订阅](https://fluthjs.github.io/fluth-doc/cn/guide/base.html#取消订阅)，无法自动取消订阅
+  - ✅ 流的数据具备响应式能力，可以与 vue 的响应式系统无缝衔接
+- **Vue 2.7.0 以下版本**：
+  - ❌ 流的订阅行为都需要手动[取消订阅](https://fluthjs.github.io/fluth-doc/cn/guide/base.html#取消订阅)，无法自动取消订阅
+  - ❌ 流的数据不具备响应式能力，需要用 [toCompt](https://fluthjs.github.io/fluth-vue/cn/useFluth/#tocompt) 转换为响应式数据
+
+::: tip 注意
+我们推荐使用 Vue 3.2.0+ 以获得最佳体验。如果使用 Vue < 3.2.0，你可能会看到 peer dependency 警告，但库仍然可以正常工作。
+:::
+
+## 安装
+
+```bash
+npm install fluth-vue
+# 或
+yarn add fluth-vue
+# 或
+pnpm add fluth-vue
+```
+
+## 使用
+
+```typescript
+import { $ } from "fluth-vue";
+
+const stream$ = $("hello");
+stream$.next("world");
+```
