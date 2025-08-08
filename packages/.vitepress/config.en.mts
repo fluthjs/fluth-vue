@@ -1,8 +1,8 @@
 export default {
-  label: "English",
+  label: "English(AI)",
   lang: "en",
   title: "fluth-vue",
-  description: " Vue Composition Utilities based on fluth",
+  description: " Streaming Reactive Programming For Vue",
 
   themeConfig: {
     nav: [
@@ -26,6 +26,7 @@ export default {
             { text: "Reactive", link: "/en/guide/reactive" },
             { text: "Render", link: "/en/guide/render" },
             { text: "Immutable", link: "/en/guide/immutable" },
+            { text: "Pinia Integration", link: "/en/guide/pinia" },
           ],
         },
         {

@@ -23,22 +23,3 @@ fluth-vue 是一个基于 [fluth](https://fluthjs.github.io/fluth-doc/index.html
 ::: tip 注意
 我们推荐使用 Vue 3.2.0+ 以获得最佳体验。如果使用 Vue < 3.2.0，你可能会看到 peer dependency 警告，但库仍然可以正常工作。
 :::
-
-## 安装
-
-```bash
-npm install fluth-vue
-# 或
-yarn add fluth-vue
-# 或
-pnpm add fluth-vue
-```
-
-## 使用
-
-```typescript
-import { $ } from "fluth-vue";
-
-const stream$ = $("hello");
-stream$.next("world");
-```

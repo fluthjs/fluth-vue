@@ -23,22 +23,3 @@ fluth-vue is a streaming programming library based on [fluth](https://fluthjs.gi
 ::: tip Note
 We recommend Vue 3.2.0+ for optimal experience. You may see a peer dependency warning if using Vue < 3.2.0, but the library will still work.
 :::
-
-## Installation
-
-```bash
-npm install fluth-vue
-# or
-yarn add fluth-vue
-# or
-pnpm add fluth-vue
-```
-
-## Usage
-
-```typescript
-import { $ } from "fluth-vue";
-
-const stream$ = $("hello");
-stream$.next("world");
-```

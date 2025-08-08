@@ -12,7 +12,7 @@ import mixRender from "../.vitepress/components/mixRender.tsx";
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
@@ -22,7 +22,7 @@ export default defineComponent(
       console.log("Example 组件更新");
     });
 
-    return effect(() => (
+    return effect$(() => (
       <div>
         <div>
           名字：{name$.render$()}
@@ -43,7 +43,7 @@ export default defineComponent(
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
@@ -53,7 +53,7 @@ export default defineComponent(
       console.log("Example 组件更新");
     });
 
-    return effect(() => (
+    return effect$(() => (
       <div>
         <div>用户信息</div>
         {user$.render$((v) => (
@@ -87,14 +87,14 @@ export default defineComponent(
 ```tsx [fluth render$]
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, onUpdated, h } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
     const user$ = $({ name: "", age: 0, address: "" });
     const order$ = $({ item: "", price: 0, count: 0 });
 
-    return effect(() => (
+    return effect$(() => (
       <div class="card-light">
         <div> example component </div>
         <div>render time: {Date.now()}</div>
@@ -144,14 +144,14 @@ export default defineComponent(
 ```tsx [ref render]
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, ref, h } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
     const user = ref({ name: "", age: 0, address: "" });
     const order = ref({ item: "", price: 0, count: 0 });
 
-    return effect(() => (
+    return effect$(() => (
       <div class="card-light" key={Date.now()}>
         <div> example component </div>
         <div>render time: {Date.now()}</div>
@@ -192,14 +192,14 @@ export default defineComponent(
 ```tsx [mix render]
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, ref, h } from "vue";
-import { $, effect } from "../../core/useFluth/index";
+import { $, effect$ } from "../../core/useFluth/index";
 
 export default defineComponent(
   () => {
     const user$ = $({ name: "", age: 0, address: "" });
     const order = ref({ item: "", price: 0, count: 0 });
 
-    return effect(() => (
+    return effect$(() => (
       <div class="card-light" key={Date.now()}>
         <div> example component </div>
         <div>render time: {Date.now()}</div>

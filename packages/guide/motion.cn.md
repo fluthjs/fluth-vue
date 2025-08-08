@@ -100,21 +100,21 @@ MVVM 框架的最大优势在于：当 Model 发生变化时，View 会自动更
 
 [Rxjs](https://rxjs.dev/) 是流式编程的典型代表，它功能十分强大并提供了丰富的流式操作符，可以完成复杂的异步逻辑。但 Rxjs 概念较多、学习曲线陡峭，使用上也较为复杂，无法作为承载业务的基础设施。
 
-Fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的异步流式编程范式，**类 Promise 的流式编程范式极大地降低了流式编程的门槛**，让流可以作为前端开发中的最基础逻辑单元。
+fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的异步流式编程范式，**类 Promise 的流式编程范式极大地降低了流式编程的门槛**，让流可以作为前端开发中的最基础逻辑单元。
 
-除了降低流编程的心智负担，Fluth 还为每个流节点保存了逻辑处理后的数据，让流节点既可以承载逻辑也可以承载数据，**可以成为替代 ref、reactive 响应式数据的基础单元**。
+除了降低流编程的心智负担，fluth 还为每个流节点保存了逻辑处理后的数据，让流节点既可以承载逻辑也可以承载数据，**可以成为替代 ref、reactive 响应式数据的基础单元**。
 
-为了大规模使用并且在框架中落地，Fluth 流还提供了以下能力：
+为了大规模使用并且在框架中落地，fluth 流还提供了以下能力：
 
 ### 框架集成
 
-- 对于 Vue 框架来说，ref、reactive、computed 响应式的数据可以通过 [to$](/cn/useFluth/#to) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
+- 对于 vue 框架来说，ref、reactive、computed 响应式的数据可以通过 [to$](/cn/usefluth/#to) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
 
-- 对于 Fluth 流来说，流的数据就是响应式数据，可以正常的在 template、watch、computed 中使用，也可以采用 [toCompt](/cn/useFluth/#tocompt) 方法转换为 computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过 vue-devtools 直接查看流的数据
+- 对于 fluth-vue 来说，流的数据就是响应式数据，可以正常的在 template、watch、computed 中使用，也可以采用 [toCompt](/cn/usefluth/#tocompt) 方法转换为 computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过 vue-devtools 直接查看流的数据
 
 ### 调试能力
 
-fluth 流底层采用 immutable 数据结构，并提供了丰富的调试插件：
+fluth 底层采用 immutable 数据结构，并提供了丰富的调试插件：
 
 - 通过 [consoleNode](https://fluthjs.github.io/fluth-doc/cn/api/plugin/consoleNode.html)插件可以方便的打印流节点数据
 
@@ -124,7 +124,7 @@ fluth 流底层采用 immutable 数据结构，并提供了丰富的调试插件
 
 - 通过 [debugAll](https://fluthjs.github.io/fluth-doc/cn/api/plugin/debugAll.html)插件可以方便的调试流所有的节点数据，并可以查看流节点的调用栈
 
-两项能力让 fluth 流**可以像 ref、reactive 响应式数据一样在 vue 框架中获得广泛使用**。
+两项能力让 fluth-vue 流**可以像 ref、reactive 响应式数据一样在 vue 框架中获得广泛使用**。
 
 ## 示例
 

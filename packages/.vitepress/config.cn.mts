@@ -2,7 +2,7 @@ export default {
   label: "简体中文",
   lang: "cn",
   title: "fluth-vue",
-  description: "基于 fluth 的 Vue Composition 工具集合",
+  description: "Streaming Reactive Programming For Vue",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -26,6 +26,7 @@ export default {
             { text: "响应式", link: "/cn/guide/reactive" },
             { text: "流式渲染", link: "/cn/guide/render" },
             { text: "不可变数据", link: "/cn/guide/immutable" },
+            { text: "pinia 集成", link: "/cn/guide/pinia" },
           ],
         },
         {

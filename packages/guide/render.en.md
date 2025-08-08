@@ -6,26 +6,26 @@ import mixRender from "../.vitepress/components/mixRender.tsx";
 
 # Streaming Rendering
 
-In addition to using stream reactive data for rendering, fluth provides powerful streaming rendering [render](/en/useFluth/#render) functionality that can achieve element-level rendering or block-level rendering, with overall effects similar to signal or block signal rendering.
+In addition to using stream reactive data for rendering, fluth provides powerful streaming rendering [render$](/en/useFluth/#render$) functionality that can achieve element-level rendering or block-level rendering, with overall effects similar to signal or block signal rendering.
 
 ## Element-level Rendering
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
-    const name$ = $(hello);
+    const name$ = $("hello");
 
     onUpdated(() => {
       console.log("Example component updated");
     });
 
-    return effect(() => (
+    return effect$(() => (
       <div>
         <div>
-          Name: {name$.render()}
+          Name: {name$.render$()}
         </div>
         <button onClick={() => name$.set((v) => v + " world")}>Update</button>
       </div>
@@ -44,7 +44,7 @@ When clicking the update button to update the text, the component's onUpdated li
 
 ```tsx
 import { defineComponent, onUpdated } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
@@ -54,10 +54,10 @@ export default defineComponent(
       console.log("Example component updated");
     });
 
-    return effect(() => (
+    return effect$(() => (
       <div>
         <div>User Information</div>
-        {user$.render((v) => (
+        {user$.render$((v) => (
           <div>
             <div>Name: {v.name}</div>
             <div>Age: {v.age}</div>
@@ -81,27 +81,27 @@ Whether it's user information or order information, after clicking the update bu
 
 ## Comparison
 
-Comparison between fluth render and ref rendering:
+Comparison between fluth render$ and ref rendering:
 
 ::: code-group
 
-```tsx [fluth render]
+```tsx [fluth render$]
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, onUpdated, h } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
     const user$ = $({ name: "", age: 0, address: "" });
     const order$ = $({ item: "", price: 0, count: 0 });
 
-    return effect(() => (
+    return effect$(() => (
       <div class="card-light">
         <div> example component </div>
         <div>render time: {Date.now()}</div>
         <section style={{ display: "flex", justifyContent: "space-between" }}>
-          {/* use$ emit data only trigger render content update*/}
-          {user$.render((v) => (
+          {/* use$ emit data only trigger render$ content update*/}
+          {user$.render$((v) => (
             <div key={Date.now()} class="card">
               <div>user$ render</div>
               <div>name：{v.name}</div>
@@ -110,8 +110,8 @@ export default defineComponent(
               <div>render time: {Date.now()}</div>
             </div>
           ))}
-          {/* order$ emit data only trigger render content update*/}
-          {order$.render((v) => (
+          {/* order$ emit data only trigger render$ content update*/}
+          {order$.render$((v) => (
             <div key={Date.now()} class="card">
               <div>order$ render</div>
               <div>item：{v.item}</div>
@@ -145,14 +145,14 @@ export default defineComponent(
 ```tsx [ref render]
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, ref, h } from "vue";
-import { $, effect } from "fluth-vue";
+import { $, effect$ } from "fluth-vue";
 
 export default defineComponent(
   () => {
     const user = ref({ name: "", age: 0, address: "" });
     const order = ref({ item: "", price: 0, count: 0 });
 
-    return effect(() => (
+    return effect$(() => (
       <div class="card-light" key={Date.now()}>
         <div> example component </div>
         <div>render time: {Date.now()}</div>
@@ -193,20 +193,20 @@ export default defineComponent(
 ```tsx [mix render]
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineComponent, ref, h } from "vue";
-import { $, effect } from "../../core/useFluth/index";
+import { $, effect$ } from "../../core/useFluth/index";
 
 export default defineComponent(
   () => {
     const user$ = $({ name: "", age: 0, address: "" });
     const order = ref({ item: "", price: 0, count: 0 });
 
-    return effect(() => (
+    return effect$(() => (
       <div class="card-light" key={Date.now()}>
         <div> example component </div>
         <div>render time: {Date.now()}</div>
         <section style={{ display: "flex", justifyContent: "space-between" }}>
-          {/* use$ emit data only trigger render content update*/}
-          {user$.render((v) => (
+          {/* use$ emit data only trigger render$ content update*/}
+          {user$.render$((v) => (
             <div key={Date.now()} class="card">
               <div>user$ render</div>
               <div>name：{v.name}</div>

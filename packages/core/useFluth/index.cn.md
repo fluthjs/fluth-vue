@@ -36,7 +36,7 @@ const computedStream$ = to$(computedValue);
 
 ## Stream 和 Observable
 
-fluth-vue 对 fluth 的 Stream 和 Observable 进行了增强，增加了 ref、toCompt 和 render 方法。
+fluth-vue 对 fluth 的 Stream 和 Observable 进行了增强，增加了 toCompt 和 render$ 方法。
 
 **类型**
 
@@ -207,11 +207,14 @@ const order$Render = order$.render$((v) => (
 function effect$(render: RenderFunction): () => VNodeChild;
 ```
 
-effect$ 方法用于清理流在组件渲染的副作用
+effect$ 方法用于清理流在组件 render 函数中渲染的副作用
+
+- **只有在组件的 render 函数中使用 render$、toCompt 以及所有的流的订阅方法和操作符**，才需要使用 effect$ 方法，使用流的响应式数据无需清理。
+- 在 setup 中使用任何方法和流的订阅方法、操作符，无需使用 effect$ 方法。
 
 ::: tip 注意
 
-effect$ 方法只适用于 vue >= 3.2.0 的版本，对于低于 3.2.0 的版本，不建议在组件的 render 函数中使用 [render$](#render$)、[toCompt](#toCompt)以及流的所有订阅方法和操作符。
+effect$ 方法只适用于 vue >= 3.2.0 的版本，对于低于 3.2.0 的版本，不建议在组件的 render 函数中使用 [render$](#render)、[toCompt](#tocompt)以及流的所有订阅方法和操作符。
 
 :::
 
@@ -262,4 +265,40 @@ export default defineComponent(
     name: "Example",
   },
 );
+```
+
+## recover$
+
+recover$ 方法用于将 vue 的响应式对象转换为 fluth 的 Stream 对象，主要用于将 vue 响应式对象中的流属性转换回 Stream 对象。
+
+::: tip 注意
+
+由于 vue 的 reactive 作用于对象时，会解构所有对象属性的响应式，因此丢失了属性的类型，无法判断这个属性之前是 Stream 还是 Observable 或者常规属性；recover$ 方法会无差别将 vue 的响应式对象所有属性的 typescript 类型恢复为 fluth 的 Stream 类型
+
+- 如果之前对象属性是 Stream，则完全正确
+- 如果之前对象属性是 Observable，返回 Steam 是其超集，使用 next 、set 等方法 typescript 不会报错，但运行时会报错
+- 如果之前对象属性是常规属性，禁止使用 recover$ 进行恢复，而应该使用 [toRefs](https://vuejs.org/api/reactivity-utilities.html#torefs) 进行恢复
+
+:::
+
+**类型**
+
+```typescript
+function recover$<T extends Record<string, any>>(
+  reactiveObj: T,
+): {
+  [K in keyof T]: Stream<T[K]>;
+}
+```
+
+**示例**
+
+```typescript
+const obj = reactive({
+  a$: $("a"),
+  b$: $("b"),
+});
+const { a$, b$ } = recover$(obj);
+a$.next("c");
+b$.next("d");
 ```

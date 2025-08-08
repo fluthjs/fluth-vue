@@ -181,3 +181,8 @@ code {
 .vp-doc a:hover {
   color: var(--vp-c-brand-3);
 }
+
+.vp-doc .header-anchor {
+  opacity: 1;
+  margin-left: -1.1em;
+}
