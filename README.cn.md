@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="./packages/public/logo.svg" alt="fluth-vue logo" width="120" height="120">
-  <p>基于 fluth 的 Vue 流式编程库</p>
+  <p style="margin-top: 20px;">基于 fluth 的 Vue 流式编程库</p>
 </div>
 
 <div align="center">
@@ -27,7 +27,7 @@
 
 ## 📖 介绍
 
-fluth-vue 是一个基于 [fluth](https://fluthjs.github.io/fluth-doc/index.html) 的流式编程库。它提供了一系列实用的流方法和组合函数，将流式编程范式与 Vue 的响应式系统深度集成，享受流式编程范式带来的流畅开发体验。
+fluth-vue 是一个基于 [fluth](https://github.com/fluthjs/fluth) 的流式编程库。它提供了一系列实用的流方法和组合函数，将流式编程范式与 Vue 的响应式系统深度集成，享受流式编程范式带来的流畅开发体验。
 
 ## 🚀 特性
 

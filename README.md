@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="./packages/public/logo.svg" alt="fluth-vue logo" width="120" height="120">
-  <p>Fluth-based Streaming Programming Library for Vue</p>
+  <p style="margin-top: 20px;">Fluth-based Streaming Programming Library for Vue</p>
 </div>
 
 <div align="center">
@@ -27,7 +27,7 @@
 
 ## Introduction
 
-fluth-vue is a streaming programming library based on [fluth](https://fluthjs.github.io/fluth-doc/index.html). It provides a series of practical stream methods and composable functions, deeply integrating the streaming programming paradigm with Vue's reactive system, fully enjoying the smooth development experience brought by streaming programming.
+fluth-vue is a streaming programming library based on [fluth](https://github.com/fluthjs/fluth). It provides a series of practical stream methods and composable functions, deeply integrating the streaming programming paradigm with Vue's reactive system, fully enjoying the smooth development experience brought by streaming programming.
 
 ## Features
 
