@@ -111,11 +111,11 @@ const updateForm = (value, key) => {
 <script setup>
 import { $, audit, debounce, useFetch, filter } from "fluth-vue";
 
-const useFetchAddOrder =  () => {
+const useFetchAddOrder =  (payload$) => {
   const { promise$ } =  useFetch({
     url: "https://api.example.com/addOrder",
     { immediate: false, refetch: true },
-  });
+  }).post(payload$).json();
   return promise$;
 };
 

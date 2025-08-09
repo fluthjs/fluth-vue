@@ -37,24 +37,15 @@ const form$ = $({
     <form>
       <div>
         <label>商品：</label>
-        <input
-          :value="form$.item"
-          @input="(value) => updateForm(value, 'item')"
-        />
+        <input :value="form$.item" />
       </div>
       <div>
         <label>数量：</label>
-        <input
-          :value="form$.number"
-          @input="(value) => updateForm(value, 'number')"
-        />
+        <input :value="form$.number" />
       </div>
       <div>
         <label>大小：</label>
-        <input
-          :value="form$.size"
-          @input="(value) => updateForm(value, 'size')"
-        />
+        <input :value="form$.size" />
       </div>
     </form>
     <button>提交</button>
@@ -69,10 +60,6 @@ const form$ = $({
   number: 1,
   size: "large",
 });
-
-const updateForm = (value, key) => {
-  form$.set((v) => (v[key] = value));
-};
 </script>
 ```
 
@@ -111,11 +98,11 @@ const updateForm = (value, key) => {
 <script setup>
 import { $, audit, debounce, useFetch, filter } from "fluth-vue";
 
-const useFetchAddOrder =  () => {
+const useFetchAddOrder =  (payload$) => {
   const { promise$ } =  useFetch({
     url: "https://api.example.com/addOrder",
     { immediate: false, refetch: true },
-  });
+  }).post(payload$).json();
   return promise$;
 };
 
@@ -134,7 +121,7 @@ const submit$ = form$.pipe(audit(trigger$.pipe(debounce(300))));
 const validate$ = submit$.then((value) => validateForm(value));
 const payload$ = validate$
   .pipe(filter((value) => !!value))
-  .then((value) => ({ ...value, user: 'fluth', address: "北京市朝阳区 XX 路 88 号" }));
+  .then((value) => ({ ...value, user: 'fluth', address: "No. 88, XX Road, Chaoyang District, Beijing" }));
 const addOrder$ = useFetchAddOrder(payload$)
 </script>
 ```

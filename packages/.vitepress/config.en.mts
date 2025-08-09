@@ -2,12 +2,13 @@ export default {
   label: "English(AI)",
   lang: "en",
   title: "fluth-vue",
-  description: " Streaming Reactive Programming For Vue",
+  description: "Fluth-based Streaming Programming Library for Vue",
 
   themeConfig: {
     nav: [
       { text: "Guide", link: "/en/guide/introduce" },
-      { text: "API", link: "/en/useFluth/index.html" },
+      { text: "API", link: "/en/useFluth/index" },
+      // { text: "Try", link: "/en/guide/try" },
       {
         text: "changelog",
         link: "https://github.com/fluthjs/fluth-vue/blob/master/CHANGELOG.md",

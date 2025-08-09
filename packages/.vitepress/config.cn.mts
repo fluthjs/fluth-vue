@@ -2,12 +2,13 @@ export default {
   label: "简体中文",
   lang: "cn",
   title: "fluth-vue",
-  description: "Streaming Reactive Programming For Vue",
+  description: "Fluth-based Streaming Programming Library for Vue",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: "指南", link: "/cn/guide/introduce" },
-      { text: "API", link: "/cn/useFluth/index.html" },
+      { text: "API", link: "/cn/useFluth/index" },
+      // { text: "试试", link: "/cn/guide/try" },
       {
         text: "changelog",
         link: "https://github.com/fluthjs/fluth-vue/blob/master/CHANGELOG.md",
