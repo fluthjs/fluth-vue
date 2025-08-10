@@ -27,7 +27,7 @@ export default {
             { text: "响应式", link: "/cn/guide/reactive" },
             { text: "流式渲染", link: "/cn/guide/render" },
             { text: "不可变数据", link: "/cn/guide/immutable" },
-            { text: "pinia 集成", link: "/cn/guide/pinia" },
+            { text: "业务模型抽象", link: "/cn/guide/pinia" },
           ],
         },
         {
@@ -39,6 +39,7 @@ export default {
             },
             {
               text: "useFetch",
+              collapsed: true,
               items: [
                 { text: "API", link: "/cn/useFetch/api.html" },
                 { text: "介绍", link: "/cn/useFetch/introduce.html" },

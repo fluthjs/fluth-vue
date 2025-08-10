@@ -27,7 +27,7 @@ export default {
             { text: "Reactive", link: "/en/guide/reactive" },
             { text: "Render", link: "/en/guide/render" },
             { text: "Immutable", link: "/en/guide/immutable" },
-            { text: "Pinia Integration", link: "/en/guide/pinia" },
+            { text: "Pinia", link: "/en/guide/pinia" },
           ],
         },
         {
@@ -39,6 +39,7 @@ export default {
             },
             {
               text: "useFetch",
+              collapsed: true,
               items: [
                 { text: "API", link: "/en/useFetch/api.html" },
                 { text: "Introduction", link: "/en/useFetch/introduce.html" },

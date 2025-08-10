@@ -1,4 +1,4 @@
-# pinia 集成
+# 业务模型抽象
 
 fluth-vue 推荐将业务逻辑全部抽离到逻辑层，并对业务进行建模，由业务模型驱动视图层，视图层只负责消费数据。
 
@@ -19,14 +19,14 @@ fluth-vue 完美兼容 pinia，流的数据可以直接在 vue-devtools 的 pini
 ```js
 └── store
     ├── index.ts
-    │   
+    │  
     ├── useModuleA
     │   ├── services
     │   │   ├── useServiceA.ts
     │   │   └── useServiceB.ts
     │   │   └── ...
     │   └── index.ts
-    │      
+    │     
     ├── useModuleB
     │   ├── services
     │   │   ├── useServiceC.ts
@@ -36,9 +36,11 @@ fluth-vue 完美兼容 pinia，流的数据可以直接在 vue-devtools 的 pini
     └── ...
 
 ```
+
 ### module 模块
 
 module 模块只做两件事情：
+
 1. 定义 module 之间的依赖关系
 2. 定义 service 之间的依赖关系
 
@@ -52,75 +54,76 @@ import { useModuleB } from "./useModuleB";
 
 const useModuleAStore = defineStore("moduleA", () => {
   // 定义 module 之间的依赖关系
-  const moduleB = useModuleB()
+  const moduleB = useModuleB();
 
   // 定义 service 之间的依赖关系
-  const serviceA = useServiceA(moduleB.serviceC)
-  const serviceB = useServiceB(serviceA)
+  const serviceA = useServiceA(moduleB.serviceC);
+  const serviceB = useServiceB(serviceA);
 
   // 服务必须通过 reactive 包装
   // 这样 vue-devtools 可以在 pinia 中直接查看 service 的响应式数据
   return {
     serviceA: reactive(serviceA),
     serviceB: reactive(serviceB),
-  }
-
+  };
 });
 ```
 
 ### service 服务
 
 useServiceA 的实现
+
 ```typescript
 import { useServiceC } from "../../useModuleB/services/useServiceC";
 import { recover$, merge } from "fluth-vue";
 
 const useServiceA = (serviceC: ReturnType<typeof useServiceC>) => {
   // 从 reactive 中恢复出流的实例
-  const { dataC$ } = recover$(serviceC)
+  const { dataC$ } = recover$(serviceC);
 
-  const dataA$ = $("A")
-  const dataB$ = $(1)
+  const dataA$ = $("A");
+  const dataB$ = $(1);
 
   merge(dataA$, dataC$).then((data) => {
     // 详细逻辑
-  })
+  });
 
   dataB$.then((dataB) => {
     // 详细逻辑
-  })
-
+  });
 
   return {
     dataA$,
     dataB$,
-  }
-}
+  };
+};
 ```
 
 useServiceB 的实现
+
 ```typescript
 // 定义业务服务B
 const useServiceB = (serviceA: ReturnType<typeof useServiceA>) => {
-  const { dataA$ } = serviceA
+  const { dataA$ } = serviceA;
 
-  const dataC$ = $("C")
-  const dataD$ = $(3)
+  const dataC$ = $("C");
+  const dataD$ = $(3);
 
   dataC$.then((dataC) => {
     // 详细逻辑
-  })
+  });
 
   promiseAll(dataA$, dataD$).then(([dataA, dataD]) => {
     // 详细逻辑
-  })
+  });
 
   return {
     dataC$,
     dataD$,
-  }
-}
+  };
+};
 ```
+
 ### 视图层消费
 
 ```vue
@@ -138,19 +141,18 @@ const useServiceB = (serviceA: ReturnType<typeof useServiceA>) => {
 import { useModuleAStore } from "@/store";
 import { recover$ } from "fluth-vue";
 
-const moduleAStore = useModuleAStore()
+const moduleAStore = useModuleAStore();
 
 // 从 reactive 中恢复出流的实例
-const { dataA$, dataB$ } = recover$(moduleAStore.serviceA)
-const { dataC$, dataD$ } = recover$(moduleAStore.serviceB)
+const { dataA$, dataB$ } = recover$(moduleAStore.serviceA);
+const { dataC$, dataD$ } = recover$(moduleAStore.serviceB);
 
 const addDataB = () => {
-  dataB$.next(dataB$.value + 1)
-}
+  dataB$.next(dataB$.value + 1);
+};
 
 const addDataD = () => {
-  dataD$.next(dataD$.value + 1)
-}
-
+  dataD$.next(dataD$.value + 1);
+};
 </script>
 ```

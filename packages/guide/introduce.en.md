@@ -4,7 +4,7 @@ fluth-vue is a streaming programming library based on [fluth](https://fluthjs.gi
 
 ## Features
 
-- 🌀 **Perfect Ecosystem Integration**: Seamlessly integrates with Vue's reactivity, enjoying Vue's ecosystem and development tools
+- 🌀 **Perfect Ecosystem Integration**: Seamlessly integrates with Vue's reactivity, sharing Vue's ecosystem and development tools
 - 🌊 **Stream-based Programming**: Leverages fluth's powerful streaming programming capabilities to implement reactive programming for logic
 - 🤖 **Development Experience**: Achieves ultimate debugging experience through plugins, enjoying the development experience brought by streaming programming
 

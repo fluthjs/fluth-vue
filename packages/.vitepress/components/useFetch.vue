@@ -297,7 +297,7 @@ const optionsApi = [
   },
   {
     name: "isFinished",
-    address: "#isFinished",
+    address: "#isfinished",
   },
   {
     name: "timeout",

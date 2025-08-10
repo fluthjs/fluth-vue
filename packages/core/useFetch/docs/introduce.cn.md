@@ -68,6 +68,7 @@ const { data: data2 } = await useFetchApi(data1.value);
 
 - data2 是通过调用 useFetchApi 异步函数并实时取出当前 data1 的值作为请求参数来获取的
 
-## 流
+### 流
 
-useFetch 除了提供响应式的数据返回，还提供了 fluth 流的支持，可以通过 [promise$](/cn/useFetch/stream) 获取到异步数据流，可以结合 fluth 操作符来实现复杂的数据流处理
+useFetch 除了提供响应式数据输入，响应式的数据输出，还提供了 fluth 流的支持。
+流既可以作为 useFetch 的输入，也可以作为 useFetch 的输出，这样异步请求就可以作为流式编程中的一个节点处理，详见[promise$](/cn/useFetch/stream)。
