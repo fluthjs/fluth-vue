@@ -17,7 +17,7 @@
 
 <div align="center">
 
-[官方文档](https://fluthjs.github.io/fluth-vue/cn/)
+[官方文档 📖 ](https://fluthjs.github.io/fluth-vue/cn/)
 
 </div>
 
@@ -25,7 +25,7 @@
 
 </div>
 
-## 📖 介绍
+## 🎯 介绍
 
 fluth-vue 是一个基于 [fluth](https://github.com/fluthjs/fluth) 的流式编程库。它提供了一系列实用的流方法和组合函数，将流式编程范式与 Vue 的响应式系统深度集成，享受流式编程范式带来的流畅开发体验。
 
@@ -48,7 +48,7 @@ fluth-vue 是一个基于 [fluth](https://github.com/fluthjs/fluth) 的流式编
   - ❌ 流订阅行为需要手动[取消](https://fluthjs.github.io/fluth-doc/cn/guide/base.html#cancel-subscription)，无法自动取消订阅
   - ❌ 流数据不具备响应式能力，需要使用 [toCompt](https://fluthjs.github.io/fluth-vue/cn/useFluth/#tocompt) 转换为响应式数据
 
-## 📦 安装
+## 🛠️ 安装
 
 ```bash
 npm install fluth-vue
@@ -58,10 +58,58 @@ yarn add fluth-vue
 pnpm add fluth-vue
 ```
 
-## 📖 使用
+## 🎥 使用
 
-### 🎮 互动演示
+[查看](https://code.juejin.cn/pen/7536440340963426314)
 
 ```vue
+<template>
+  <div>{{ stream$ }}</div>
+  <div>{{ tips$ }}</div>
 
+  <button @click="updateStream">click</button>
+</template>
+
+<script setup lang="ts">
+import { $, debounce, filter, map } from "fluth-vue";
+
+const words = [
+  "word",
+  "i",
+  "am",
+  "fluth",
+  "vue",
+  "welcome",
+  "everyone",
+  "to",
+  "try",
+  "and",
+  "experience",
+  "the",
+  "amazing",
+  "fluth-vue",
+  "library",
+  "for",
+  "reactive",
+  "programming",
+  "in",
+  "vue",
+  "applications",
+];
+
+const stream$ = $("hello");
+
+const tips$ = stream$.pipe(
+  debounce(300),
+  map((value) => `debounce: ${value}`),
+  filter((value) => value.includes("welcome")),
+  map((value) => `filter: ${value}`),
+);
+
+const updateStream = () => {
+  if (words.length > 0) {
+    stream$.next(`${stream$.value} ${words.shift()}`);
+  }
+};
+</script>
 ```

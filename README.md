@@ -25,18 +25,18 @@
 
 </div>
 
-## Introduction
+## 🎯 Introduction
 
 fluth-vue is a streaming programming library based on [fluth](https://github.com/fluthjs/fluth). It provides a series of practical stream methods and composable functions, deeply integrating the streaming programming paradigm with Vue's reactive system, fully enjoying the smooth development experience brought by streaming programming.
 
-## Features
+## 🚀 Features
 
 - 🌀 **Perfect Ecosystem Integration**: Seamlessly integrates with Vue's reactivity, enjoying Vue's ecosystem and development tools
 - 🌊 **Stream-based Programming**: Leverages fluth's powerful streaming programming capabilities to implement reactive programming for logic
 - 🌈 **Stream Rendering**: More fine-grained stream rendering capabilities, giving you control over rendering timing and frequency
 - 🤖 **Development Experience**: Achieves ultimate debugging experience through plugins, enjoying the development experience brought by streaming programming
 
-## Applicable Versions
+## 📦 Applicable Versions
 
 - **Vue 3.2.0 and above**:
   - ✅ All stream subscription behaviors in Vue setup will automatically cancel subscriptions when components are destroyed
@@ -48,7 +48,7 @@ fluth-vue is a streaming programming library based on [fluth](https://github.com
   - ❌ Stream subscription behaviors need to be manually [canceled](https://fluthjs.github.io/fluth-doc/en/guide/base.html#cancel-subscription), cannot automatically cancel subscriptions
   - ❌ Stream data doesn't have reactive capabilities, need to use [toCompt](https://fluthjs.github.io/fluth-vue/en/useFluth/#tocompt) to convert to reactive data
 
-## Installation
+## 🛠️ Installation
 
 ```bash
 npm install fluth-vue
@@ -58,7 +58,9 @@ yarn add fluth-vue
 pnpm add fluth-vue
 ```
 
-## Usage
+## 🎥 Usage Example
+
+[View](https://code.juejin.cn/pen/7536440340963426314)
 
 ```vue
 <template>
@@ -69,17 +71,40 @@ pnpm add fluth-vue
 </template>
 
 <script setup lang="ts">
-import { $ } from "fluth-vue";
+import { $, debounce, filter, map } from "fluth-vue";
 
-const words = ["word", "i", "am", "fluth", "vue", "welcome", "to", "use"];
+const words = [
+  "word",
+  "i",
+  "am",
+  "fluth",
+  "vue",
+  "welcome",
+  "everyone",
+  "to",
+  "try",
+  "and",
+  "experience",
+  "the",
+  "amazing",
+  "fluth-vue",
+  "library",
+  "for",
+  "reactive",
+  "programming",
+  "in",
+  "vue",
+  "applications",
+];
 
 const stream$ = $("hello");
 
-const tips$ = stream$
-  .pipe(debounce(00))
-  .then((value) => `debounce: ${value}`)
-  .pipe(filter((value) => value.includes("welcome")))
-  .then((value) => `filter: ${value}`);
+const tips$ = stream$.pipe(
+  debounce(300),
+  map((value) => `debounce: ${value}`),
+  filter((value) => value.includes("welcome")),
+  map((value) => `filter: ${value}`),
+);
 
 const updateStream = () => {
   if (words.length > 0) {
@@ -87,8 +112,4 @@ const updateStream = () => {
   }
 };
 </script>
-```
-
-```
-
 ```
