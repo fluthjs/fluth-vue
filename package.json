@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@vueuse/shared": "^11.1.0",
-    "fluth": "^0.3.32",
+    "fluth": "^0.3.33",
     "lodash-es": "^4.17.21"
   },
   "devDependencies": {

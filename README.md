@@ -7,13 +7,14 @@
 
 <div align="center">
 
+[![codecov](https://img.shields.io/codecov/c/github/fluthjs/fluth-vue?style=flat)](https://codecov.io/gh/fluthjs/fluth-vue)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/fluthjs/fluth-vue/blob/master/LICENSE)
 [![npm version](https://img.shields.io/npm/v/fluth-vue.svg?style=flat)](https://www.npmjs.com/package/fluth-vue)
 [![npm downloads](https://img.shields.io/npm/dm/fluth-vue.svg?style=flat)](https://www.npmjs.com/package/fluth-vue)
-[![MIT License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/fluthjs/fluth-vue/blob/master/LICENSE)
-[![codecov](https://img.shields.io/codecov/c/github/fluthjs/fluth-vue?style=flat)](https://codecov.io/gh/fluthjs/fluth-vue)
 [![GitHub stars](https://img.shields.io/github/stars/fluthjs/fluth-vue?style=flat)](https://github.com/fluthjs/fluth-vue/stargazers)
 [![Vue](https://img.shields.io/badge/Vue-3.2.0+-4FC08D?style=flat&logo=vue.js)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fluthjs/fluth-vue)
 
 <div align="center">
 
