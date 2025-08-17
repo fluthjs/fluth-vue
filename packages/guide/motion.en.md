@@ -2,7 +2,53 @@
 
 ## Frontend Business Model
 
-In the field of Web development, the core responsibility of backend services is to receive, process, and respond to requests. From a system modeling perspective, this is a typical single-input, single-output processing flow.
+In the field of Web development, the core responsibility of backend services is to receive, process, and respond to requests. From a sys- **Control inversion**: Compared to method calls which are a "pull" approach, stream programming paradigm is a "push" approach, allowing data, methods to modify data, and behaviors that trigger data modifications to all be placed in the same folder, no longer needing to search globally for where calls change module internal data.
+
+#### Reusability and Maintainability
+
+For imperative programming, in subsequent iterations of handleSubmit, different scenarios may be needed:
+
+- Scenario A: After successfully calling fetchAddOrderApi, only call handleDataB method
+- Scenario B: After successfully calling fetchAddOrderApi, only call handleDataC method
+
+At this point, handleSubmit can only turn scenarios into parameters handled by if-else, and as more and more branch logic emerges, the function gradually bloats. If implemented using stream programming paradigm, this problem can be easily solved:
+
+- If scenarios are streams, they can be easily solved by combining streams
+
+  ```typescript
+  // Scenario A stream
+  const caseA$ = $();
+  addOrderApi$.pipe(audit(caseA$)).then(handleDataB);
+  caseA$.next();
+
+  // Scenario B stream
+  const caseB$ = $();
+  addOrderApi$.pipe(audit(caseB$)).then(handleDataC);
+  caseB$.next();
+  ```
+
+- If scenarios are data, they can be handled through either splitting or filtering, both approaches can easily solve the problem
+
+  ```typescript
+  // Scenario stream, could be A or B
+  const case$ = $<"A" | "B">();
+
+  // Method 1: Split streams
+  const [caseA$, caseB$] = partition(case$, (value) => value === "A");
+  addOrderApi$.pipe(audit(caseA$)).then(handleDataB);
+  addOrderApi$.pipe(audit(caseA$)).then(handleDataC);
+
+  // Method 2: Filter
+  const caseAA$ = addOrderApi$
+    .pipe(filter(case$.value === "A"))
+    .then(handleDataB);
+
+  const caseBB$ = addOrderApi$
+    .pipe(filter(case$.value === "B"))
+    .then(handleDataC);
+  ```
+
+#### Refactoring Capabilityem modeling perspective, this is a typical single-input, single-output processing flow.
 
 This characteristic makes backend service logic naturally suitable for abstraction as an Onion Model: outer middleware wraps inner middleware, requests penetrate through each layer of middleware in sequence to reach the core business processing logic, then return responses layer by layer. This programming paradigm is most suitable for the business model of backend services.
 
@@ -96,17 +142,31 @@ If streams, in addition to conventional pipeline capabilities, can also carry lo
 
 Frontend business models based on streams perfectly match the **highly asynchronous, event-driven, multi-input multi-output** essential characteristics of modern frontend applications, providing more elegant and maintainable solutions in both data management and business logic organization.
 
-## Stream Implementation in Frameworks
+## fluth Stream
 
 [RxJS](https://rxjs.dev/) is a typical representative of stream programming. It is very powerful and provides rich stream operators that can handle complex asynchronous logic. However, RxJS has many concepts, a steep learning curve, and is relatively complex to use, making it unsuitable as the infrastructure for carrying business.
 
-Fluth adopts a Promise-like stream programming paradigm. Promise is the most commonly encountered asynchronous stream programming paradigm in frontend development, and **Promise-like stream programming paradigm greatly reduces the threshold for stream programming**, allowing streams to serve as the most basic logical units in frontend development.
+[fluth](https://fluthjs.github.io/fluth-doc/) adopts a Promise-like stream programming paradigm. Promise is the most commonly encountered asynchronous stream programming paradigm in frontend development, and **Promise-like stream programming paradigm greatly reduces the threshold for stream programming**, making large-scale use of streams possible.
 
-In addition to reducing the mental burden of stream programming, Fluth also saves the data processed by logic for each stream node, allowing stream nodes to carry both logic and data, and become the basic units that can replace ref, reactive reactive data.
+Differences between fluth streams and promises:
 
-For large-scale use and implementation in frameworks, Fluth streams also provide the following capabilities:
+- Compared to promises, fluth can continuously publish and supports canceling subscriptions
+- Compared to promises, fluth executes then methods synchronously, updating data immediately
+- Compared to promises, fluth retains data for each subscription node and allows direct access
+- Compared to promises, fluth fully supports PromiseLike
 
-### Framework Integration
+Differences between fluth streams and RxJS:
+
+- fluth is very easy to get started with, it's a Promise-like streaming programming library that can be used by anyone who knows how to use promises
+- fluth streams are hot and multicast, while RxJS streams also have cold and unicast characteristics
+- fluth allows stream chain subscriptions, while RxJS subscriptions cannot be chained after subscribing
+- fluth retains data and state of each subscription node for subsequent consumption
+- fluth subscription nodes have status similar to promises
+- fluth can add plugins to extend stream functionality and add custom behaviors
+
+fluth saves the data processed by logic for each stream node, allowing stream nodes to carry both logic and data, making it possible to become **basic units that can replace ref, reactive reactive data**.
+
+## Implementation in Vue Framework
 
 - For Vue framework, ref, reactive, computed reactive data can be converted to fluth streams through the [to$](/en/useFluth/#to) method. To maintain fluth stream's immutable characteristics, data will be deepCloned before being given to fluth
 
@@ -126,7 +186,11 @@ fluth streams use immutable data structures at the bottom layer and provide rich
 
 These two capabilities allow fluth streams **to be widely used in vue frameworks like ref, reactive reactive data**.
 
-## Example
+### Stream Rendering
+
+fluth-vue stream's data is reactive data that can be rendered normally in templates. In addition, fluth-vue also provides powerful stream rendering [render$](/en/useFluth/#render) functionality, which can achieve element-level rendering or block-level rendering, with overall effects similar to signal or block signal rendering.
+
+### Code Organization
 
 Below is a simple example — an order form submission page, demonstrating the application of streams in business models:
 
@@ -160,7 +224,7 @@ Through the code, we can discover:
 - **Expressiveness improvement**: Operators like [audit](https://fluthjs.github.io/fluth-doc/en/api/operator/audit.html), [debounce](https://fluthjs.github.io/fluth-doc/en/api/operator/debounce.html), [filter](https://fluthjs.github.io/fluth-doc/en/api/operator/debounce.html) handle complex asynchronous control logic such as triggers, throttling, conditional filtering in a declarative manner. Through stream operators, code expressiveness is significantly improved.
 - **Inversion of control**: Compared to method calls which are a "pull" approach, stream programming paradigm is a "push" approach, allowing data, methods to modify data, and behaviors that trigger data modifications to all be placed in the same folder, no longer needing to search globally for where calls change module internal data.
 
-### Reusability and Maintainability Explanation
+#### Reusability and Maintainability Explanation
 
 For imperative programming, in subsequent iterations of handleSubmit, different scenarios may be needed:
 
@@ -204,7 +268,7 @@ At this point, handleSubmit can only turn scenarios into parameters handled by i
     .then(handleDataC);
   ```
 
-## Extension
+#### Extension
 
 The above is a simple example. If business logic is complex, in traditional development mode, there might be dozens of refs and dozens of methods under a setup function. If we consider setup as a class, then this class would have dozens of properties and methods as well as ugly watches, with very high reading and maintenance costs.
 
@@ -212,4 +276,10 @@ Although more granular component extraction and hooks development concepts can s
 
 Stream programming paradigm can solve this problem well. As business continues to iterate, code also grows longer; but **stream programming organizes code declaratively according to real business order**, equivalent to a line continuously extending. At this point, to extract logic, you just need to cut the line into several segments and put them into hooks respectively, with no mental burden at all, equivalent to having a very heavy business that only takes a few minutes to solve and refactor well.
 
-Through this example and extension, we can see that **stream programming paradigm naturally aligns with the asynchronous, event-driven characteristics of frontend business, making it an ideal choice for organizing frontend business logic**.
+## Summary
+
+Through developing and debugging with stream programming paradigm in actual business scenarios, we found that this programming paradigm is severely underestimated in the frontend field. Perhaps because RxJS's concepts and usage are relatively complex, people consider it an "overkill" tool only suitable for complex asynchronous data flow combination scenarios. In fact, even the simplest `ref("string")`, when changed to `$("string")`, can bring considerable benefits.
+
+fluth-vue truly brings the stream programming paradigm to Vue developers: making streams the most basic form of data in frontend and perfectly compatible with reactivity, thoroughly implementing reactivity: not just data and view reactivity, but also organizing logic reactively.
+
+The experience of actual development shows that **stream programming paradigm naturally aligns with the asynchronous, event-driven characteristics of frontend business, making it an ideal choice for organizing frontend business logic**.

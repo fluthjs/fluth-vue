@@ -46,7 +46,7 @@ You can open the console and click the button to see the effect
 :::
 
 ::: info Note
-consoleAll printing the entire stream refers to child nodes created through methods like then, thenOnce, thenImmediate, then$, thenOnce$, thenImmediate$, etc.
+consoleAll printing the entire stream refers to Stream nodes and their Observable child nodes.
 :::
 
 ## Debug Plugin

@@ -6,7 +6,7 @@ import mixRender from "../.vitepress/components/mixRender.tsx";
 
 # Streaming Rendering
 
-In addition to using stream reactive data for rendering, fluth provides powerful streaming rendering [render$](/en/useFluth/#render$) functionality that can achieve element-level rendering or block-level rendering, with overall effects similar to signal or block signal rendering.
+In addition to using stream reactive data for rendering, fluth provides powerful streaming rendering [render$](/en/useFluth/#render) functionality that can achieve element-level rendering or block-level rendering, with overall effects similar to signal or block signal rendering.
 
 ## Element-level Rendering
 

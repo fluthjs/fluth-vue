@@ -46,7 +46,7 @@ data$
 :::
 
 ::: info 注意
-consoleAll 会打印整条流指的是通过 then、thenOnce、thenImmediate、then$、thenOnce$、thenImmediate$等方法创建的子节点
+consoleAll 会打印整条流指的是 Stream 节点以及其 Observable 子节点。
 :::
 
 ## 调试插件

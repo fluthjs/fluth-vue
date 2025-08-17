@@ -96,21 +96,39 @@ MVVM 框架的最大优势在于：当 Model 发生变化时，View 会自动更
 
 基于流构建的前端业务模型完美契合了现代前端应用**高度异步、事件驱动、多输入多输出**的本质特征，在数据管理和业务逻辑组织方面都能提供更优雅、更可维护的解决方案。
 
-## 流在框架中落地
+## fluth 流
 
 [Rxjs](https://rxjs.dev/) 是流式编程的典型代表，它功能十分强大并提供了丰富的流式操作符，可以完成复杂的异步逻辑。但 Rxjs 概念较多、学习曲线陡峭，使用上也较为复杂，无法作为承载业务的基础设施。
 
-fluth 采用类 Promise 的流式编程范式，Promise 是前端最常接触的异步流式编程范式，**类 Promise 的流式编程范式极大地降低了流式编程的门槛**，让流可以作为前端开发中的最基础逻辑单元。
+[fluth](https://fluthjs.github.io/fluth-doc/) 采用类 Promise 的流式编程范式，Promise 是前端最常接触的异步流式编程范式，**类 Promise 的流式编程范式极大地降低了流式编程的门槛**，让流的大规模使用成为可能。
 
-除了降低流编程的心智负担，fluth 还为每个流节点保存了逻辑处理后的数据，让流节点既可以承载逻辑也可以承载数据，**可以成为替代 ref、reactive 响应式数据的基础单元**。
+fluth 流和 promise 的差异点：
 
-为了大规模使用并且在框架中落地，fluth 流还提供了以下能力：
+- 相比 promise，fluth 可以不断发布并且支持取消定订阅
+- 相比 promise，fluth 同步执行 then 方法，及时更新数据
+- 相比 promise，fluth 保留每个订阅节点的数据并可直接访问
+- 相比 promise，fluth 完全支持 PromiseLike
 
-### 框架集成
+fluth 流和 rxjs 的差异点：
+
+- fluth 上手非常简单，是类 promise 的流式编程库，只要会使用 promise 就可以使用
+- fluth 的流是 hot、multicast 的，而 rxjs 的流还具备 cold、unicast 的特性
+- fluth 可以流链式订阅，而 rxjs 的订阅后无法再链式订阅
+- fluth 保留了每个订阅节点的数据以及状态供后续消费
+- fluth 订阅节点存在和 promise 类似的 status 状态
+- fluth 可以添加插件来扩展流的功能和添加自定义行为
+
+fluth 为每个流节点保存了逻辑处理后的数据，让流节点既可以承载逻辑也可以承载数据，可以成为**替代 ref、reactive 响应式数据的基础单元**。
+
+## 在 vue 框架中落地
+
+为了流大规模的使用，fluth-vue 对 fluth 流进行了增强：
+
+### 响应式
 
 - 对于 vue 框架来说，ref、reactive、computed 响应式的数据可以通过 [to$](/cn/useFluth/#to$) 方法转换为 fluth 流，为了保持 fluth 流的 immutable 的特性会将数据 deepClone 后再给到 fluth
 
-- 对于 fluth-vue 来说，流的数据就是响应式数据，可以正常的在 template、watch、computed 中使用，也可以采用 [toCompt](/cn/useFluth/#tocompt) 方法转换为 computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过 vue-devtools 直接查看流的数据
+- 对于 fluth-vue 来说，流的数据就是只读的响应式数据，可以正常的在 template、watch、computed 中使用，也可以采用 [toCompt](/cn/useFluth/#tocompt) 方法转换为 computed 响应式数据，这样框架就可以直接消费流的数据，并可以通过 vue-devtools 直接查看流的数据
 
 ### 调试能力
 
@@ -126,7 +144,11 @@ fluth 底层采用 immutable 数据结构，并提供了丰富的调试插件：
 
 两项能力让 fluth-vue 流**可以像 ref、reactive 响应式数据一样在 vue 框架中获得广泛使用**。
 
-## 示例
+### 流式渲染
+
+fluth-vue流的数据就是响应式数据可以正常在 template 中渲染，除此之外 fluth-vue 还提供了强大的流式渲染 [render$](/cn/useFluth/#render)功能，可以实现元素级渲染或者块级渲染，整体效果类似 signal 或者 block signal 的渲染。
+
+### 代码组织
 
 下面以一个简单的例子——订单表单的提交页面，来展示流在业务模型中的应用：
 
@@ -160,7 +182,7 @@ fluth 底层采用 immutable 数据结构，并提供了丰富的调试插件：
 - **表达力提升**，[audit](https://fluthjs.github.io/fluth-doc/cn/api/operator/audit.html)、[debounce](https://fluthjs.github.io/fluth-doc/cn/api/operator/debounce.html)、[filter](https://fluthjs.github.io/fluth-doc/cn/api/operator/debounce.html) 等操作符以声明式的方式处理了触发器、节流、条件过滤等复杂的异步控制逻辑，通过流的操作符，代码的表达力显著提升。
 - **控制反转**，相对于方法调用这种”拉“的方式，流式编程范式是”推“的方式，可以实现数据、修改数据的方法、触发数据修改的行为都放置在同一个文件夹内，再也无需全局搜索哪里的调用改变了模块内部的数据。
 
-### 复用性和可维护性说明
+#### 复用性和可维护性
 
 对于命令式的编程，在 handleSubmit 后续的迭代中可能需要分场景：
 
@@ -204,7 +226,7 @@ fluth 底层采用 immutable 数据结构，并提供了丰富的调试插件：
     .then(handleDataC);
   ```
 
-## 延伸
+#### 重构能力
 
 上面是一个简单的示例，如果业务逻辑复杂传统开发模式下，一个 setup 函数下面可能有几十个 ref 和几十个 methods，如果认为 setup 是一个 class，那么这个 class 将拥有几十属性和方法以及的丑陋的 watch，阅读和维护成本将非常的高。
 
@@ -212,4 +234,10 @@ fluth 底层采用 immutable 数据结构，并提供了丰富的调试插件：
 
 而流式编程范式可以很好的解决这个问题，随着业务持续迭代，代码也会也来也长；但是**流式编程是按照业务真实顺序进行声明式组织代码**，相当于一条线不断延伸，此时要抽离逻辑只需要将线剪成几段分别放入 hook 就好了，完全没有心智负担，相当于有一个很重的业务，只需要几分钟就可以解决重构好。
 
-通过这个示例和延伸可以看出，**流式编程范式与前端业务的异步、事件驱动特性天然契合，是组织前端业务逻辑的理想选择**。
+## 总结
+
+通过在实际业务中用流式编程范式进行开发和调试，发现流这种编程范式在前端领域被严重的低估，可能是 rxjs 概念或者使用较为复杂让大家认为是一把“牛刀”，只有复杂异步数据流组合场景才配用上，其实最简单的 ref("字符串")，当采用 $("字符串")后都能带来非常可观的收益。
+
+fluth-vue 真正意义上将流式编程范式带给了vue开发者：让流成为前端最基础的数据形态并完美兼容响应式，将响应式进行彻底：除了数据和视图的响应式，逻辑也能用流响应式的组织。
+
+实际体验下来的感受：**流式编程范式与前端业务的异步、事件驱动特性天然契合，是组织前端业务逻辑的理想选择**。

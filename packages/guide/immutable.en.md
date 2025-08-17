@@ -4,7 +4,7 @@ import Immutable from '../.vitepress/components/immutable.vue'
 
 # Immutable Data
 
-fluth uses [limu](https://tnfe.github.io/limu/) immutable data at the bottom layer, and only through methods like set, then$, thenOnce$, thenImmediate$ can data be modified immutably.
+fluth uses [limu](https://tnfe.github.io/limu/) immutable data at the bottom layer, and only through methods like set, thenSet, thenOnceSet, thenImmediateSet and set operator can data be modified immutably.
 
 ## Modifying Object Data
 

@@ -4,7 +4,7 @@ import Immutable from '../.vitepress/components/immutable.vue'
 
 # 不可变数据
 
-fluth 底层采用 [limu](https://tnfe.github.io/limu/) 不可变数据，并且只有通过 set、then$、thenOnce$、thenImmediate$等方法才能 immutable 的修改数据。
+fluth 底层采用 [limu](https://tnfe.github.io/limu/) 不可变数据，并且只有通过 set、thenSet、thenOnceSet、thenImmediateSet等方法以及 set 操作符才能 immutable 的修改数据。
 
 ## 修改对象数据
 
