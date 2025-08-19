@@ -102,14 +102,16 @@ MVVM 框架的最大优势在于：当 Model 发生变化时，View 会自动更
 
 [fluth](https://fluthjs.github.io/fluth-doc/) 采用类 Promise 的流式编程范式，Promise 是前端最常接触的异步流式编程范式，**类 Promise 的流式编程范式极大地降低了流式编程的门槛**，让流的大规模使用成为可能。
 
-fluth 流和 promise 的差异点：
+::: details fluth 流和 promise 的差异点：
 
 - 相比 promise，fluth 可以不断发布并且支持取消定订阅
 - 相比 promise，fluth 同步执行 then 方法，及时更新数据
 - 相比 promise，fluth 保留每个订阅节点的数据并可直接访问
 - 相比 promise，fluth 完全支持 PromiseLike
 
-fluth 流和 rxjs 的差异点：
+:::
+
+::: details fluth 流和 rxjs 的差异点：
 
 - fluth 上手非常简单，是类 promise 的流式编程库，只要会使用 promise 就可以使用
 - fluth 的流是 hot、multicast 的，而 rxjs 的流还具备 cold、unicast 的特性
@@ -118,7 +120,34 @@ fluth 流和 rxjs 的差异点：
 - fluth 订阅节点存在和 promise 类似的 status 状态
 - fluth 可以添加插件来扩展流的功能和添加自定义行为
 
-fluth 为每个流节点保存了逻辑处理后的数据，让流节点既可以承载逻辑也可以承载数据，可以成为**替代 ref、reactive 响应式数据的基础单元**。
+:::
+
+fluth 为每个流节点保存了逻辑处理后的数据，让流节点既可以承载逻辑也可以承载数据，如下所示：
+
+```typescript
+import { $ } from "fluth";
+
+const userInfo$ = $({ name: "fluth", age: 18, role: "admin" });
+
+const isAdult$ = userInfo$.thenImmediate((value) => value.age >= 18);
+
+const isAdmin$ = userInfo$.thenImmediate((value) => value.role === "admin");
+
+userInfo$.value; // { name: "fluth", age: 18, role: "admin" }
+isAdult$.value; // true
+isAdmin$.value; // true
+
+userInfo$.set((value) => {
+  value.age = 17;
+  value.role = "user";
+});
+
+userInfo$.value; // { name: "fluth", age: 17, role: "user" }
+isAdult$.value; // false
+isAdmin$.value; // false
+```
+
+这样流节点可以成为**替代 ref、reactive 响应式数据的基础单元**。
 
 ## 在 vue 框架中落地
 
