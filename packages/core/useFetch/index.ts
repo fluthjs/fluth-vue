@@ -285,7 +285,34 @@ export function useFetch<T>(
         response.value = fetchResponse;
         statusCode.value = fetchResponse.status;
 
-        responseData = await fetchResponse.clone()[config.type]();
+        const isStream =
+          fetchResponse.headers.get("Content-Type") === "text/event-stream" &&
+          fetchResponse.body instanceof ReadableStream;
+
+        // handle stream response
+        if (isStream) {
+          const reader = fetchResponse
+            .clone()
+            .body?.getReader() as ReadableStreamDefaultReader<
+            Uint8Array<ArrayBuffer>
+          >;
+          const decoder = new TextDecoder();
+          let received = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            promise$.next(chunk as T);
+            received += chunk;
+          }
+
+          responseData = received;
+        } else {
+          responseData = await fetchResponse.clone()[config.type]();
+        }
 
         // see: https://www.tjvantoll.com/2015/09/13/fetch-and-errors/
         if (!fetchResponse.ok) {
@@ -310,7 +337,9 @@ export function useFetch<T>(
               cacheSetting.expiration,
             );
         }
-        promise$.next(Promise.resolve(responseData));
+        if (!isStream) {
+          promise$.next(Promise.resolve(responseData));
+        }
 
         responseEvent.trigger(fetchResponse);
         return responseData;
