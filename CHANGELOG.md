@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.32](https://github.com/fluthjs/fluth-vue/compare/v0.2.31...v0.2.32) (2025-08-20)
+
+
+### Features
+
+* usefetch support sse ([cbf0413](https://github.com/fluthjs/fluth-vue/commit/cbf041371c4507e3255bb4585619c246b54a6905))
+
 ### [0.2.31](https://github.com/fluthjs/fluth-vue/compare/v0.2.30...v0.2.31) (2025-08-13)
 
 
