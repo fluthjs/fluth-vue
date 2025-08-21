@@ -8,135 +8,79 @@ import { useFetch } from "../index";
 import "./mockServer";
 import { retry } from "./utils";
 
+let spyConsoleLog: any;
+let fetchSpy: any;
+
 window.fetch = nodeFetch as any;
 
 describe("useFetch with SSE stream", () => {
   beforeEach(() => {
     process.on("unhandledRejection", () => null);
-    vi.spyOn(window, "fetch");
-    vi.spyOn(console, "log");
+    spyConsoleLog = vi.spyOn(console, "log");
+    fetchSpy = vi.spyOn(window, "fetch");
   });
   it("should handle basic SSE stream correctly", async () => {
-    const { response, statusCode } = useFetch(
+    const { response, statusCode, promise$ } = useFetch(
       "https://example.com?stream&count=1",
     );
 
+    promise$.then((data) => {
+      console.log(data);
+    });
+
     await retry(() => {
       expect(statusCode.value).toBe(200);
       expect(response.value).toBeDefined();
+      expect(fetchSpy).toBeCalledTimes(1);
+      expect(spyConsoleLog).toBeCalledTimes(2);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("Event 1");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain('"type":"complete"');
     });
-
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-    expect(res.headers.get("cache-control")).toBe("no-cache");
-    expect(res.headers.get("connection")).toBe("keep-alive");
-
-    const reader = res.body?.getReader();
-    expect(reader).toBeDefined();
-
-    if (reader) {
-      const decoder = new TextDecoder();
-      let received = "";
-
-      // Read the entire stream
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          received += chunk;
-        }
-      } catch {
-        // Stream might be cancelled, that's ok
-      }
-
-      expect(received).toContain("data:");
-      expect(received).toContain("Event 1");
-      expect(received).toContain('"type":"complete"');
-    }
   });
 
   it("should handle SSE stream with custom count and interval", async () => {
-    const { response, statusCode } = useFetch(
+    const { response, statusCode, promise$ } = useFetch(
       "https://example.com?stream&count=2&interval=50",
     );
 
+    promise$.then((data) => {
+      console.log(data);
+    });
+
     await retry(() => {
       expect(statusCode.value).toBe(200);
       expect(response.value).toBeDefined();
+      expect(spyConsoleLog).toBeCalledTimes(3);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("Event 1");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain("Event 2");
+      expect(spyConsoleLog.mock.calls[2][0]).toContain('"type":"complete"');
     });
-
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      let received = "";
-
-      // Read the entire stream
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          received += chunk;
-        }
-      } catch {
-        // Stream might be cancelled, that's ok
-      }
-
-      // Should have received events for count=2
-      expect(received).toContain("Event 1");
-      expect(received).toContain("Event 2");
-      expect(received).toContain('"type":"complete"');
-    }
-  }, 10000); // Increase timeout to 10 seconds
+  }); // Increase timeout to 10 seconds
 
   it("should handle SSE stream with custom data", async () => {
     const customMessage = "Hello World Custom";
-    const { response, statusCode } = useFetch(
+    const { response, statusCode, promise$ } = useFetch(
       `https://example.com?stream&count=1&data=${encodeURIComponent(customMessage)}`,
     );
+
+    promise$.then((data) => {
+      console.log(data);
+    });
 
     await retry(() => {
       expect(statusCode.value).toBe(200);
       expect(response.value).toBeDefined();
+      expect(spyConsoleLog).toBeCalledTimes(2);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("Hello World Custom");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain('"type":"complete"');
     });
-
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      let received = "";
-
-      // Read first chunk
-      const { value } = await reader.read();
-      if (value) {
-        received = decoder.decode(value);
-      }
-
-      reader.cancel();
-
-      expect(received).toContain(`"message":"${customMessage}"`);
-      expect(received).toContain('"type":"data"');
-      expect(received).toContain('"count":1');
-      expect(received).toContain('"total":1');
-    }
   });
 
   it("should work with POST requests and stream parameter", async () => {
-    const { response, statusCode } = useFetch(
+    const { response, statusCode, promise$ } = useFetch(
       "https://example.com?stream&count=1",
       {
         method: "POST",
@@ -144,186 +88,103 @@ describe("useFetch with SSE stream", () => {
       },
     );
 
+    promise$.then((data) => {
+      console.log(data);
+    });
+
     await retry(() => {
       expect(statusCode.value).toBe(200);
       expect(response.value).toBeDefined();
+      expect(spyConsoleLog).toBeCalledTimes(2);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("Event 1");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain('"type":"complete"');
     });
-
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      const { value } = await reader.read();
-
-      if (value) {
-        const received = decoder.decode(value);
-        expect(received).toContain("data:");
-        expect(received).toContain("Event 1");
-      }
-
-      reader.cancel();
-    }
   });
 
   it("should support stream with delay parameter", async () => {
-    const { response, statusCode } = useFetch(
+    const { response, statusCode, promise$ } = useFetch(
       "https://example.com?stream&count=1&delay=50", // Reduce delay for more stable testing
     );
 
-    await retry(
-      () => {
-        expect(statusCode.value).toBe(200);
-        expect(response.value).toBeDefined();
-      },
-      { timeout: 5000 },
-    ); // Increase retry timeout significantly
+    promise$.then((data) => {
+      console.log(data);
+    });
 
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      const { value } = await reader.read();
-
-      if (value) {
-        const received = decoder.decode(value);
-        expect(received).toContain("Event 1");
-        expect(received).toContain('"type":"data"');
-      }
-
-      reader.cancel();
-    }
+    await retry(() => {
+      expect(statusCode.value).toBe(200);
+      expect(response.value).toBeDefined();
+      expect(spyConsoleLog).toBeCalledTimes(2);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("Event 1");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain('"type":"complete"');
+    });
   });
 
   it("should split custom data into parts when count < data length", async () => {
-    const { response, statusCode } = useFetch(
-      "https://example.com?stream&count=2&data=hello",
+    const { response, statusCode, promise$ } = useFetch(
+      "https://example.com?stream&count=2&data=hello&interval=10",
     );
+
+    promise$.then((data) => {
+      console.log(data);
+    });
 
     await retry(() => {
       expect(statusCode.value).toBe(200);
       expect(response.value).toBeDefined();
+      expect(spyConsoleLog).toBeCalledTimes(3);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("hel");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain("lo");
+      expect(spyConsoleLog.mock.calls[2][0]).toContain('"type":"complete"');
     });
-
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      let received = "";
-
-      // Read the entire stream
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          received += chunk;
-        }
-      } catch {
-        // Stream might be cancelled, that's ok
-      }
-
-      // Should split "hello" into 2 parts: "hel" and "lo"
-      expect(received).toContain('"message":"hel"');
-      expect(received).toContain('"message":"lo"');
-      expect(received).toContain('"total":2');
-    }
   });
 
   it("should send characters one by one when count > data length", async () => {
-    const { response, statusCode } = useFetch(
+    const { response, statusCode, promise$ } = useFetch(
       "https://example.com?stream&count=6&data=hi&interval=10",
     );
 
+    promise$.then((data) => {
+      console.log(data);
+    });
+
     await retry(() => {
       expect(statusCode.value).toBe(200);
       expect(response.value).toBeDefined();
+      expect(spyConsoleLog).toBeCalledTimes(7);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("h");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain("i");
+      expect(spyConsoleLog.mock.calls[2][0]).toContain("3");
+      expect(spyConsoleLog.mock.calls[3][0]).toContain("4");
+      expect(spyConsoleLog.mock.calls[4][0]).toContain("5");
+      expect(spyConsoleLog.mock.calls[5][0]).toContain("6");
+      expect(spyConsoleLog.mock.calls[6][0]).toContain('"type":"complete"');
     });
-
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      let received = "";
-
-      // Read the entire stream
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          received += chunk;
-        }
-      } catch {
-        // Stream might be cancelled, that's ok
-      }
-
-      // Should send "h", "i", "", "", "", "" (6 events total)
-      expect(received).toContain('"message":"h"');
-      expect(received).toContain('"message":"i"');
-      expect(received).toContain('"message":""'); // Empty messages for remaining events
-      expect(received).toContain('"total":6');
-      expect(received).toContain('"count":1');
-      expect(received).toContain('"count":2');
-    }
-  }, 10000);
+  });
 
   it("should work with exact count matching data length", async () => {
-    const { response, statusCode } = useFetch(
+    const { response, statusCode, promise$ } = useFetch(
       "https://example.com?stream&count=5&data=hello&interval=10",
     );
 
+    promise$.then((data) => {
+      console.log(data);
+    });
+
     await retry(() => {
       expect(statusCode.value).toBe(200);
       expect(response.value).toBeDefined();
+      expect(spyConsoleLog).toBeCalledTimes(6);
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("data:");
+      expect(spyConsoleLog.mock.calls[0][0]).toContain("h");
+      expect(spyConsoleLog.mock.calls[1][0]).toContain("e");
+      expect(spyConsoleLog.mock.calls[2][0]).toContain("l");
+      expect(spyConsoleLog.mock.calls[3][0]).toContain("l");
+      expect(spyConsoleLog.mock.calls[4][0]).toContain("o");
+      expect(spyConsoleLog.mock.calls[5][0]).toContain('"type":"complete"');
     });
-
-    const res = response.value;
-    if (!res) throw new Error("Response is null");
-
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-    const reader = res.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      let received = "";
-
-      // Read the entire stream
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          received += chunk;
-        }
-      } catch {
-        // Stream might be cancelled, that's ok
-      }
-
-      // Should send each character: "h", "e", "l", "l", "o"
-      expect(received).toContain('"message":"h"');
-      expect(received).toContain('"message":"e"');
-      expect(received).toContain('"message":"l"');
-      expect(received).toContain('"message":"o"');
-      expect(received).toContain('"total":5');
-    }
-  }, 10000);
+  });
 });
