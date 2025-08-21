@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.33](https://github.com/fluthjs/fluth-vue/compare/v0.2.32...v0.2.33) (2025-08-21)
+
+
+### Bug Fixes
+
+* **useFetch:** improve content type check for SSE support ([9794ebc](https://github.com/fluthjs/fluth-vue/commit/9794ebc9156f8da5c17128b5322203f57793ec86))
+
 ### [0.2.32](https://github.com/fluthjs/fluth-vue/compare/v0.2.31...v0.2.32) (2025-08-20)
 
 

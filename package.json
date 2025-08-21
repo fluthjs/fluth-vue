@@ -1,6 +1,6 @@
 {
   "name": "fluth-vue",
-  "version": "0.2.32",
+  "version": "0.2.33",
   "description": "Fluth-based Streaming Programming Library for Vue",
   "author": "yiludege <https://github.com/yiludege>",
   "repository": "https://github.com/fluthjs/fluth-vue",
