@@ -286,7 +286,9 @@ export function useFetch<T>(
         statusCode.value = fetchResponse.status;
 
         const isStream =
-          fetchResponse.headers.get("Content-Type") === "text/event-stream" &&
+          fetchResponse.headers
+            .get("Content-Type")
+            ?.includes("text/event-stream") &&
           fetchResponse.body instanceof ReadableStream;
 
         // handle stream response
