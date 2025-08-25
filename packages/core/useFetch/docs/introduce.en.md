@@ -68,6 +68,7 @@ const { data: data2 } = await useFetchApi(data1.value);
 
 - `data2` is obtained by calling the `useFetchApi` async function and taking the current value of `data1` as the request parameter in real-time
 
-## Stream
+### Stream
 
-useFetch provides not only reactive data returns but also fluth stream support. You can get the async data stream through [promise$](/en/useFetch/stream) and combine it with fluth operators to implement complex data flow processing
+useFetch provides not only reactive data input and reactive data output, but also supports fluth streams.
+Streams can be used as both input and output for useFetch, allowing async requests to be handled as nodes in stream programming. See [promise$](/en/useFetch/stream) for details.

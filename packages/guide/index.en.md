@@ -5,7 +5,7 @@ layout: home
 hero:
   name: fluth-vue
   text: Streaming Reactive Programming For Vue
-  tagline: Revolutionary programming paradigm
+  tagline: Experience the beauty of streaming programming paradigm
   image:
     src: /logo.svg
     alt: fluth

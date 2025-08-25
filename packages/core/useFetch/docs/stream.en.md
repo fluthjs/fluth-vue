@@ -33,6 +33,25 @@ promise$.catch((error) => {
 execute(); // Trigger request, promise$ will push result
 ```
 
+### Stream Input and Output
+
+Async request methods wrapped with useFetch, using streams as input and output, can implement stream programming.
+
+```ts
+const url$ = $("https://api.example.com/data");
+const payload$ = $({ id: 1, name: "fluth" });
+const { promise$ } = useFetch(url$, { immediate: false, refetch: true })
+  .get(payload$)
+  .json();
+
+promise$.then((data) => {
+  console.log(data);
+});
+
+url$.next("https://api.example.com/data2"); // Trigger request and print result
+payload$.next({ id: 2, name: "vue" }); // Trigger request and print result
+```
+
 ### Handling Success and Failure
 
 ```ts
