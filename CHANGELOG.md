@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.34](https://github.com/fluthjs/fluth-vue/compare/v0.2.33...v0.2.34) (2025-10-11)
+
+
+### Features
+
+* support NDJSON stream response ([8e05f4c](https://github.com/fluthjs/fluth-vue/commit/8e05f4c2f22b79b52f1287632e27f62648e93956))
+
 ### [0.2.33](https://github.com/fluthjs/fluth-vue/compare/v0.2.32...v0.2.33) (2025-08-21)
 
 
