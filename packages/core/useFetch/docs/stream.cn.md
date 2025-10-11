@@ -51,3 +51,41 @@ promise$.then((data) => {
 url$.next("https://api.example.com/data2"); // 触发请求，并打印结果
 payload$.next({ id: 2, name: "vue" }); // 触发请求，并打印结果
 ```
+
+### 流式响应支持
+
+useFetch 自动检测并支持两种流式响应格式：
+
+#### SSE (Server-Sent Events) 流
+
+当服务器响应的 `Content-Type` 为 `text/event-stream` 时，useFetch 会自动启用 SSE 流处理模式。
+
+```ts
+const { promise$ } = useFetch("https://api.example.com/events", {
+  immediate: false,
+});
+
+// 订阅 SSE 事件流
+promise$.then((chunk) => {
+  console.log("收到 SSE 数据:", chunk);
+});
+
+execute(); // 开始接收 SSE 流
+```
+
+#### NDJSON (Newline Delimited JSON) 流
+
+当服务器响应的 `Content-Type` 为 `application/x-ndjson` 时，useFetch 会自动启用 NDJSON 流处理模式。
+
+```ts
+const { promise$ } = useFetch("https://api.example.com/data-stream", {
+  immediate: false,
+});
+
+// 订阅 NDJSON 对象流
+promise$.then((jsonObject) => {
+  console.log("收到 JSON 对象:", jsonObject);
+});
+
+execute(); // 开始接收 NDJSON 流
+```

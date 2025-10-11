@@ -285,14 +285,16 @@ export function useFetch<T>(
         response.value = fetchResponse;
         statusCode.value = fetchResponse.status;
 
-        const isStream =
-          fetchResponse.headers
-            .get("Content-Type")
-            ?.includes("text/event-stream") &&
+        const contentType = fetchResponse.headers.get("Content-Type");
+        const isSSEStream =
+          contentType?.includes("text/event-stream") &&
+          fetchResponse.body instanceof ReadableStream;
+        const isNDJSONStream =
+          contentType?.includes("application/x-ndjson") &&
           fetchResponse.body instanceof ReadableStream;
 
         // handle stream response
-        if (isStream) {
+        if (isSSEStream || isNDJSONStream) {
           const reader = fetchResponse
             .clone()
             .body?.getReader() as ReadableStreamDefaultReader<
@@ -300,6 +302,7 @@ export function useFetch<T>(
           >;
           const decoder = new TextDecoder();
           let received = "";
+          let buffer = "";
 
           while (true) {
             const { done, value } = await reader.read();
@@ -307,8 +310,41 @@ export function useFetch<T>(
             if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
-            promise$.next(chunk as T);
             received += chunk;
+
+            if (isNDJSONStream) {
+              // For NDJSON, parse each line as a separate JSON object
+              buffer += chunk;
+              const lines = buffer.split("\n");
+              buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
+
+              for (const line of lines) {
+                if (line.trim()) {
+                  try {
+                    const jsonObj = JSON.parse(line);
+                    promise$.next(jsonObj as T);
+                  } catch (e) {
+                    // If JSON parsing fails, send the raw line
+                    console.error(e);
+                    promise$.next(line as T);
+                  }
+                }
+              }
+            } else {
+              // For SSE, send raw chunks
+              promise$.next(chunk as T);
+            }
+          }
+
+          // Handle any remaining content in buffer for NDJSON
+          if (isNDJSONStream && buffer.trim()) {
+            try {
+              const jsonObj = JSON.parse(buffer);
+              promise$.next(jsonObj as T);
+            } catch (e) {
+              console.error(e);
+              promise$.next(buffer as T);
+            }
           }
 
           responseData = received;
@@ -339,7 +375,7 @@ export function useFetch<T>(
               cacheSetting.expiration,
             );
         }
-        if (!isStream) {
+        if (!isSSEStream && !isNDJSONStream) {
           promise$.next(Promise.resolve(responseData));
         }
 

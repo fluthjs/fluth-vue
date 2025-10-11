@@ -12,6 +12,89 @@ const defaultTextMessage = "Hello World";
 const baseUrl = "https://example.com";
 
 /**
+ * Create a Newline Delimited JSON (NDJSON) stream response
+ * @param count Number of JSON objects to send (default: 3)
+ * @param interval Interval between objects in milliseconds (default: 1000)
+ * @param customData Custom data objects array to send (each object will be sent as one line)
+ */
+function createNDJSONStream(count = 3, interval = 1000, customData?: any[]) {
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // If customData is provided, use it directly as NDJSON objects
+        if (customData && Array.isArray(customData)) {
+          for (let eventCount = 0; eventCount < count; eventCount++) {
+            let data;
+
+            if (eventCount < customData.length) {
+              // Use custom data if available
+              data = customData[eventCount];
+            } else {
+              // Generate {count: x} objects for remaining items
+              data = { count: eventCount + 1 };
+            }
+
+            // Send as NDJSON (one JSON object per line)
+            controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
+
+            // Wait for interval before next object (except for last object)
+            if (eventCount < count - 1) {
+              await new Promise((resolve) => setTimeout(resolve, interval));
+            }
+          }
+        } else {
+          // Default behavior: generate objects with sequential data
+          for (let eventCount = 1; eventCount <= count; eventCount++) {
+            const data = {
+              type: "data",
+              message: `Event ${eventCount}`,
+              timestamp: new Date().toISOString(),
+              count: eventCount,
+              total: count,
+            };
+
+            // Send as NDJSON (one JSON object per line)
+            controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
+
+            // Wait for interval before next object (except for last object)
+            if (eventCount < count) {
+              await new Promise((resolve) => setTimeout(resolve, interval));
+            }
+          }
+        }
+
+        // Send final completion object
+        const finalData = {
+          type: "complete",
+          message: "Stream completed",
+          count: count,
+        };
+        controller.enqueue(encoder.encode(JSON.stringify(finalData) + "\n"));
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+
+    cancel() {
+      // Cleanup if stream is cancelled
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Cache-Control",
+    },
+  });
+}
+
+/**
  * Create a Server-Sent Events (SSE) stream response
  * @param count Number of events to send (default: 3)
  * @param interval Interval between events in milliseconds (default: 1000)
@@ -97,6 +180,34 @@ function createResponse(request: Request) {
     const interval = qs.get("interval") ? Number(qs.get("interval")) : 1000;
     const customData = qs.get("data") || undefined;
     response = createSSEStream(count, interval, customData);
+  } else if (qs.get("ndjson") != null) {
+    // Handle NDJSON stream response
+    const count = qs.get("count") ? Number(qs.get("count")) : 3;
+    const interval = qs.get("interval") ? Number(qs.get("interval")) : 1000;
+
+    let customData: any[] | undefined;
+    const dataParam = qs.get("data");
+    if (dataParam) {
+      try {
+        // Try to parse as JSON array
+        customData = JSON.parse(dataParam);
+        if (!Array.isArray(customData)) {
+          customData = undefined;
+        }
+      } catch (e) {
+        console.error(e);
+        // If parsing fails, create default objects with the string as message
+        customData = Array.from({ length: count }, (_, i) => ({
+          type: "data",
+          message: dataParam,
+          timestamp: new Date().toISOString(),
+          count: i + 1,
+          total: count,
+        }));
+      }
+    }
+
+    response = createNDJSONStream(count, interval, customData);
   } else if (qs.get("text") != null) {
     response = HttpResponse.text(qs.get("text") ?? defaultTextMessage);
   } else if (qs.get("json") != null) {
@@ -144,6 +255,15 @@ function createResponse(request: Request) {
  *          will send each character "h", "e", "l", "l", "o" in separate events
  * @example https://example.com?stream&count=2&data=hello
  *          will split "hello" into 2 parts: "hel" and "lo"
+ * @example https://example.com?ndjson will respond with a Newline Delimited JSON (NDJSON) stream
+ * @example https://example.com?ndjson&count=5&interval=500
+ *          will send 5 JSON objects with 500ms interval between each object
+ * @example https://example.com?ndjson&data=hello
+ *          will send JSON objects with custom message "hello" in each object
+ * @example https://example.com?ndjson&data=[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]
+ *          will send the provided JSON array as separate NDJSON objects
+ * @example https://example.com?ndjson&count=3&data=[{"type":"user","name":"Alice"},{"type":"user","name":"Bob"}]
+ *          will send first 3 objects from the provided array (limited by count)
  */
 const server = setupServer(
   http.post(baseUrl, async ({ request }) => {
@@ -155,6 +275,7 @@ const server = setupServer(
       qs.get("text") != null ||
       qs.get("json") != null ||
       qs.get("stream") != null ||
+      qs.get("ndjson") != null ||
       qs.get("status") ||
       qs.get("delay")
     ) {
