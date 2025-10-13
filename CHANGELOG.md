@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.35](https://github.com/fluthjs/fluth-vue/compare/v0.2.34...v0.2.35) (2025-10-13)
+
+
+### Bug Fixes
+
+* **useFetch:** prevent refetching when refetch is false for streams and observables ([3049893](https://github.com/fluthjs/fluth-vue/commit/3049893b80f0955bdcc2863c1886fbd326e5443e))
+
 ### [0.2.34](https://github.com/fluthjs/fluth-vue/compare/v0.2.33...v0.2.34) (2025-10-11)
 
 
