@@ -34,6 +34,14 @@ describe.skipIf(isBelowNode18)("useFetch with refetch", () => {
     await retry(() => expect(fetchSpy).toBeCalledTimes(2));
   });
 
+  it("should not refetch when url is stream and refetch is false", async () => {
+    const url = $("https://example.com");
+    useFetch(url, { refetch: false });
+    url.next("https://example.com?text");
+    await sleep(50);
+    expect(fetchSpy).toBeCalledTimes(1);
+  });
+
   it("should auto refetch when the refetch is set to true and the payload is a ref", async () => {
     const param = ref({ num: 1 });
     useFetch("https://example.com", { refetch: true }).post(param);
@@ -53,6 +61,14 @@ describe.skipIf(isBelowNode18)("useFetch with refetch", () => {
     useFetch("https://example.com", { refetch: true }).post(param);
     param.set((state) => (state.num = 2));
     await retry(() => expect(fetchSpy).toBeCalledTimes(2));
+  });
+
+  it("should not refetch when payload is stream and refetch is false", async () => {
+    const param = $({ num: 1 });
+    useFetch("https://example.com", { refetch: false }).post(param);
+    param.set((state) => (state.num = 2));
+    await sleep(50);
+    expect(fetchSpy).toBeCalledTimes(1);
   });
 
   it("should be url with right with absolute url", async () => {
@@ -78,7 +94,6 @@ describe.skipIf(isBelowNode18)("useFetch with refetch", () => {
   });
 
   it("should be url with right with get object", async () => {
-    vi.useFakeTimers();
     const url = ref("https://example.com/url?a=3");
     const payload = ref({ a: 1 });
     const { data } = await useFetch(url, { refetch: true, immediate: true })

@@ -2,8 +2,12 @@ import { vi } from "vitest";
 
 process.setMaxListeners(0);
 
-export const isBelowNode18 = Number(process.version.slice(1).split(".")[0]) < 18;
-export function retry(assertion: () => void, { interval = 1, timeout = 100 } = {}) {
+export const isBelowNode18 =
+  Number(process.version.slice(1).split(".")[0]) < 18;
+export function retry(
+  assertion: () => void,
+  { interval = 1, timeout = 100 } = {},
+) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
@@ -20,6 +24,7 @@ export function retry(assertion: () => void, { interval = 1, timeout = 100 } = {
         vi.advanceTimersByTime(interval);
       } catch (e) {
         /* Expected to throw */
+        console.error(e);
       }
     };
 

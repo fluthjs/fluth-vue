@@ -449,7 +449,10 @@ export function useFetch<T>(
   // watch for url changes
   if (isRef(url) && refetch.value) {
     watch(url, () => executeFun());
-  } else if (url instanceof Observable || url instanceof Stream) {
+  } else if (
+    refetch.value &&
+    (url instanceof Observable || url instanceof Stream)
+  ) {
     url.then(() => executeFun());
   }
 
@@ -500,8 +503,9 @@ export function useFetch<T>(
         ) {
           watch(config.payload as any, () => executeFun(), { deep: true });
         } else if (
-          config.payload instanceof Observable ||
-          config.payload instanceof Stream
+          refetch.value &&
+          (config.payload instanceof Observable ||
+            config.payload instanceof Stream)
         ) {
           config.payload.then(() => executeFun());
         }
