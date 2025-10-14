@@ -61,7 +61,7 @@ useFetch automatically detects and supports two streaming response formats:
 When the server response has `Content-Type` of `text/event-stream`, useFetch automatically enables SSE stream processing mode.
 
 ```ts
-const { promise$ } = useFetch("https://api.example.com/events", {
+const { promise$, execute } = useFetch("https://api.example.com/events", {
   immediate: false,
 });
 
@@ -78,7 +78,7 @@ execute(); // Start receiving SSE stream
 When the server response has `Content-Type` of `application/x-ndjson`, useFetch automatically enables NDJSON stream processing mode.
 
 ```ts
-const { promise$ } = useFetch("https://api.example.com/data-stream", {
+const { promise$, execute } = useFetch("https://api.example.com/data-stream", {
   immediate: false,
 });
 

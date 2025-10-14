@@ -61,7 +61,7 @@ useFetch 自动检测并支持两种流式响应格式：
 当服务器响应的 `Content-Type` 为 `text/event-stream` 时，useFetch 会自动启用 SSE 流处理模式。
 
 ```ts
-const { promise$ } = useFetch("https://api.example.com/events", {
+const { promise$, execute } = useFetch("https://api.example.com/events", {
   immediate: false,
 });
 
@@ -78,7 +78,7 @@ execute(); // 开始接收 SSE 流
 当服务器响应的 `Content-Type` 为 `application/x-ndjson` 时，useFetch 会自动启用 NDJSON 流处理模式。
 
 ```ts
-const { promise$ } = useFetch("https://api.example.com/data-stream", {
+const { promise$, execute } = useFetch("https://api.example.com/data-stream", {
   immediate: false,
 });
 
