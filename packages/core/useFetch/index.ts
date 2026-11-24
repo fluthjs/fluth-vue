@@ -16,6 +16,8 @@ import {
   shallowRef,
   watch,
   nextTick,
+  getCurrentScope,
+  onScopeDispose,
 } from "vue";
 import { debounce, throttle } from "lodash-es";
 import { $, Observable, Stream, PromiseStatus } from "../useFluth";
@@ -189,6 +191,7 @@ export function useFetch<T>(
     if (!conditionResult) return Promise.resolve(null);
 
     abort(REPEAT_REQUEST);
+    const requestController = controller;
 
     // cache process
     cacheKey =
@@ -383,8 +386,14 @@ export function useFetch<T>(
         return responseData;
       })
       .catch(async (fetchError) => {
-        if (fetchError === REPEAT_REQUEST) {
+        // the request is cancelled by a newer execute, the newer one owns error / retry / promise$
+        const isRepeatCanceled =
+          fetchError === REPEAT_REQUEST ||
+          (requestController?.signal.aborted &&
+            requestController.signal.reason === REPEAT_REQUEST);
+        if (isRepeatCanceled) {
           console.warn(REPEAT_REQUEST, getValue(url));
+          return null;
         }
         let errorData = fetchError.message || fetchError.name;
 
@@ -441,7 +450,21 @@ export function useFetch<T>(
       : execute;
   if (options.immediate) nextTick(() => executeFun());
 
-  if (refresh) interval = setInterval(() => executeFun(), refresh);
+  if (refresh) {
+    interval = setInterval(() => executeFun(), refresh);
+    if (getCurrentScope()) {
+      onScopeDispose(() => {
+        if (interval) {
+          console.debug(
+            "[useFetch] scope disposed, clear refresh interval",
+            getValue(url),
+          );
+          clearInterval(interval);
+          interval = null;
+        }
+      });
+    }
+  }
 
   // compatible Ref refetch
   const refetch = toRef(options.refetch);
@@ -468,7 +491,10 @@ export function useFetch<T>(
     promise$,
     abort,
     execute: executeFun,
-    cancelRefresh: () => clearInterval(interval || undefined),
+    cancelRefresh: () => {
+      clearInterval(interval || undefined);
+      interval = null;
+    },
     clearCache: () => useFetch._cache.delete(cacheKey || ""),
     onFetchResponse: responseEvent.on,
     onFetchError: errorEvent.on,
