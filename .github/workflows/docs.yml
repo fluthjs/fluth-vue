@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Workflow for building and deploying VitePress docs to GitHub Pages
 name: Deploy static content to Pages
 
 on:
@@ -9,11 +9,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Default least-privilege permissions; job-level permissions grant what each job needs
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -22,27 +20,65 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
     steps:
       - uses: pnpm/action-setup@v4
         with:
           version: 9
       - name: Checkout
         uses: actions/checkout@v4
-      - name: build docs
+      - name: Build docs
         run: pnpm i && pnpm run docs:build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
-          # Upload entire repository
           path: "packages/.vitepress/dist"
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Wait for Pages artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_API_PATH: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts?name=github-pages
+        run: |
+          max_wait=60
+          interval=2
+          deadline=$((SECONDS + max_wait))
+          attempt=0
+
+          while true; do
+            attempt=$((attempt + 1))
+            count="$(gh api "$ARTIFACT_API_PATH" --jq '.total_count // 0' 2>&1)" && api_status=0 || api_status=$?
+
+            if [[ "$api_status" -eq 0 && "$count" =~ ^[0-9]+$ && "$count" -ge 1 ]]; then
+              echo "Pages artifact 'github-pages' is ready (total_count=$count, attempt=$attempt, elapsed=${SECONDS}s)."
+              exit 0
+            fi
+
+            if (( SECONDS >= deadline )); then
+              echo "::error::Timed out after ${max_wait}s waiting for artifact 'github-pages' (attempt=$attempt, last_status=$api_status, last_output=$count)."
+              exit 1
+            fi
+
+            echo "Waiting for Pages artifact 'github-pages' (attempt=$attempt, elapsed=${SECONDS}s, status=$api_status, output=$count); retrying in ${interval}s..."
+            sleep "$interval"
+          done
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
