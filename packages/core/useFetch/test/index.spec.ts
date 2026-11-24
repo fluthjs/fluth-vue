@@ -715,6 +715,30 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
     });
   });
 
+  it("should not trigger error flow when request is canceled by repeat request", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => null);
+    const rejectSpy = vi.fn();
+    const { execute, onFetchError, error, promise$ } = useFetch("https://example.com?delay=20", {
+      immediate: false,
+      retry: 3,
+    });
+    onFetchError(onFetchErrorSpy);
+    promise$.then(undefined, rejectSpy);
+
+    const first = execute();
+    const second = execute();
+
+    await expect(first).resolves.toBeNull();
+    await second;
+    await retry(() => expect(error.value).toBeNull());
+
+    expect(fetchSpy).toBeCalledTimes(2);
+    expect(onFetchErrorSpy).not.toBeCalled();
+    expect(rejectSpy).not.toBeCalled();
+    expect(warnSpy).toBeCalledWith("repeat request", "https://example.com?delay=20");
+    warnSpy.mockRestore();
+  });
+
   it("should listen url ref change abort previous request", async () => {
     const url = ref("https://example.com");
     const { onFetchResponse } = useFetch(url, {
