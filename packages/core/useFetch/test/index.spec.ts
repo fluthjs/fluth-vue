@@ -109,7 +109,7 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
       ?.catch((err) => err);
 
     expect(error1).toBe("Bad Request");
-    expect(error2).toBe("Error");
+    expect(error2).toBe("HTTP Error 600");
   });
 
   it("should abort request and set aborted to true", async () => {
@@ -718,10 +718,13 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
   it("should not trigger error flow when request is canceled by repeat request", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => null);
     const rejectSpy = vi.fn();
-    const { execute, onFetchError, error, promise$ } = useFetch("https://example.com?delay=20", {
-      immediate: false,
-      retry: 3,
-    });
+    const { execute, onFetchError, error, promise$ } = useFetch(
+      "https://example.com?delay=20",
+      {
+        immediate: false,
+        retry: 3,
+      },
+    );
     onFetchError(onFetchErrorSpy);
     promise$.then(undefined, rejectSpy);
 
@@ -735,7 +738,10 @@ describe.skipIf(isBelowNode18)("useFetch", () => {
     expect(fetchSpy).toBeCalledTimes(2);
     expect(onFetchErrorSpy).not.toBeCalled();
     expect(rejectSpy).not.toBeCalled();
-    expect(warnSpy).toBeCalledWith("repeat request", "https://example.com?delay=20");
+    expect(warnSpy).toBeCalledWith(
+      "repeat request",
+      "https://example.com?delay=20",
+    );
     warnSpy.mockRestore();
   });
 

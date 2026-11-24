@@ -1,10 +1,9 @@
-import type { MaybeRefOrGetter, Stoppable } from "@vueuse/shared";
+import type { MaybeRefOrGetter } from "@vueuse/shared";
 import {
   createEventHook,
   toRef,
   toValue,
   until,
-  useTimeoutFn,
   objectPick,
 } from "@vueuse/shared";
 import {
@@ -22,10 +21,16 @@ import {
 import { debounce, throttle } from "lodash-es";
 import { $, Observable, Stream, PromiseStatus } from "../useFluth";
 import type {
+  AfterFetchContext,
   DataType,
+  FetchCacheConfig,
+  FetchCacheStorage,
   HttpMethod,
   Combination,
+  OnFetchErrorContext,
+  RetryOptions,
   UseFetchOptions,
+  UseFetchResult,
   UseFetchReturn,
   BeforeFetchContext,
   CreateFetchOptions,
@@ -64,27 +69,200 @@ const requestInitKeys: (keyof RequestInit)[] = [
   "window",
 ];
 
+const CACHE_ENTRY_TAG = Symbol("fluth-vue:fetch-cache-entry");
+const DEFAULT_CACHE_MAX_SIZE = 100;
+
+interface InternalCacheEntry<T = any> {
+  [CACHE_ENTRY_TAG]: true;
+  data: T;
+  expiresAt?: number;
+  timer?: ReturnType<typeof setTimeout>;
+}
+
+const globalCacheConfig = {
+  maxSize: DEFAULT_CACHE_MAX_SIZE,
+};
+
+function isInternalCacheEntry(value: unknown): value is InternalCacheEntry {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    CACHE_ENTRY_TAG in value &&
+    (value as InternalCacheEntry)[CACHE_ENTRY_TAG] === true
+  );
+}
+
+function deleteCacheEntry(storage: FetchCacheStorage, key: string): boolean {
+  if (!storage.has(key)) return false;
+  const existing = storage.get(key);
+  if (isInternalCacheEntry(existing) && existing.timer !== undefined) {
+    clearTimeout(existing.timer);
+  }
+  return storage.delete(key);
+}
+
+function clearCacheStorage(storage: FetchCacheStorage): void {
+  for (const key of Array.from(storage.keys())) {
+    deleteCacheEntry(storage, key);
+  }
+  storage.clear();
+}
+
+function evictExcessEntries(storage: FetchCacheStorage, maxSize: number): void {
+  const limit = Math.max(0, maxSize);
+  while (storage.size > limit) {
+    const oldestKey = storage.keys().next().value;
+    if (oldestKey === undefined) break;
+    deleteCacheEntry(storage, oldestKey);
+  }
+}
+
+function getCacheEntry(
+  storage: FetchCacheStorage,
+  key: string,
+): { hit: true; data: any } | { hit: false } {
+  if (!storage.has(key)) return { hit: false };
+  const raw = storage.get(key);
+
+  if (isInternalCacheEntry(raw)) {
+    if (raw.expiresAt !== undefined && Date.now() >= raw.expiresAt) {
+      deleteCacheEntry(storage, key);
+      return { hit: false };
+    }
+    // Refresh LRU order on hit
+    storage.delete(key);
+    storage.set(key, raw);
+    return { hit: true, data: raw.data };
+  }
+
+  storage.delete(key);
+  storage.set(key, raw);
+  return { hit: true, data: raw };
+}
+
+function setCacheEntry(
+  storage: FetchCacheStorage,
+  key: string,
+  data: any,
+  expiration?: number,
+  maxSize?: number,
+): void {
+  const effectiveMaxSize = maxSize ?? globalCacheConfig.maxSize;
+  deleteCacheEntry(storage, key);
+
+  if (effectiveMaxSize <= 0) return;
+
+  evictExcessEntries(storage, effectiveMaxSize - 1);
+
+  const entry: InternalCacheEntry = {
+    [CACHE_ENTRY_TAG]: true,
+    data,
+    expiresAt:
+      expiration && expiration > 0 ? Date.now() + expiration : undefined,
+  };
+
+  if (expiration && expiration > 0) {
+    entry.timer = setTimeout(() => {
+      if (storage.get(key) === entry) {
+        storage.delete(key);
+      }
+    }, expiration);
+  }
+
+  storage.set(key, entry);
+}
+
+function normalizeRetry(retryOption?: number | RetryOptions): {
+  count: number;
+  delay: number | ((attempt: number, error: any) => number);
+} {
+  if (typeof retryOption === "number") {
+    return { count: Math.max(0, Math.floor(retryOption)), delay: 0 };
+  }
+  if (retryOption && typeof retryOption === "object") {
+    return {
+      count: Math.max(0, Math.floor(retryOption.count)),
+      delay: retryOption.delay ?? 0,
+    };
+  }
+  return { count: 0, delay: 0 };
+}
+
+function watchReactiveSource(
+  source: unknown,
+  onTrigger: () => void,
+  deep = false,
+): (() => void) | null {
+  // Check Observable/Stream before isRef because enhanced streams mimic Ref via __v_isRef
+  if (source instanceof Observable || source instanceof Stream) {
+    const subscription = source.then(() => onTrigger());
+    return () => subscription.unsubscribe();
+  }
+  if (typeof source === "function") {
+    return watch(source as () => unknown, () => onTrigger(), { deep });
+  }
+  if (isRef(source) || isReactive(source)) {
+    return watch(source as any, () => onTrigger(), { deep });
+  }
+  return null;
+}
+
+type AbortKind = "manual" | "repeat" | "timeout" | "unmount" | null;
+
+interface ActiveRequest {
+  id: number;
+  controller?: AbortController;
+  abortKind: AbortKind;
+  abortMessage?: string;
+  timeoutId?: ReturnType<typeof setTimeout>;
+  retryTimerId?: ReturnType<typeof setTimeout>;
+  cancelRetryWait?: () => void;
+  reader?: ReadableStreamDefaultReader<Uint8Array>;
+  streamDisposed?: boolean;
+}
+
+const getAbortKind = (req: ActiveRequest): AbortKind => req.abortKind;
+
 export function createFetch(config: CreateFetchOptions = {}) {
   const _combination = config.combination || ("chain" as Combination);
   const _options = config.options;
 
-  function useFactoryFetch(
-    url: MaybeRefOrGetter<string>,
-    options?: UseFetchOptions,
-  ) {
+  function useFactoryFetch<T = any>(
+    url: MaybeRefOrGetter<string> | Observable<string> | Stream<string>,
+    options?: UseFetchOptions<T>,
+  ): UseFetchResult<T> {
     const computedUrl = computed(() => {
       const baseUrl = toValue(config.baseUrl);
-      const targetUrl = toValue(url);
+      const targetUrl = String(getValue(url) ?? "");
 
       return baseUrl && !isAbsoluteURL(targetUrl)
         ? joinPaths(baseUrl, targetUrl)
         : targetUrl;
     });
 
-    const combinedOptions = {
+    const hasHeaders = Boolean(_options?.headers || options?.headers);
+    const hasCacheSetting = Boolean(
+      _options?.cacheSetting || options?.cacheSetting,
+    );
+    const combinedOptions: UseFetchOptions<T> = {
       ..._options,
       ...options,
-      headers: { ..._options?.headers, ...options?.headers },
+      ...(hasHeaders
+        ? {
+            headers: {
+              ...headersToObject(_options?.headers),
+              ...headersToObject(options?.headers),
+            },
+          }
+        : {}),
+      ...(hasCacheSetting
+        ? {
+            cacheSetting: {
+              ..._options?.cacheSetting,
+              ...options?.cacheSetting,
+            },
+          }
+        : {}),
       beforeFetch: combineCallbacks(
         _combination,
         _options?.beforeFetch,
@@ -102,41 +280,63 @@ export function createFetch(config: CreateFetchOptions = {}) {
       ),
     };
 
-    return useFetch(computedUrl, combinedOptions);
+    return useFetch<T>(computedUrl, combinedOptions);
   }
 
   return useFactoryFetch as typeof useFetch;
 }
 
-export function useFetch<T>(
+export function useFetch<T = any>(
   url: MaybeRefOrGetter<string> | Observable<string> | Stream<string>,
-  fetchOptions?: UseFetchOptions,
-): UseFetchReturn<T> & PromiseLike<UseFetchReturn<T>> {
+  fetchOptions?: UseFetchOptions<T>,
+): UseFetchResult<T> {
   const supportsAbort = typeof AbortController === "function";
+
+  const baseFetchOptions = fetchOptions ? { ...fetchOptions } : undefined;
+  const externalSignal = baseFetchOptions?.signal ?? undefined;
 
   const options = {
     immediate: true,
     refetch: false,
     condition: true,
     updateDataOnError: false,
-    ...fetchOptions,
+    abortOnUnmount: false,
+    ...baseFetchOptions,
   };
 
+  if (options.debounce && options.throttle) {
+    console.warn(
+      "[useFetch] Both 'debounce' and 'throttle' options were provided; 'debounce' takes precedence.",
+    );
+  }
+
   const config: InternalConfig = {
-    method: "GET",
+    method: (baseFetchOptions?.method?.toUpperCase() as HttpMethod) || "GET",
     type: "text" as DataType,
     payload: undefined as unknown,
   };
 
-  const promise$ = $<T>(fetchOptions?.initialData);
+  const promise$ = $<T | undefined>(baseFetchOptions?.initialData);
 
-  const {
-    fetch = window?.fetch,
-    initialData,
-    timeout,
-    refresh,
-    cacheSetting,
-  } = options;
+  const { initialData, timeout, refresh, cacheSetting } = options;
+  const retryConfig = normalizeRetry(options.retry);
+
+  const resolveFetch = (): typeof globalThis.fetch | undefined => {
+    if (options.fetch) return options.fetch;
+    if (typeof window !== "undefined" && typeof window.fetch === "function") {
+      return (...args) => window.fetch(...args);
+    }
+    if (
+      typeof globalThis !== "undefined" &&
+      typeof globalThis.fetch === "function"
+    ) {
+      return (...args) => globalThis.fetch(...args);
+    }
+    return undefined;
+  };
+
+  const getCacheStorage = (): FetchCacheStorage =>
+    cacheSetting?.storage ?? useFetch._cache;
 
   // Event Hooks
   const responseEvent = createEventHook<Response>();
@@ -149,177 +349,424 @@ export function useFetch<T>(
   const statusCode = ref<number | null>(null);
   const response = shallowRef<Response | null>(null);
   const error = shallowRef<any>(null);
-  const data = shallowRef<T | null>(initialData || null);
+  const data = shallowRef<T | null>(initialData ?? null);
 
   const canAbort = computed(() => supportsAbort && loading.value);
 
-  let controller: AbortController | undefined;
-  let timer: Stoppable | undefined;
   const REPEAT_REQUEST = "repeat request";
   const TIME_OUT = "fetch timeout";
 
-  const abort = (message?: string) => {
-    if (supportsAbort) {
-      controller?.abort(message);
-      controller = new AbortController();
-      controller.signal.onabort = () => (aborted.value = true);
-      fetchOptions = {
-        ...fetchOptions,
-        signal: controller.signal,
-      };
-    }
-  };
+  let executeCounter = 0;
+  let activeRequest: ActiveRequest | null = null;
+  let lastController: AbortController | undefined;
+  let interval: null | ReturnType<typeof setInterval> = null;
+  let lastCacheKey: string | null = null;
+  let stopUrlWatch: (() => void) | null = null;
+  let stopPayloadWatch: (() => void) | null = null;
+  let isDisposed = false;
 
   const setLoading = (isLoading: boolean) => {
     loading.value = isLoading;
     isFinished.value = !isLoading;
   };
 
-  if (timeout)
-    timer = useTimeoutFn(() => abort(TIME_OUT), timeout, { immediate: false });
+  const clearRequestTimers = (req: ActiveRequest) => {
+    if (req.timeoutId !== undefined) {
+      clearTimeout(req.timeoutId);
+      req.timeoutId = undefined;
+    }
+    if (req.retryTimerId !== undefined) {
+      clearTimeout(req.retryTimerId);
+      req.retryTimerId = undefined;
+    }
+  };
 
-  let retryCount = 0;
-  let executeCounter = 0;
-  let interval: null | ReturnType<typeof setInterval> = null;
-  let cacheKey: string | null = null;
+  const abortRequest = (
+    req: ActiveRequest | null,
+    kind: Exclude<AbortKind, null>,
+    message?: string,
+  ) => {
+    if (!req) return;
+    if (!req.abortKind) {
+      req.abortKind = kind;
+      req.abortMessage = message;
+    }
+    clearRequestTimers(req);
+    req.cancelRetryWait?.();
 
-  const execute = async (throwOnFailed = true) => {
-    const conditionResult =
-      typeof options.condition === "function"
-        ? options.condition()
-        : getValue(options.condition);
-    if (!conditionResult) return Promise.resolve(null);
-
-    abort(REPEAT_REQUEST);
-    const requestController = controller;
-
-    // cache process
-    cacheKey =
-      cacheSetting?.cacheResolve?.({ url: getValue(url), ...config }) || null;
-    if (cacheKey) {
-      const cacheData = useFetch._cache.get(cacheKey);
-      if (cacheData !== undefined) {
-        data.value = cacheData;
-        setLoading(false);
-        promise$.next(cacheData);
-        return Promise.resolve(cacheData);
-      }
+    if (req.reader) {
+      const reader = req.reader;
+      req.reader = undefined;
+      void reader.cancel().catch(() => undefined);
     }
 
-    setLoading(true);
+    if (
+      (kind === "manual" || kind === "timeout" || kind === "unmount") &&
+      req.id === executeCounter
+    ) {
+      aborted.value = true;
+    }
 
-    error.value = null;
-    statusCode.value = null;
-    aborted.value = false;
+    if (supportsAbort && req.controller && !req.controller.signal.aborted) {
+      const reason =
+        message ??
+        (kind === "repeat"
+          ? REPEAT_REQUEST
+          : kind === "timeout"
+            ? TIME_OUT
+            : undefined);
+      req.controller.abort(reason);
+    }
+  };
 
-    executeCounter += 1;
-    const currentExecuteCounter = executeCounter;
+  const abort = (message?: string) => {
+    if (!supportsAbort) return;
+    if (activeRequest) {
+      abortRequest(activeRequest, "manual", message);
+    } else if (lastController && !lastController.signal.aborted) {
+      lastController.abort(message);
+      aborted.value = true;
+    }
+  };
+
+  const waitRetryDelay = (
+    req: ActiveRequest,
+    delayMs: number,
+  ): Promise<boolean> => {
+    return new Promise<boolean>((resolve) => {
+      let settled = false;
+      const finish = (shouldContinue: boolean) => {
+        if (settled) return;
+        settled = true;
+        if (req.retryTimerId !== undefined) {
+          clearTimeout(req.retryTimerId);
+          req.retryTimerId = undefined;
+        }
+        req.cancelRetryWait = undefined;
+        resolve(shouldContinue);
+      };
+
+      req.cancelRetryWait = () => finish(false);
+      req.retryTimerId = setTimeout(() => finish(true), delayMs);
+    });
+  };
+
+  const attachForwardSignal = (
+    sourceSignal: AbortSignal | null | undefined,
+    targetController: AbortController | undefined,
+    req: ActiveRequest,
+    currentExecuteCounter: number,
+  ): (() => void) | null => {
+    if (!sourceSignal || !targetController) return null;
+    if (sourceSignal.aborted) {
+      if (!req.abortKind) req.abortKind = "manual";
+      if (currentExecuteCounter === executeCounter) aborted.value = true;
+      if (!targetController.signal.aborted) {
+        targetController.abort(sourceSignal.reason);
+      }
+      return null;
+    }
+
+    const onAbort = () => {
+      if (!req.abortKind) req.abortKind = "manual";
+      if (currentExecuteCounter === executeCounter) aborted.value = true;
+      if (!targetController.signal.aborted) {
+        targetController.abort(sourceSignal.reason);
+      }
+    };
+
+    sourceSignal.addEventListener("abort", onAbort, { once: true });
+    return () => sourceSignal.removeEventListener("abort", onAbort);
+  };
+
+  const runAttempt = async (
+    attempt: number,
+    currentExecuteCounter: number,
+    throwOnFailed: boolean,
+    req: ActiveRequest,
+    currentCacheKey: string | null,
+  ): Promise<T | null> => {
+    const attemptController = supportsAbort ? new AbortController() : undefined;
+    req.controller = attemptController;
+    lastController = attemptController;
+
+    const cleanupFns: (() => void)[] = [];
+    if (attemptController) {
+      const onControllerAbort = () => {
+        if (
+          req.id === executeCounter &&
+          req.abortKind !== "repeat" &&
+          !req.streamDisposed
+        ) {
+          aborted.value = true;
+        }
+      };
+      attemptController.signal.addEventListener("abort", onControllerAbort, {
+        once: true,
+      });
+      cleanupFns.push(() =>
+        attemptController.signal.removeEventListener(
+          "abort",
+          onControllerAbort,
+        ),
+      );
+    }
+
+    const externalCleanup = attachForwardSignal(
+      externalSignal,
+      attemptController,
+      req,
+      currentExecuteCounter,
+    );
+    if (externalCleanup) cleanupFns.push(externalCleanup);
 
     const defaultFetchOptions: RequestInit = {
       method: config.method,
       headers: {},
     };
 
-    if (config.payload && config.method !== "GET") {
-      const headers = headersToObject(defaultFetchOptions.headers) as Record<
-        string,
-        string
-      >;
+    let resolvedPayloadType = config.payloadType;
+    if (config.payload !== undefined && config.method !== "GET") {
+      const headers = headersToObject(defaultFetchOptions.headers);
       const payload = getValue(config.payload);
-      // Set the payload to json type only if it's not provided and a literal object is provided and the object is not `formData`
-      // The only case we can deduce the content type and `fetch` can't
+      // Set the payload to json type only if it's not provided and a literal object is provided and the object is not `FormData`
       if (
-        !config.payloadType &&
+        !resolvedPayloadType &&
         payload &&
         Object.getPrototypeOf(payload) === Object.prototype &&
         !(payload instanceof FormData)
-      )
-        config.payloadType = "json";
+      ) {
+        resolvedPayloadType = "json";
+      }
 
-      if (config.payloadType)
+      if (resolvedPayloadType) {
         headers["Content-Type"] =
-          payloadMapping[config.payloadType] ?? config.payloadType;
+          payloadMapping[resolvedPayloadType] ?? resolvedPayloadType;
+      }
 
-      defaultFetchOptions.body =
-        config.payloadType === "json"
-          ? JSON.stringify(payload)
-          : (payload as BodyInit);
+      defaultFetchOptions.headers = headers;
+      if (payload !== undefined) {
+        defaultFetchOptions.body =
+          resolvedPayloadType === "json"
+            ? JSON.stringify(payload)
+            : (payload as BodyInit);
+      }
     }
 
+    const resolvedUrl = String(getValue(url) ?? "");
     let isCanceled = false;
     const context: BeforeFetchContext = {
       url:
-        config.method === "GET" && config.payload
-          ? addQueryParams(getValue(url), getValue(config.payload))
-          : getValue(url),
+        config.method === "GET" && config.payload !== undefined
+          ? addQueryParams(resolvedUrl, getValue(config.payload))
+          : resolvedUrl,
       options: {
+        ...baseFetchOptions,
         ...defaultFetchOptions,
-        ...fetchOptions,
+        headers: {
+          ...headersToObject(defaultFetchOptions.headers),
+          ...headersToObject(baseFetchOptions?.headers),
+        },
+        ...(attemptController ? { signal: attemptController.signal } : {}),
       },
       cancel: () => {
         isCanceled = true;
       },
     };
 
-    if (options.beforeFetch)
-      Object.assign(context, await options.beforeFetch(context));
+    if (options.beforeFetch) {
+      try {
+        Object.assign(context, await options.beforeFetch(context));
+      } catch (beforeFetchError) {
+        cleanupFns.forEach((fn) => fn());
+        if (currentExecuteCounter === executeCounter) {
+          if (activeRequest === req) activeRequest = null;
+          setLoading(false);
+        }
+        throw beforeFetchError;
+      }
+    }
 
-    if (isCanceled || !fetch) {
-      setLoading(false);
-      return Promise.resolve(null);
+    if (
+      currentExecuteCounter !== executeCounter ||
+      getAbortKind(req) === "repeat"
+    ) {
+      cleanupFns.forEach((fn) => fn());
+      return null;
+    }
+
+    const fetchFn = resolveFetch();
+    if (isCanceled || !fetchFn) {
+      cleanupFns.forEach((fn) => fn());
+      if (currentExecuteCounter === executeCounter) {
+        if (activeRequest === req) activeRequest = null;
+        setLoading(false);
+      }
+      return null;
+    }
+
+    if (
+      context.options?.signal &&
+      context.options.signal !== attemptController?.signal &&
+      context.options.signal !== externalSignal
+    ) {
+      const extraCleanup = attachForwardSignal(
+        context.options.signal,
+        attemptController,
+        req,
+        currentExecuteCounter,
+      );
+      if (extraCleanup) cleanupFns.push(extraCleanup);
     }
 
     let responseData: any = null;
     response.value = null;
 
-    if (timer) timer.start();
+    let attemptTimeoutId: ReturnType<typeof setTimeout> | undefined;
+    if (timeout && timeout > 0) {
+      attemptTimeoutId = setTimeout(() => {
+        if (
+          req.id === executeCounter &&
+          (!attemptController || !attemptController.signal.aborted)
+        ) {
+          abortRequest(req, "timeout", TIME_OUT);
+        }
+      }, timeout);
+      req.timeoutId = attemptTimeoutId;
+    }
 
     promise$.status = PromiseStatus.PENDING;
 
-    return fetch(context.url, {
-      ...defaultFetchOptions,
-      ...objectPick(context.options, requestInitKeys),
-      headers: {
-        ...headersToObject(defaultFetchOptions.headers),
-        ...headersToObject(context.options?.headers),
-      },
-    })
-      .then(async (fetchResponse) => {
-        response.value = fetchResponse;
-        statusCode.value = fetchResponse.status;
+    let isRetrying = false;
 
-        const contentType = fetchResponse.headers.get("Content-Type");
-        const isSSEStream =
-          contentType?.includes("text/event-stream") &&
-          fetchResponse.body instanceof ReadableStream;
-        const isNDJSONStream =
-          contentType?.includes("application/x-ndjson") &&
-          fetchResponse.body instanceof ReadableStream;
+    try {
+      const preFetchAbortKind = getAbortKind(req);
+      if (preFetchAbortKind) {
+        throw new Error(
+          req.abortMessage ||
+            (preFetchAbortKind === "timeout"
+              ? TIME_OUT
+              : "The operation was aborted."),
+        );
+      }
 
-        // handle stream response
-        if (isSSEStream || isNDJSONStream) {
-          const reader = fetchResponse
-            .clone()
-            .body?.getReader() as ReadableStreamDefaultReader<
-            Uint8Array<ArrayBuffer>
-          >;
-          const decoder = new TextDecoder();
-          let received = "";
-          let buffer = "";
+      const requestInit: RequestInit = {
+        ...defaultFetchOptions,
+        ...objectPick(context.options, requestInitKeys),
+        headers: {
+          ...headersToObject(defaultFetchOptions.headers),
+          ...headersToObject(context.options?.headers),
+        },
+      };
+      if (attemptController) {
+        requestInit.signal = attemptController.signal;
+      }
 
+      const fetchResponse = await fetchFn(context.url, requestInit);
+
+      if (
+        currentExecuteCounter !== executeCounter ||
+        getAbortKind(req) === "repeat"
+      ) {
+        return null;
+      }
+
+      response.value = fetchResponse;
+      statusCode.value = fetchResponse.status;
+
+      // Check response.ok before consuming stream bodies to avoid pushing error responses to promise$
+      if (!fetchResponse.ok) {
+        try {
+          responseData = await fetchResponse.clone()[config.type]();
+        } catch {
+          responseData = null;
+        }
+        if (currentExecuteCounter !== executeCounter) return null;
+        data.value = initialData ?? null;
+        throw new Error(
+          fetchResponse.statusText || `HTTP Error ${fetchResponse.status}`,
+        );
+      }
+
+      const contentType =
+        fetchResponse.headers.get("Content-Type")?.toLowerCase() || "";
+      const responseBody = fetchResponse.body;
+      const hasReadableBody =
+        responseBody != null &&
+        typeof (responseBody as any).getReader === "function";
+      const isSSEStream =
+        contentType.includes("text/event-stream") && hasReadableBody;
+      const isNDJSONStream =
+        (contentType.includes("application/x-ndjson") ||
+          contentType.includes("application/ndjson")) &&
+        hasReadableBody;
+
+      // Handle stream response directly without cloning to avoid ReadableStream.tee() OOM
+      if ((isSSEStream || isNDJSONStream) && responseBody) {
+        const reader = responseBody.getReader();
+        req.reader = reader;
+        const decoder = new TextDecoder();
+        let received = "";
+        let buffer = "";
+
+        try {
           while (true) {
+            const abortKindBeforeRead = getAbortKind(req);
+            if (
+              currentExecuteCounter !== executeCounter ||
+              abortKindBeforeRead === "repeat"
+            ) {
+              await reader.cancel().catch(() => undefined);
+              return null;
+            }
+            if (req.streamDisposed && !options.abortOnUnmount) {
+              await reader.cancel().catch(() => undefined);
+              return null;
+            }
+            if (abortKindBeforeRead) {
+              await reader.cancel().catch(() => undefined);
+              throw new Error(
+                req.abortMessage ||
+                  (abortKindBeforeRead === "timeout"
+                    ? TIME_OUT
+                    : "The operation was aborted."),
+              );
+            }
+
             const { done, value } = await reader.read();
+
+            const abortKindAfterRead = getAbortKind(req);
+            if (
+              currentExecuteCounter !== executeCounter ||
+              abortKindAfterRead === "repeat"
+            ) {
+              await reader.cancel().catch(() => undefined);
+              return null;
+            }
+            if (req.streamDisposed && !options.abortOnUnmount) {
+              await reader.cancel().catch(() => undefined);
+              return null;
+            }
+            if (abortKindAfterRead) {
+              await reader.cancel().catch(() => undefined);
+              throw new Error(
+                req.abortMessage ||
+                  (abortKindAfterRead === "timeout"
+                    ? TIME_OUT
+                    : "The operation was aborted."),
+              );
+            }
 
             if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
+            if (!chunk) continue;
             received += chunk;
 
             if (isNDJSONStream) {
-              // For NDJSON, parse each line as a separate JSON object
               buffer += chunk;
-              const lines = buffer.split("\n");
-              buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
+              const lines = buffer.split(/\r?\n/);
+              buffer = lines.pop() || "";
 
               for (const line of lines) {
                 if (line.trim()) {
@@ -327,111 +774,269 @@ export function useFetch<T>(
                     const jsonObj = JSON.parse(line);
                     promise$.next(jsonObj as T);
                   } catch (e) {
-                    // If JSON parsing fails, send the raw line
                     console.error(e);
                     promise$.next(line as T);
                   }
                 }
               }
             } else {
-              // For SSE, send raw chunks
               promise$.next(chunk as T);
+            }
+          }
+
+          // Flush trailing multi-byte UTF-8 sequence buffered in TextDecoder
+          const rest = decoder.decode();
+          if (rest) {
+            received += rest;
+            if (isNDJSONStream) {
+              buffer += rest;
+            } else {
+              promise$.next(rest as T);
             }
           }
 
           // Handle any remaining content in buffer for NDJSON
           if (isNDJSONStream && buffer.trim()) {
-            try {
-              const jsonObj = JSON.parse(buffer);
-              promise$.next(jsonObj as T);
-            } catch (e) {
-              console.error(e);
-              promise$.next(buffer as T);
+            const remainingLines = buffer.split(/\r?\n/);
+            for (const line of remainingLines) {
+              if (line.trim()) {
+                try {
+                  const jsonObj = JSON.parse(line);
+                  promise$.next(jsonObj as T);
+                } catch (e) {
+                  console.error(e);
+                  promise$.next(line as T);
+                }
+              }
             }
           }
 
           responseData = received;
-        } else {
-          responseData = await fetchResponse.clone()[config.type]();
+        } finally {
+          if (req.reader === reader) {
+            req.reader = undefined;
+          }
+          try {
+            reader.releaseLock();
+          } catch {
+            // Lock may already be released after cancel
+          }
         }
+      } else {
+        responseData = await fetchResponse.clone()[config.type]();
+      }
 
-        // see: https://www.tjvantoll.com/2015/09/13/fetch-and-errors/
-        if (!fetchResponse.ok) {
-          data.value = initialData || null;
-          throw new Error(fetchResponse.statusText);
-        }
+      if (currentExecuteCounter !== executeCounter) return null;
 
-        if (options.afterFetch) {
-          ({ data: responseData } = await options.afterFetch({
-            data: responseData,
-            response: fetchResponse,
-          }));
-        }
-        // reset retry count
-        retryCount = 0;
-        data.value = responseData;
-        if (cacheKey) {
-          useFetch._cache.set(cacheKey, responseData);
-          if (cacheSetting?.expiration)
-            setTimeout(
-              () => useFetch._cache.delete(cacheKey || ""),
-              cacheSetting.expiration,
-            );
-        }
-        if (!isSSEStream && !isNDJSONStream) {
-          promise$.next(Promise.resolve(responseData));
-        }
+      if (options.afterFetch) {
+        const afterCtx: AfterFetchContext<T> = {
+          data: responseData,
+          response: fetchResponse,
+        };
+        const afterResult = await options.afterFetch(afterCtx);
+        if (currentExecuteCounter !== executeCounter) return null;
+        responseData =
+          afterResult && "data" in afterResult
+            ? afterResult.data
+            : afterCtx.data;
+      }
 
-        responseEvent.trigger(fetchResponse);
-        return responseData;
-      })
-      .catch(async (fetchError) => {
-        // the request is cancelled by a newer execute, the newer one owns error / retry / promise$
-        const isRepeatCanceled =
-          fetchError === REPEAT_REQUEST ||
-          (requestController?.signal.aborted &&
-            requestController.signal.reason === REPEAT_REQUEST);
-        if (isRepeatCanceled) {
-          console.warn(REPEAT_REQUEST, getValue(url));
-          return null;
-        }
-        let errorData = fetchError.message || fetchError.name;
+      data.value = responseData;
+      if (currentCacheKey && !isSSEStream && !isNDJSONStream) {
+        setCacheEntry(
+          getCacheStorage(),
+          currentCacheKey,
+          responseData,
+          cacheSetting?.expiration,
+          cacheSetting?.maxSize,
+        );
+      }
 
-        if (options.onFetchError) {
-          ({ error: errorData, data: responseData } =
-            await options.onFetchError({
-              data: responseData,
-              error: fetchError,
-              response: response.value,
-            }));
-        }
+      if (!isSSEStream && !isNDJSONStream) {
+        promise$.next(Promise.resolve(responseData));
+      }
 
-        // retry should not release error
-        if (options.retry && retryCount < options.retry) {
-          retryCount += 1;
-          execute();
-          return;
-        }
-
-        error.value = errorData;
-        if (options.updateDataOnError) data.value = responseData;
-
-        promise$.next(Promise.reject(errorData));
-        errorEvent.trigger(errorData);
-        if (throwOnFailed) throw errorData;
+      responseEvent.trigger(fetchResponse);
+      return responseData;
+    } catch (fetchError: any) {
+      // Request cancelled by a newer execute: newer request owns error / retry / promise$
+      const currentAbortKind = getAbortKind(req);
+      const isRepeatCanceled =
+        currentAbortKind === "repeat" ||
+        fetchError === REPEAT_REQUEST ||
+        (attemptController?.signal.aborted &&
+          attemptController.signal.reason === REPEAT_REQUEST);
+      if (isRepeatCanceled) {
+        console.warn(REPEAT_REQUEST, getValue(url));
         return null;
-      })
-      .finally(() => {
-        if (currentExecuteCounter === executeCounter && retryCount === 0)
-          setLoading(false);
-        if (timer) timer.stop();
+      }
+
+      if (currentExecuteCounter !== executeCounter) {
+        return null;
+      }
+
+      if (req.streamDisposed && !options.abortOnUnmount) {
+        return null;
+      }
+
+      // Retry state machine: skip retry for manual/unmount abort or disposed scope
+      const isManualOrUnmountAbort =
+        currentAbortKind === "manual" || currentAbortKind === "unmount";
+      const canRetry =
+        !isManualOrUnmountAbort && !isDisposed && attempt < retryConfig.count;
+
+      if (canRetry) {
+        const nextAttempt = attempt + 1;
+        const delayMs =
+          typeof retryConfig.delay === "function"
+            ? retryConfig.delay(nextAttempt, fetchError)
+            : retryConfig.delay;
+
+        if (delayMs && delayMs > 0) {
+          const shouldContinue = await waitRetryDelay(req, delayMs);
+          const postWaitAbortKind = getAbortKind(req);
+          if (
+            currentExecuteCounter !== executeCounter ||
+            postWaitAbortKind === "repeat"
+          ) {
+            return null;
+          }
+          if (!shouldContinue || isDisposed) {
+            if (
+              postWaitAbortKind !== "manual" &&
+              postWaitAbortKind !== "unmount"
+            ) {
+              return null;
+            }
+          }
+        }
+
+        const retryAbortKind = getAbortKind(req);
+        if (
+          currentExecuteCounter === executeCounter &&
+          !isDisposed &&
+          retryAbortKind !== "manual" &&
+          retryAbortKind !== "unmount" &&
+          retryAbortKind !== "repeat"
+        ) {
+          // Reset per-attempt abort state (e.g. from timeout) before next attempt
+          req.abortKind = null;
+          req.abortMessage = undefined;
+          aborted.value = false;
+          isRetrying = true;
+          return runAttempt(
+            nextAttempt,
+            currentExecuteCounter,
+            throwOnFailed,
+            req,
+            currentCacheKey,
+          );
+        }
+      }
+
+      let errorData = fetchError?.message || fetchError?.name || fetchError;
+
+      if (options.onFetchError) {
+        const errorCtx: OnFetchErrorContext<T> = {
+          data: responseData,
+          error: fetchError,
+          response: response.value,
+        };
+        const errorResult = await options.onFetchError(errorCtx);
+        if (currentExecuteCounter !== executeCounter) return null;
+        if (errorResult) {
+          if ("error" in errorResult) {
+            errorData = errorResult.error;
+          } else if (errorCtx.error !== fetchError) {
+            errorData = errorCtx.error;
+          }
+          responseData =
+            "data" in errorResult ? errorResult.data : errorCtx.data;
+        } else {
+          if (errorCtx.error !== fetchError) {
+            errorData = errorCtx.error;
+          }
+          responseData = errorCtx.data;
+        }
+      }
+
+      error.value = errorData;
+      if (options.updateDataOnError) data.value = responseData;
+
+      promise$.next(Promise.reject(errorData));
+      errorEvent.trigger(errorData);
+      if (throwOnFailed) throw errorData;
+      return null;
+    } finally {
+      if (attemptTimeoutId !== undefined) {
+        clearTimeout(attemptTimeoutId);
+        if (req.timeoutId === attemptTimeoutId) {
+          req.timeoutId = undefined;
+        }
+      }
+      cleanupFns.forEach((fn) => fn());
+
+      if (!isRetrying && currentExecuteCounter === executeCounter) {
+        if (activeRequest === req) {
+          activeRequest = null;
+        }
+        setLoading(false);
         finallyEvent.trigger(null);
-      });
+      }
+    }
   };
 
-  const executeFun = options.debounce
+  const executeCore = async (throwOnFailed = true): Promise<T | null> => {
+    const conditionResult = getValue(options.condition);
+    if (!conditionResult) return null;
+
+    abortRequest(activeRequest, "repeat", REPEAT_REQUEST);
+
+    executeCounter += 1;
+    const currentExecuteCounter = executeCounter;
+
+    const resolvedUrl = String(getValue(url) ?? "");
+    const currentCacheKey =
+      cacheSetting?.cacheResolve?.({ url: resolvedUrl, ...config }) || null;
+    lastCacheKey = currentCacheKey;
+
+    if (currentCacheKey) {
+      const cached = getCacheEntry(getCacheStorage(), currentCacheKey);
+      if (cached.hit) {
+        data.value = cached.data;
+        error.value = null;
+        aborted.value = false;
+        setLoading(false);
+        promise$.next(cached.data);
+        return cached.data;
+      }
+    }
+
+    setLoading(true);
+    error.value = null;
+    statusCode.value = null;
+    aborted.value = false;
+
+    const req: ActiveRequest = {
+      id: currentExecuteCounter,
+      abortKind: null,
+    };
+    activeRequest = req;
+
+    return runAttempt(
+      0,
+      currentExecuteCounter,
+      throwOnFailed,
+      req,
+      currentCacheKey,
+    );
+  };
+
+  const debouncedOrThrottled = options.debounce
     ? debounce(
-        execute,
+        () => {
+          void executeCore(false);
+        },
         typeof options.debounce === "number"
           ? options.debounce
           : options.debounce.wait,
@@ -440,43 +1045,82 @@ export function useFetch<T>(
       )
     : options.throttle
       ? throttle(
-          execute,
+          () => {
+            void executeCore(false);
+          },
           typeof options.throttle === "number"
             ? options.throttle
             : options.throttle.wait,
           (typeof options.throttle === "object" && options.throttle.options) ||
             {},
         )
-      : execute;
-  if (options.immediate) nextTick(() => executeFun());
+      : null;
 
-  if (refresh) {
-    interval = setInterval(() => executeFun(), refresh);
-    if (getCurrentScope()) {
-      onScopeDispose(() => {
-        if (interval) {
-          console.debug(
-            "[useFetch] scope disposed, clear refresh interval",
-            getValue(url),
-          );
-          clearInterval(interval);
-          interval = null;
-        }
-      });
+  const executeFun = debouncedOrThrottled
+    ? (): void => {
+        debouncedOrThrottled();
+      }
+    : executeCore;
+
+  const triggerAutoExecute = () => {
+    if (isDisposed) return;
+    if (debouncedOrThrottled) {
+      debouncedOrThrottled();
+    } else {
+      void executeCore(false);
     }
+  };
+
+  if (options.immediate) {
+    nextTick(() => {
+      if (!isDisposed) triggerAutoExecute();
+    });
   }
 
-  // compatible Ref refetch
-  const refetch = toRef(options.refetch);
+  if (refresh) {
+    interval = setInterval(() => triggerAutoExecute(), refresh);
+  }
 
-  // watch for url changes
-  if (isRef(url) && refetch.value) {
-    watch(url, () => executeFun());
-  } else if (
-    refetch.value &&
-    (url instanceof Observable || url instanceof Stream)
-  ) {
-    url.then(() => executeFun());
+  // Compatible Ref / Getter / boolean refetch
+  const refetch = toRef(options.refetch);
+  const shouldWatchRefetch =
+    isRef(options.refetch) ||
+    typeof options.refetch === "function" ||
+    Boolean(options.refetch);
+
+  if (shouldWatchRefetch) {
+    stopUrlWatch = watchReactiveSource(url, () => {
+      if (refetch.value) triggerAutoExecute();
+    });
+  }
+
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      isDisposed = true;
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+      debouncedOrThrottled?.cancel();
+      stopUrlWatch?.();
+      stopUrlWatch = null;
+      stopPayloadWatch?.();
+      stopPayloadWatch = null;
+
+      if (activeRequest) {
+        clearRequestTimers(activeRequest);
+        activeRequest.cancelRetryWait?.();
+        if (activeRequest.reader) {
+          activeRequest.streamDisposed = true;
+          const reader = activeRequest.reader;
+          activeRequest.reader = undefined;
+          void reader.cancel().catch(() => undefined);
+        }
+        if (options.abortOnUnmount) {
+          abortRequest(activeRequest, "unmount");
+        }
+      }
+    });
   }
 
   const shell: UseFetchReturn<T> = {
@@ -492,10 +1136,23 @@ export function useFetch<T>(
     abort,
     execute: executeFun,
     cancelRefresh: () => {
-      clearInterval(interval || undefined);
-      interval = null;
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
     },
-    clearCache: () => useFetch._cache.delete(cacheKey || ""),
+    clearCache: () => {
+      const targetKey =
+        lastCacheKey ||
+        cacheSetting?.cacheResolve?.({
+          url: String(getValue(url) ?? ""),
+          ...config,
+        }) ||
+        null;
+      if (targetKey) {
+        deleteCacheEntry(getCacheStorage(), targetKey);
+      }
+    },
     onFetchResponse: responseEvent.on,
     onFetchError: errorEvent.on,
     onFetchFinally: finallyEvent.on,
@@ -515,6 +1172,15 @@ export function useFetch<T>(
     formData: setType("formData"),
   };
 
+  function createShellResult(): UseFetchResult<T> {
+    return {
+      ...shell,
+      then(onFulfilled: any, onRejected: any) {
+        return waitUntilFinished().then(onFulfilled, onRejected);
+      },
+    } as UseFetchResult<T>;
+  }
+
   function setMethod(method: HttpMethod) {
     return (payload?: unknown, payloadType?: string) => {
       if (!loading.value) {
@@ -522,28 +1188,20 @@ export function useFetch<T>(
         config.payload = payload;
         config.payloadType = payloadType;
 
-        // watch for payload changes
-        if (
-          (isRef(config.payload) || isReactive(config.payload)) &&
-          refetch.value
-        ) {
-          watch(config.payload as any, () => executeFun(), { deep: true });
-        } else if (
-          refetch.value &&
-          (config.payload instanceof Observable ||
-            config.payload instanceof Stream)
-        ) {
-          config.payload.then(() => executeFun());
-        }
+        stopPayloadWatch?.();
+        stopPayloadWatch = null;
 
-        return {
-          ...shell,
-          then(onFulfilled: any, onRejected: any) {
-            return waitUntilFinished().then(onFulfilled, onRejected);
-          },
-        } as any;
+        if (shouldWatchRefetch) {
+          stopPayloadWatch = watchReactiveSource(
+            config.payload,
+            () => {
+              if (refetch.value) triggerAutoExecute();
+            },
+            true,
+          );
+        }
       }
-      return undefined;
+      return createShellResult() as any;
     };
   }
 
@@ -559,27 +1217,28 @@ export function useFetch<T>(
     return () => {
       if (!loading.value) {
         config.type = type;
-        return {
-          ...shell,
-          then(onFulfilled: any, onRejected: any) {
-            return waitUntilFinished().then(onFulfilled, onRejected);
-          },
-        } as any;
       }
-      return undefined;
+      return createShellResult() as any;
     };
   }
 
-  return {
-    ...shell,
-    then(onFulfilled, onRejected) {
-      return waitUntilFinished().then(onFulfilled, onRejected);
-    },
-  };
+  return createShellResult();
 }
 
 useFetch._cache = new Map() as unknown as Map<string, any>;
 
+export function configureFetchCache(config: FetchCacheConfig = {}) {
+  if (config.maxSize !== undefined) {
+    globalCacheConfig.maxSize = Number.isFinite(config.maxSize)
+      ? Math.max(0, Math.floor(config.maxSize))
+      : config.maxSize > 0
+        ? Infinity
+        : 0;
+    evictExcessEntries(useFetch._cache, globalCacheConfig.maxSize);
+  }
+}
+
 export function clearFetchCache() {
+  clearCacheStorage(useFetch._cache);
   useFetch._cache = new Map();
 }
