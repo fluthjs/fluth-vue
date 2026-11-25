@@ -793,5 +793,110 @@ describe("render$ function comprehensive tests", () => {
       );
       expect(html).toContain('<b class="ssr-only">SSR Component</b>');
     });
+
+    it("should keep inline renderFn closures fresh with parent refs not read in parent render", async () => {
+      const stream$ = $("A");
+      const externalSuffix = ref("suffix-1");
+
+      const Parent = defineComponent({
+        setup() {
+          return () =>
+            h("div", [
+              stream$.render$((val) =>
+                h("span", { class: "out" }, `${val}:${externalSuffix.value}`),
+              ),
+            ]);
+        },
+      });
+
+      const wrapper = mount(Parent);
+      expect(wrapper.find(".out").text()).toBe("A:suffix-1");
+
+      externalSuffix.value = "suffix-2";
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".out").text()).toBe("A:suffix-2");
+
+      stream$.next("B");
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".out").text()).toBe("B:suffix-2");
+    });
+
+    it("should switch streams dynamically without remounting child and stop tracking old stream", async () => {
+      const a$ = $("A1");
+      const b$ = $("B1");
+      const useB = ref(false);
+      let childMounts = 0;
+
+      const Child = defineComponent({
+        props: { text: String },
+        setup(props) {
+          onMounted(() => {
+            childMounts++;
+          });
+          return () => h("span", { class: "switched" }, props.text);
+        },
+      });
+
+      const Parent = defineComponent({
+        setup() {
+          return () =>
+            (useB.value ? b$ : a$).render$((val) => h(Child, { text: val }));
+        },
+      });
+
+      const wrapper = mount(Parent);
+      expect(childMounts).toBe(1);
+      expect(wrapper.find(".switched").text()).toBe("A1");
+
+      useB.value = true;
+      await wrapper.vm.$nextTick();
+      expect(childMounts).toBe(1);
+      expect(wrapper.find(".switched").text()).toBe("B1");
+
+      // Old stream emissions should not overwrite the active stream display
+      a$.next("A2");
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".switched").text()).toBe("B1");
+
+      // New stream emissions update cleanly
+      b$.next("B2");
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".switched").text()).toBe("B2");
+      expect(childMounts).toBe(1);
+    });
+
+    it("should not leak subscriber nodes across repeated mount and unmount cycles", async () => {
+      const stream$ = $(0);
+      const renderCount = vi.fn();
+
+      const Comp = defineComponent({
+        setup() {
+          return () =>
+            stream$.render$((v) => {
+              renderCount(v);
+              return h("span", String(v));
+            });
+        },
+      });
+
+      for (let i = 0; i < 5; i++) {
+        const w = mount(Comp);
+        w.unmount();
+      }
+
+      renderCount.mockClear();
+      const active = mount(Comp);
+      expect(renderCount).toHaveBeenCalledTimes(1);
+
+      stream$.next(1);
+      await active.vm.$nextTick();
+      expect(renderCount).toHaveBeenCalledTimes(2);
+      expect(active.text()).toBe("1");
+
+      active.unmount();
+      stream$.next(2);
+      await Promise.resolve();
+      expect(renderCount).toHaveBeenCalledTimes(2);
+    });
   });
 });

@@ -161,7 +161,7 @@ describe("to$ function", () => {
     expect(stream$.value).toBe("before-complete"); // Should remain at last value before completion
   });
 
-  it("should deep clone circular references, Date, RegExp, Map, Set, and preserve functions/class instances", async () => {
+  it("should deep clone circular references, Date, RegExp, TypedArray, Map, Set, unwrap nested refs, and preserve functions/class instances", async () => {
     class CustomBox {
       constructor(public id: number) {}
     }
@@ -169,7 +169,9 @@ describe("to$ function", () => {
     const box = new CustomBox(7);
     const createdAt = new Date("2026-01-01T00:00:00Z");
     const pattern = /fluth/gi;
-    const map = new Map<string, { n: number }>([["k", { n: 1 }]]);
+    const bytes = new Uint8Array([1, 2, 3]);
+    const mapKey = { id: "key" };
+    const map = new Map<object, { n: number }>([[mapKey, { n: 1 }]]);
     const set = new Set([{ tag: "a" }]);
 
     const obj: any = {
@@ -177,8 +179,11 @@ describe("to$ function", () => {
       box,
       createdAt,
       pattern,
+      bytes,
       map,
       set,
+      nestedRef: ref(42),
+      deepNested: { innerRef: ref("unwrapped") },
     };
     obj.self = obj;
 
@@ -197,13 +202,20 @@ describe("to$ function", () => {
     expect(stream$.value.pattern).not.toBe(pattern);
     expect(stream$.value.pattern.source).toBe("fluth");
     expect(stream$.value.pattern.flags).toBe("gi");
+    expect(stream$.value.bytes).toBeInstanceOf(Uint8Array);
+    expect(stream$.value.bytes).not.toBe(bytes);
+    expect(Array.from(stream$.value.bytes)).toEqual([1, 2, 3]);
+    bytes[0] = 99;
+    expect(stream$.value.bytes[0]).toBe(1);
     expect(stream$.value.map).toBeInstanceOf(Map);
     expect(stream$.value.map).not.toBe(map);
-    expect(stream$.value.map.get("k")).toEqual({ n: 1 });
-    expect(stream$.value.map.get("k")).not.toBe(map.get("k"));
+    expect(stream$.value.map.get(mapKey)).toEqual({ n: 1 });
+    expect(stream$.value.map.get(mapKey)).not.toBe(map.get(mapKey));
     expect(stream$.value.set).toBeInstanceOf(Set);
     expect(stream$.value.set).not.toBe(set);
     expect(Array.from(stream$.value.set)).toEqual([{ tag: "a" }]);
+    expect(stream$.value.nestedRef).toBe(42);
+    expect(stream$.value.deepNested.innerRef).toBe("unwrapped");
   });
 
   it("should unwrap reactive proxies deeply via toRaw when cloning", () => {

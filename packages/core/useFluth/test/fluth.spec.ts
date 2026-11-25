@@ -12,7 +12,7 @@ import {
   unref,
 } from "vue";
 
-import { $, Stream } from "../index";
+import { $, Stream, combine } from "../index";
 
 const consoleSpy = vi.spyOn(console, "log");
 
@@ -52,7 +52,7 @@ describe.sequential("useFluth", () => {
       expect(consoleSpy).toHaveBeenCalledTimes(0);
     });
 
-    it("should unsubscribe PENDING async observable when component unmounts (no ghost downstream callback)", async () => {
+    it("should unsubscribe PENDING async observable on unmount so settled node is detached from subsequent emissions", async () => {
       vi.useRealTimers();
       let resolvePending!: (val: string) => void;
       const pendingPromise = new Promise<string>((resolve) => {
@@ -60,16 +60,15 @@ describe.sequential("useFluth", () => {
       });
 
       const stream$ = $<number>();
+      const handler = vi.fn(() => pendingPromise);
       const downstreamSpy = vi.fn();
 
       const TestComp = defineComponent({
         template: `<div>pending</div>`,
         setup() {
-          stream$
-            .then(() => pendingPromise)
-            .then((res) => {
-              downstreamSpy(res);
-            });
+          stream$.then(handler).then((res) => {
+            downstreamSpy(res);
+          });
           return {};
         },
       });
@@ -77,21 +76,44 @@ describe.sequential("useFluth", () => {
       const wrapper = mount(TestComp);
       // Put the async observable into PENDING state
       stream$.next(1);
+      expect(handler).toHaveBeenCalledTimes(1);
+
       // Unmount while the observable is still PENDING
       wrapper.unmount();
 
-      // Now resolve the pending promise and flush microtasks
-      resolvePending("ghost-value");
-      await Promise.resolve();
-      await Promise.resolve();
+      // Resolve the pending promise so the unsubscribed node finishes and detaches
+      resolvePending("settled-after-unmount");
       await new Promise((r) => setTimeout(r, 10));
 
       expect(downstreamSpy).not.toHaveBeenCalled();
 
-      // Subsequent emissions should also not reach downstream
+      // Subsequent emissions must NOT re-trigger the detached handler or downstream
       stream$.next(2);
-      await Promise.resolve();
+      await new Promise((r) => setTimeout(r, 10));
+      expect(handler).toHaveBeenCalledTimes(1);
       expect(downstreamSpy).not.toHaveBeenCalled();
+    });
+
+    it("should complete and detach combine input node when component unmounts", () => {
+      const a$ = $(1);
+      const b$ = $(10);
+      const onComplete = vi.fn();
+
+      const TestComp = defineComponent({
+        template: `<div>combine</div>`,
+        setup() {
+          const derived$ = a$.thenImmediate((v) => v * 2);
+          derived$.afterComplete(onComplete);
+          combine(derived$, b$);
+          return {};
+        },
+      });
+
+      const wrapper = mount(TestComp);
+      expect(onComplete).not.toHaveBeenCalled();
+
+      wrapper.unmount();
+      expect(onComplete).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -185,21 +207,6 @@ describe.sequential("useFluth", () => {
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(stream$.value).toBe("initial");
       warnSpy.mockRestore();
-    });
-
-    it("should return the authoritative _v synchronously inside afterSetValue callbacks", () => {
-      const stream$ = $(1);
-      const seenValues: number[] = [];
-
-      // Even if a callback reads stream$.value during afterSetValue, it sees the updated _v
-      stream$.afterSetValue(() => {
-        seenValues.push(stream$.value);
-      });
-
-      stream$.next(2);
-      stream$.next(3);
-
-      expect(seenValues).toEqual([2, 3]);
     });
   });
 

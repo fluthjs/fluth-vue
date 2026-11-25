@@ -44,6 +44,9 @@ declare module "fluth" {
 
 function deepClone<T>(value: T, seen = new WeakMap<object, any>()): T {
   const raw = toRaw(value);
+  if (isRef(raw)) {
+    return deepClone(raw.value, seen) as unknown as T;
+  }
   if (raw === null || typeof raw !== "object") {
     return raw;
   }
@@ -55,6 +58,27 @@ function deepClone<T>(value: T, seen = new WeakMap<object, any>()): T {
   }
   if (raw instanceof RegExp) {
     return new RegExp(raw.source, raw.flags) as unknown as T;
+  }
+  if (ArrayBuffer.isView(raw)) {
+    const NodeBuffer = (globalThis as any).Buffer;
+    if (
+      NodeBuffer &&
+      typeof NodeBuffer.isBuffer === "function" &&
+      NodeBuffer.isBuffer(raw)
+    ) {
+      return NodeBuffer.from(raw) as unknown as T;
+    }
+    const copiedBuffer = raw.buffer.slice(
+      raw.byteOffset,
+      raw.byteOffset + raw.byteLength,
+    );
+    if (raw instanceof DataView) {
+      return new DataView(copiedBuffer) as unknown as T;
+    }
+    const TypedArrayCtor = raw.constructor as new (
+      buffer: ArrayBufferLike,
+    ) => ArrayBufferView;
+    return new TypedArrayCtor(copiedBuffer) as unknown as T;
   }
   if (Array.isArray(raw)) {
     const arr: any[] = [];
@@ -68,7 +92,7 @@ function deepClone<T>(value: T, seen = new WeakMap<object, any>()): T {
     const map = new Map();
     seen.set(raw, map);
     raw.forEach((v, k) => {
-      map.set(deepClone(k, seen), deepClone(v, seen));
+      map.set(k, deepClone(v, seen));
     });
     return map as unknown as T;
   }
@@ -93,7 +117,7 @@ function deepClone<T>(value: T, seen = new WeakMap<object, any>()): T {
     }
     return cloned as T;
   }
-  // Preserve DOM nodes, class instances, buffers, etc. by reference
+  // Preserve DOM nodes and custom class instances by reference
   return raw;
 }
 
@@ -143,9 +167,7 @@ const FluthRender = defineComponent({
       required: true,
     },
     renderFn: {
-      type: Function as PropType<
-        ((value: any) => VNodeChild | DefineComponent) | undefined
-      >,
+      type: Function as PropType<(value: any) => VNodeChild | DefineComponent>,
       default: undefined,
     },
   },
@@ -166,10 +188,7 @@ const FluthRender = defineComponent({
           typeof result === "object" &&
           result !== null &&
           "__vccOpts" in result &&
-          !("setup" in result) &&
-          !("render" in result) &&
-          !("ssrRender" in result) &&
-          !("template" in result)
+          (result as any).__vccOpts
             ? (result as any).__vccOpts
             : result;
         return h(comp as any);
@@ -193,7 +212,6 @@ function render$<T>(
   this: Stream<T> | Observable<T>,
   renderFn?: (value: T) => VNodeChild | DefineComponent,
 ): VNodeChild {
-  enhanceFluthStream(this);
   return h(FluthRender, {
     stream: this,
     renderFn: typeof renderFn === "function" ? renderFn : undefined,
@@ -213,17 +231,13 @@ function enhanceFluthStream(arg$: Stream | Observable) {
   (arg$ as any).toCompt = toCompt;
   (arg$ as any).render$ = render$;
 
-  const value = shallowRef<any>(arg$._getProtectedProperty("_v"));
+  const value = shallowRef<any>(arg$.value);
   arg$.afterSetValue((v) => {
     value.value = v;
   });
 
   Object.defineProperty(arg$, "value", {
-    get: () => {
-      // Trigger Vue dependency tracking before reading the authoritative _v
-      void value.value;
-      return arg$._getProtectedProperty("_v");
-    },
+    get: () => value.value,
     set: () => {
       console.warn(
         "[fluth-vue] Stream/Observable .value is readonly. Use .next() or .set() to update the stream.",
@@ -252,12 +266,16 @@ export const vuePlugin = {
 export interface ToStreamOptions<T = any> {
   /**
    * Whether to deep clone the value before emitting to the stream, or a custom clone function.
-   * Defaults to `true`.
+   * Defaults to `true` (deep clones plain objects, arrays, Date, RegExp, TypedArrays, Map, Set;
+   * unwraps nested refs; preserves functions, DOM nodes, and custom class instances by reference).
+   * Note: when `clone: false`, mutating the same object reference in place will not trigger
+   * Vue `shallowRef` updates.
    */
   clone?: boolean | ((value: T) => T);
   /**
    * Whether to watch deeply.
    * Defaults to `!isShallow(arg)` for refs and `true` for reactive objects.
+   * Note: passing `deep: false` for a `reactive()` source requires Vue >= 3.5.
    */
   deep?: boolean;
 }
@@ -329,9 +347,6 @@ export function to$<T>(
   };
 
   stream$.afterUnsubscribe(stopWatch);
-  if (getCurrentScope()) {
-    onScopeDispose(stopWatch);
-  }
 
   return stream$;
 }
