@@ -1,6 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
-import { defineComponent, computed, watch, ref } from "vue";
+import {
+  defineComponent,
+  computed,
+  watch,
+  ref,
+  reactive,
+  readonly,
+  isRef,
+  isReadonly,
+  unref,
+} from "vue";
 
 import { $, Stream } from "../index";
 
@@ -40,6 +50,156 @@ describe.sequential("useFluth", () => {
       wrapper.unmount();
       promise$.next(2);
       expect(consoleSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it("should unsubscribe PENDING async observable when component unmounts (no ghost downstream callback)", async () => {
+      vi.useRealTimers();
+      let resolvePending!: (val: string) => void;
+      const pendingPromise = new Promise<string>((resolve) => {
+        resolvePending = resolve;
+      });
+
+      const stream$ = $<number>();
+      const downstreamSpy = vi.fn();
+
+      const TestComp = defineComponent({
+        template: `<div>pending</div>`,
+        setup() {
+          stream$
+            .then(() => pendingPromise)
+            .then((res) => {
+              downstreamSpy(res);
+            });
+          return {};
+        },
+      });
+
+      const wrapper = mount(TestComp);
+      // Put the async observable into PENDING state
+      stream$.next(1);
+      // Unmount while the observable is still PENDING
+      wrapper.unmount();
+
+      // Now resolve the pending promise and flush microtasks
+      resolvePending("ghost-value");
+      await Promise.resolve();
+      await Promise.resolve();
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(downstreamSpy).not.toHaveBeenCalled();
+
+      // Subsequent emissions should also not reach downstream
+      stream$.next(2);
+      await Promise.resolve();
+      expect(downstreamSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("$() PromiseLike support", () => {
+    it("should support Promise input and infer unwrapped type", async () => {
+      vi.useRealTimers();
+      let resolveValue!: (v: number) => void;
+      const deferred = new Promise<number>((resolve) => {
+        resolveValue = resolve;
+      });
+
+      const num$ = $(deferred);
+      const TestComp = defineComponent({
+        template: `<div data-testid="val">{{ num$ ?? 'loading' }}</div>`,
+        setup() {
+          return { num$ };
+        },
+      });
+
+      const wrapper = mount(TestComp);
+      expect(wrapper.find('[data-testid="val"]').text()).toBe("loading");
+
+      resolveValue(42);
+      await deferred;
+      await wrapper.vm.$nextTick();
+
+      const typedVal: number = num$.value;
+      expect(typedVal).toBe(42);
+      expect(wrapper.find('[data-testid="val"]').text()).toBe("42");
+    });
+
+    it("should support synchronous thenable input", () => {
+      const syncThenable: PromiseLike<string> = {
+        then<TResult1 = string>(
+          onfulfilled?:
+            | ((value: string) => TResult1 | PromiseLike<TResult1>)
+            | null,
+        ) {
+          const result = onfulfilled
+            ? onfulfilled("sync-ok")
+            : ("sync-ok" as any);
+          return Promise.resolve(result);
+        },
+      };
+
+      const str$ = $(syncThenable);
+      const typedVal: string = str$.value;
+      expect(typedVal).toBe("sync-ok");
+    });
+  });
+
+  describe("enhanceFluthStream reactivity interop and readonly semantics", () => {
+    it("should work with isRef, isReadonly, unref, ref, reactive, readonly, and watch(stream$)", async () => {
+      const stream$ = $("a");
+
+      expect(isRef(stream$)).toBe(true);
+      expect(isReadonly(stream$)).toBe(true);
+      expect(unref(stream$)).toBe("a");
+
+      // ref(stream$) should return the same instance without double-wrapping
+      expect(ref(stream$)).toBe(stream$);
+
+      // reactive(stream$) and readonly(stream$) should skip proxying so private fields stay intact
+      const reactiveStream = reactive(stream$);
+      expect(reactiveStream).toBe(stream$);
+      const readonlyStream = readonly(stream$);
+      expect(readonlyStream).toBe(stream$);
+
+      const watched: [string, string][] = [];
+      const stop = watch(stream$, (newVal, oldVal) => {
+        watched.push([newVal, oldVal]);
+      });
+
+      stream$.next("b");
+      await Promise.resolve();
+      expect(watched).toEqual([["b", "a"]]);
+
+      stop();
+    });
+
+    it("should warn instead of throwing when assigning to stream$.value directly", () => {
+      const warnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => undefined);
+      const stream$ = $("initial");
+
+      expect(() => {
+        (stream$ as any).value = "mutated";
+      }).not.toThrow();
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(stream$.value).toBe("initial");
+      warnSpy.mockRestore();
+    });
+
+    it("should return the authoritative _v synchronously inside afterSetValue callbacks", () => {
+      const stream$ = $(1);
+      const seenValues: number[] = [];
+
+      // Even if a callback reads stream$.value during afterSetValue, it sees the updated _v
+      stream$.afterSetValue(() => {
+        seenValues.push(stream$.value);
+      });
+
+      stream$.next(2);
+      stream$.next(3);
+
+      expect(seenValues).toEqual([2, 3]);
     });
   });
 

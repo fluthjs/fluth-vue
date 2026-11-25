@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ref, reactive, computed } from "vue";
+import {
+  ref,
+  reactive,
+  computed,
+  shallowRef,
+  isReactive,
+  effectScope,
+} from "vue";
 import { to$ } from "../index";
 
 describe("to$ function", () => {
@@ -152,5 +159,115 @@ describe("to$ function", () => {
     // because watch should be cleaned up
     expect(values).toHaveLength(0);
     expect(stream$.value).toBe("before-complete"); // Should remain at last value before completion
+  });
+
+  it("should deep clone circular references, Date, RegExp, Map, Set, and preserve functions/class instances", async () => {
+    class CustomBox {
+      constructor(public id: number) {}
+    }
+    const fn = () => "hello";
+    const box = new CustomBox(7);
+    const createdAt = new Date("2026-01-01T00:00:00Z");
+    const pattern = /fluth/gi;
+    const map = new Map<string, { n: number }>([["k", { n: 1 }]]);
+    const set = new Set([{ tag: "a" }]);
+
+    const obj: any = {
+      fn,
+      box,
+      createdAt,
+      pattern,
+      map,
+      set,
+    };
+    obj.self = obj;
+
+    const source = ref(obj);
+    const stream$ = to$(source);
+
+    expect(isReactive(stream$.value)).toBe(false);
+    expect(stream$.value).not.toBe(obj);
+    expect(stream$.value.self).toBe(stream$.value);
+    expect(stream$.value.fn).toBe(fn);
+    expect(stream$.value.box).toBe(box);
+    expect(stream$.value.createdAt).toBeInstanceOf(Date);
+    expect(stream$.value.createdAt).not.toBe(createdAt);
+    expect(stream$.value.createdAt.getTime()).toBe(createdAt.getTime());
+    expect(stream$.value.pattern).toBeInstanceOf(RegExp);
+    expect(stream$.value.pattern).not.toBe(pattern);
+    expect(stream$.value.pattern.source).toBe("fluth");
+    expect(stream$.value.pattern.flags).toBe("gi");
+    expect(stream$.value.map).toBeInstanceOf(Map);
+    expect(stream$.value.map).not.toBe(map);
+    expect(stream$.value.map.get("k")).toEqual({ n: 1 });
+    expect(stream$.value.map.get("k")).not.toBe(map.get("k"));
+    expect(stream$.value.set).toBeInstanceOf(Set);
+    expect(stream$.value.set).not.toBe(set);
+    expect(Array.from(stream$.value.set)).toEqual([{ tag: "a" }]);
+  });
+
+  it("should unwrap reactive proxies deeply via toRaw when cloning", () => {
+    const nested = reactive({ a: 1, inner: { b: 2 } });
+    const source = ref(nested);
+    const stream$ = to$(source);
+
+    expect(isReactive(stream$.value)).toBe(false);
+    expect(isReactive(stream$.value.inner)).toBe(false);
+    expect(stream$.value).toEqual({ a: 1, inner: { b: 2 } });
+  });
+
+  it("should respect shallowRef semantics by default and allow deep override", async () => {
+    const shallow = shallowRef({ nested: { count: 0 } });
+    const stream$ = to$(shallow);
+    const received: any[] = [];
+    stream$.then((v) => received.push(v));
+
+    // Mutating nested property should NOT trigger watch for shallowRef
+    shallow.value.nested.count = 1;
+    await vi.runAllTimersAsync();
+    expect(received).toHaveLength(0);
+
+    // Replacing top-level value SHOULD trigger watch
+    shallow.value = { nested: { count: 2 } };
+    await vi.runAllTimersAsync();
+    expect(received).toHaveLength(1);
+    expect(stream$.value.nested.count).toBe(2);
+  });
+
+  it("should support clone: false and custom clone function", async () => {
+    const rawObj = { count: 1 };
+    const r = shallowRef(rawObj);
+    const noClone$ = to$(r, { clone: false });
+    expect(noClone$.value).toBe(rawObj);
+
+    const customClone$ = to$(r, {
+      clone: (v) => ({ count: v.count * 10 }),
+    });
+    expect(customClone$.value).toEqual({ count: 10 });
+
+    r.value = { count: 2 };
+    await vi.runAllTimersAsync();
+    expect(customClone$.value).toEqual({ count: 20 });
+  });
+
+  it("should clean up watch when enclosing EffectScope is disposed", async () => {
+    const source = ref("v0");
+    const values: string[] = [];
+    const scope = effectScope();
+
+    scope.run(() => {
+      const s$ = to$(source);
+      s$.then((v) => values.push(v));
+    });
+
+    source.value = "v1";
+    await vi.runAllTimersAsync();
+    expect(values).toEqual(["v1"]);
+
+    scope.stop();
+
+    source.value = "v2";
+    await vi.runAllTimersAsync();
+    expect(values).toEqual(["v1"]);
   });
 });

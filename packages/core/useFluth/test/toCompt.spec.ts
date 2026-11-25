@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { isReactive } from "vue";
 import { $ } from "../index";
 
-describe("toComp function", () => {
+describe("toCompt function", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -48,5 +49,26 @@ describe("toComp function", () => {
 
     streamWithoutInitial$.next(42);
     expect(typeof streamWithoutInitial$Compt.value).toBe("number");
+  });
+
+  it("should use shallowRef without wrapping immutable objects in a deep reactive proxy", () => {
+    const initialObj = { nested: { count: 1 } };
+    const stream$ = $(initialObj);
+    const compt = stream$.toCompt();
+
+    expect(isReactive(compt.value)).toBe(false);
+    expect(compt.value).toBe(initialObj);
+
+    const nextObj = { nested: { count: 2 } };
+    stream$.next(nextObj);
+    expect(isReactive(compt.value)).toBe(false);
+    expect(compt.value).toBe(nextObj);
+  });
+
+  it("should throw descriptive error with correct toCompt name on invalid this", () => {
+    const stream$ = $(1);
+    expect(() => stream$.toCompt.call({} as any)).toThrow(
+      "toCompt only accepts Stream or Observable as input",
+    );
   });
 });
