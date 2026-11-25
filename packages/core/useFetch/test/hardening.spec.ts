@@ -1114,4 +1114,380 @@ describe("useFetch 1.0 hardening", () => {
       expect(mockFetch2).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("PR #3 review regression fixes", () => {
+    it("B1: clears attempt timeout before retry backoff when timeout < failTime + delay", async () => {
+      vi.useFakeTimers();
+
+      // Case 1: all attempts fail with timeout (100ms) < delay (300ms) -> must retry all and reject terminally
+      const failFetch = vi.fn(
+        async () => new Response("err", { status: 500, statusText: "Fail500" }),
+      );
+      const onFetchErrorSpy = vi.fn();
+
+      const req1 = useFetch("https://api.test/b1-fail", {
+        immediate: false,
+        timeout: 100,
+        retry: { count: 2, delay: 300 },
+        fetch: failFetch,
+        onFetchError: onFetchErrorSpy,
+      });
+
+      const p1 = req1.execute(true);
+      const caught = p1?.catch((e) => e);
+
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(await caught).toBe("Fail500");
+      expect(failFetch).toHaveBeenCalledTimes(3);
+      expect(req1.error.value).toBe("Fail500");
+      expect(req1.loading.value).toBe(false);
+      expect(onFetchErrorSpy).toHaveBeenCalledTimes(1);
+
+      // Case 2: fails first, waits 300ms (> 100ms timeout), then recovers on retry
+      const recoverFetch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response("err", { status: 503, statusText: "Busy" }),
+        )
+        .mockResolvedValueOnce(new Response("recovered", { status: 200 }));
+
+      const req2 = useFetch("https://api.test/b1-recover", {
+        immediate: false,
+        timeout: 100,
+        retry: { count: 2, delay: 300 },
+        fetch: recoverFetch,
+      });
+
+      const p2 = req2.execute(true);
+      await vi.advanceTimersByTimeAsync(500);
+      expect(await p2).toBe("recovered");
+      expect(req2.data.value).toBe("recovered");
+      expect(req2.aborted.value).toBe(false);
+      expect(recoverFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("S1: normalizes default error.value to message string consistently across useFetch and createFetch", async () => {
+      const failFetch = vi.fn(
+        async () =>
+          new Response("bad", { status: 400, statusText: "Bad Request" }),
+      );
+
+      // 1. Direct useFetch without hook
+      const directNoHook = useFetch("https://api.test/s1", {
+        immediate: false,
+        fetch: failFetch,
+      });
+      await directNoHook.execute(false);
+      expect(directNoHook.error.value).toBe("Bad Request");
+
+      // 2. Direct useFetch with pass-through / void hook
+      const directPassThrough = useFetch("https://api.test/s1", {
+        immediate: false,
+        fetch: failFetch,
+        onFetchError: (ctx) => ctx,
+      });
+      await directPassThrough.execute(false);
+      expect(directPassThrough.error.value).toBe("Bad Request");
+
+      // 3. createFetch without hook
+      const useApiNoHook = createFetch({ options: { fetch: failFetch } });
+      const factoryNoHook = useApiNoHook("https://api.test/s1", {
+        immediate: false,
+      });
+      await factoryNoHook.execute(false);
+      expect(factoryNoHook.error.value).toBe("Bad Request");
+
+      // 4. createFetch with void/pass-through hook (only side-effect)
+      const sideEffect = vi.fn();
+      const useApiWithHook = createFetch({
+        options: {
+          fetch: failFetch,
+          onFetchError: (ctx) => {
+            sideEffect(ctx.response?.status);
+          },
+        },
+      });
+      const factoryWithHook = useApiWithHook("https://api.test/s1", {
+        immediate: false,
+      });
+      await factoryWithHook.execute(false);
+      expect(sideEffect).toHaveBeenCalledWith(400);
+      expect(factoryWithHook.error.value).toBe("Bad Request");
+
+      // 5. Explicitly customizing ctx.error still works
+      const customErr = new Error("CustomObj");
+      const factoryCustom = useApiWithHook("https://api.test/s1", {
+        immediate: false,
+        onFetchError: () => ({ error: customErr }),
+      });
+      await factoryCustom.execute(false);
+      expect(factoryCustom.error.value).toBe(customErr);
+    });
+
+    it("S2: abortOnUnmount silently cancels without writing error or firing onFetchError", async () => {
+      const mockFetch = createAbortableMockFetch(
+        () => new Promise(() => undefined),
+      );
+      const onFetchErrorOption = vi.fn();
+      const onFetchErrorEvent = vi.fn();
+      const promiseReject = vi.fn();
+
+      let req!: ReturnType<typeof useFetch>;
+      const scope = effectScope();
+      scope.run(() => {
+        req = useFetch("https://api.test/s2-unmount", {
+          immediate: false,
+          abortOnUnmount: true,
+          retry: 2,
+          fetch: mockFetch,
+          onFetchError: onFetchErrorOption,
+        });
+        req.onFetchError(onFetchErrorEvent);
+        req.promise$.then(undefined, promiseReject);
+      });
+
+      // Even with throwOnFailed = true, unmount cancellation resolves null silently
+      const p = req.execute(true);
+      scope.stop();
+      expect(await p).toBeNull();
+
+      expect(req.aborted.value).toBe(true);
+      expect(req.loading.value).toBe(false);
+      expect(req.error.value).toBeNull();
+      expect(onFetchErrorOption).not.toHaveBeenCalled();
+      expect(onFetchErrorEvent).not.toHaveBeenCalled();
+      expect(promiseReject).not.toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("S3: supports initialData: [], initialData: null with explicit generic, and deprecated isFinished option", async () => {
+      interface User {
+        id: number;
+      }
+      const mockFetch = vi.fn(
+        async () => new Response(JSON.stringify([{ id: 1 }]), { status: 200 }),
+      );
+
+      // initialData: [] should not narrow T to never[]
+      const inferred = useFetch("https://api.test/s3-a", {
+        immediate: false,
+        initialData: [],
+        fetch: mockFetch,
+        isFinished: false,
+      });
+      inferred.data.value = [{ id: 1 }];
+      expect(inferred.data.value).toEqual([{ id: 1 }]);
+
+      // Explicit generic accepts null initialData
+      const typed = useFetch<User[]>("https://api.test/s3-b", {
+        immediate: false,
+        initialData: null,
+        fetch: mockFetch,
+      }).json<User[]>();
+      await typed.execute();
+      expect(typed.data.value).toEqual([{ id: 1 }]);
+    });
+
+    it("S4: handles beforeFetch errors cleanly without unhandled rejection on auto-trigger", async () => {
+      const unhandled: any[] = [];
+      const onUnhandled = (reason: any) => unhandled.push(reason);
+      process.on("unhandledRejection", onUnhandled);
+
+      try {
+        const mockFetch = vi.fn(
+          async () => new Response("ok", { status: 200 }),
+        );
+        const onFinallySpy = vi.fn();
+        const onErrorEventSpy = vi.fn();
+
+        const autoReq = useFetch("https://api.test/s4-auto", {
+          immediate: true,
+          retry: 2,
+          fetch: mockFetch,
+          beforeFetch: () => {
+            throw new Error("bf boom");
+          },
+        });
+        autoReq.onFetchFinally(onFinallySpy);
+        autoReq.onFetchError(onErrorEventSpy);
+
+        await vi.waitFor(() => {
+          expect(autoReq.error.value).toBe("bf boom");
+        });
+        await new Promise((r) => setTimeout(r, 20));
+
+        expect(unhandled).toHaveLength(0);
+        expect(autoReq.loading.value).toBe(false);
+        expect(onFinallySpy).toHaveBeenCalledTimes(1);
+        expect(onErrorEventSpy).toHaveBeenCalledWith("bf boom");
+        expect(mockFetch).not.toHaveBeenCalled();
+
+        // Manual execute still rejects when beforeFetch throws
+        const manualReq = useFetch("https://api.test/s4-manual", {
+          immediate: false,
+          fetch: mockFetch,
+          beforeFetch: () => {
+            throw new Error("manual bf boom");
+          },
+        });
+        await expect(manualReq.execute()).rejects.toBe("manual bf boom");
+        expect(manualReq.error.value).toBe("manual bf boom");
+        expect(manualReq.loading.value).toBe(false);
+      } finally {
+        process.off("unhandledRejection", onUnhandled);
+      }
+    });
+
+    it("S6 (M6): flushes incomplete trailing multi-byte UTF-8 sequence via TextDecoder.decode()", async () => {
+      const mockFetch = vi.fn(async () => {
+        const stream = new ReadableStream({
+          start(controller) {
+            // "hi" followed by incomplete 2-byte prefix of 3-byte UTF-8 char "中" (0xE4 0xB8 0xAD)
+            controller.enqueue(Uint8Array.from([0x68, 0x69, 0xe4, 0xb8]));
+            controller.close();
+          },
+        });
+        return new Response(stream, {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        });
+      });
+
+      const chunks: string[] = [];
+      const { execute, data, promise$ } = useFetch("https://api.test/s6-utf8", {
+        immediate: false,
+        fetch: mockFetch,
+      });
+      promise$.then((v) => chunks.push(v));
+
+      await execute();
+      expect(data.value).toBe("hi\uFFFD");
+      expect(chunks).toEqual(["hi", "\uFFFD"]);
+    });
+
+    it("S6 (M10): overwriting the same cache key clears the old expiration timer without deleting the new entry", async () => {
+      vi.useFakeTimers();
+      const d1 = createDeferred<Response>();
+      const d2 = createDeferred<Response>();
+
+      const req1 = useFetch("https://api.test/s6-overwrite", {
+        immediate: false,
+        fetch: vi.fn(() => d1.promise),
+        cacheSetting: { expiration: 500, cacheResolve: ({ url }) => url },
+      });
+      const req2 = useFetch("https://api.test/s6-overwrite", {
+        immediate: false,
+        fetch: vi.fn(() => d2.promise),
+        cacheSetting: { expiration: 500, cacheResolve: ({ url }) => url },
+      });
+
+      // Start both concurrently before either populates cache
+      const p1 = req1.execute();
+      const p2 = req2.execute();
+
+      // t=0: req1 finishes and writes "v1" (expires at t=500)
+      d1.resolve(new Response("v1", { status: 200 }));
+      expect(await p1).toBe("v1");
+      expect(vi.getTimerCount()).toBe(1);
+
+      // t=300: req2 finishes and overwrites same key with "v2" (expires at t=800)
+      await vi.advanceTimersByTimeAsync(300);
+      d2.resolve(new Response("v2", { status: 200 }));
+      expect(await p2).toBe("v2");
+      // Old timer from v1 must have been cleared (only 1 active timer)
+      expect(vi.getTimerCount()).toBe(1);
+
+      // t=550 (past v1's 500ms expiry, before v2's 800ms expiry): must still hit cache with "v2"
+      await vi.advanceTimersByTimeAsync(250);
+      const probeFetch = vi.fn(async () => new Response("v3", { status: 200 }));
+      const req3 = useFetch("https://api.test/s6-overwrite", {
+        immediate: false,
+        fetch: probeFetch,
+        cacheSetting: { expiration: 500, cacheResolve: ({ url }) => url },
+      });
+      expect(await req3.execute()).toBe("v2");
+      expect(probeFetch).not.toHaveBeenCalled();
+
+      // t=850 (past v2's 800ms expiry): now expires and fetches "v3"
+      await vi.advanceTimersByTimeAsync(300);
+      expect(await req3.execute()).toBe("v3");
+      expect(probeFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("O4: external signal abort during retry backoff terminates wait immediately", async () => {
+      vi.useFakeTimers();
+      const externalController = new AbortController();
+      const failFetch = vi.fn(
+        async () => new Response("err", { status: 503, statusText: "Busy" }),
+      );
+
+      const { execute, aborted, loading } = useFetch("https://api.test/o4", {
+        immediate: false,
+        signal: externalController.signal,
+        retry: { count: 3, delay: 5000 },
+        fetch: failFetch,
+      });
+
+      const p = execute(false);
+      await vi.advanceTimersByTimeAsync(50);
+      expect(failFetch).toHaveBeenCalledTimes(1);
+
+      // Abort external signal well before the 5000ms backoff finishes
+      externalController.abort("ext-stop");
+      await p;
+
+      expect(aborted.value).toBe(true);
+      expect(loading.value).toBe(false);
+      expect(vi.getTimerCount()).toBe(0);
+      expect(failFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("O5: configureFetchCache ignores NaN maxSize instead of disabling cache", async () => {
+      const warnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => undefined);
+      const mockFetch = vi.fn(async () => new Response("ok", { status: 200 }));
+
+      configureFetchCache({ maxSize: Number.NaN });
+      expect(warnSpy).toHaveBeenCalled();
+
+      const { execute } = useFetch("https://api.test/o5-nan", {
+        immediate: false,
+        fetch: mockFetch,
+        cacheSetting: { cacheResolve: ({ url }) => url },
+      });
+
+      await execute();
+      await execute();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      warnSpy.mockRestore();
+    });
+
+    it("O6: preserves timeout protection for normal in-flight request when scope disposes with abortOnUnmount=false", async () => {
+      vi.useFakeTimers();
+      const mockFetch = createAbortableMockFetch(
+        () => new Promise(() => undefined),
+      );
+
+      let req!: ReturnType<typeof useFetch>;
+      const scope = effectScope();
+      scope.run(() => {
+        req = useFetch("https://api.test/o6-timeout", {
+          immediate: false,
+          timeout: 100,
+          abortOnUnmount: false,
+          fetch: mockFetch,
+        });
+      });
+
+      const p = req.execute(false);
+      scope.stop();
+      expect(req.aborted.value).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(110);
+      await p;
+      expect(req.aborted.value).toBe(true);
+      expect(req.loading.value).toBe(false);
+    });
+  });
 });

@@ -64,7 +64,8 @@ export interface FetchCacheSetting {
   storage?: FetchCacheStorage;
 
   /**
-   * Maximum cache size override for this storage
+   * Maximum cache size for custom `storage`.
+   * For the default global cache, use `configureFetchCache({ maxSize })`.
    */
   maxSize?: number;
 }
@@ -75,7 +76,7 @@ export interface UseFetchOptions<T = any> extends RequestInit {
    *
    * @default null
    */
-  initialData?: T;
+  initialData?: NoInfer<T> | null;
 
   /**
    * Will automatically run fetch when `useFetch` is used
@@ -154,6 +155,11 @@ export interface UseFetchOptions<T = any> extends RequestInit {
       };
 
   /**
+   * @deprecated Unused option; has no effect and will be removed in 1.0.
+   */
+  isFinished?: boolean;
+
+  /**
    * Timeout for aborting a request after number of milliseconds
    * `0` means use browser default
    *
@@ -162,7 +168,8 @@ export interface UseFetchOptions<T = any> extends RequestInit {
   timeout?: number;
 
   /**
-   * Abort in-flight requests when the enclosing Vue EffectScope is disposed.
+   * Abort in-flight requests silently when the enclosing Vue EffectScope is disposed
+   * (sets `aborted = true` without triggering `onFetchError` or writing `error`).
    * Timers, watchers, and streaming readers are always cleaned up on dispose.
    *
    * @default false
