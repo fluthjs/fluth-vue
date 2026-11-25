@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
-import { defineComponent, h } from "vue";
+import {
+  createSSRApp,
+  defineComponent,
+  h,
+  onErrorCaptured,
+  onMounted,
+  onUpdated,
+  ref,
+} from "vue";
+import { renderToString } from "vue/server-renderer";
 import { $ } from "../index";
 
 const consoleSpy = vi.spyOn(console, "log");
@@ -523,21 +532,34 @@ describe("render$ function comprehensive tests", () => {
   });
 
   describe("Error Handling", () => {
-    it("should handle render$ function throwing errors gracefully", () => {
+    it("should propagate render$ function errors to Vue onErrorCaptured boundary", async () => {
       const stream$ = $("Hello World");
+      const capturedErrors: unknown[] = [];
 
       const TestComponent = defineComponent({
         setup() {
-          const streamComponent = stream$.render$(() => {
-            throw new Error("render$ function error");
+          const hasError = ref(false);
+          onErrorCaptured((err) => {
+            capturedErrors.push(err);
+            hasError.value = true;
+            return false;
           });
-          return () => streamComponent;
+          return () =>
+            hasError.value
+              ? h("div", { class: "fallback" }, "fallback")
+              : stream$.render$(() => {
+                  throw new Error("render$ function error");
+                });
         },
       });
 
       const wrapper = mount(TestComponent);
-      // Should render empty string for error (based on your modification)
-      expect(wrapper.text()).toBe("");
+      await wrapper.vm.$nextTick();
+      expect(capturedErrors).toHaveLength(1);
+      expect((capturedErrors[0] as Error).message).toBe(
+        "render$ function error",
+      );
+      expect(wrapper.find(".fallback").text()).toBe("fallback");
     });
 
     it("should handle render$ function returning null gracefully", () => {
@@ -641,6 +663,240 @@ describe("render$ function comprehensive tests", () => {
 
       expect(divElement.exists()).toBe(true);
       expect(divElement.text()).toBe("Functional: Hello World");
+    });
+
+    it("should detect SFC components with __vccOpts", () => {
+      const stream$ = $("SFC Value");
+      const SfcLike = {
+        __vccOpts: {
+          render() {
+            return h("div", { class: "sfc-vcc" }, "from-vccOpts");
+          },
+        },
+      };
+
+      const TestComponent = defineComponent({
+        setup() {
+          return () => stream$.render$(() => SfcLike as any);
+        },
+      });
+
+      const wrapper = mount(TestComponent);
+      expect(wrapper.find(".sfc-vcc").text()).toBe("from-vccOpts");
+    });
+  });
+
+  describe("Static FluthRender Instance Preservation & SSR", () => {
+    it("should preserve child component state and DOM identity across parent re-renders", async () => {
+      const stream$ = $("v1");
+      const parentTick = ref(0);
+      let childMountCount = 0;
+      let parentUpdateCount = 0;
+
+      const StatefulChild = defineComponent({
+        props: { label: String },
+        setup(props) {
+          const localCount = ref(0);
+          onMounted(() => {
+            childMountCount++;
+          });
+          return () =>
+            h("div", { class: "stateful-child" }, [
+              h("span", { class: "label" }, props.label),
+              h("span", { class: "local-count" }, String(localCount.value)),
+              h(
+                "button",
+                {
+                  class: "inc-btn",
+                  onClick: () => {
+                    localCount.value++;
+                  },
+                },
+                "+",
+              ),
+              h("input", { class: "focus-input" }),
+            ]);
+        },
+      });
+
+      const ParentComponent = defineComponent({
+        setup() {
+          onUpdated(() => {
+            parentUpdateCount++;
+          });
+          return () =>
+            h("div", [
+              h("span", { class: "parent-tick" }, String(parentTick.value)),
+              stream$.render$((val) => h(StatefulChild, { label: val })),
+            ]);
+        },
+      });
+
+      const wrapper = mount(ParentComponent);
+      expect(childMountCount).toBe(1);
+      expect(wrapper.find(".label").text()).toBe("v1");
+      expect(wrapper.find(".local-count").text()).toBe("0");
+
+      const inputElBefore = wrapper.find(".focus-input").element;
+      await wrapper.find(".inc-btn").trigger("click");
+      expect(wrapper.find(".local-count").text()).toBe("1");
+
+      // Trigger parent re-render — FluthRender must reuse instance & preserve child state + DOM
+      parentTick.value = 1;
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.find(".parent-tick").text()).toBe("1");
+      expect(childMountCount).toBe(1);
+      expect(wrapper.find(".local-count").text()).toBe("1");
+      expect(wrapper.find(".focus-input").element).toBe(inputElBefore);
+
+      // Update stream — FluthRender updates fine-grained without triggering parent onUpdated
+      const parentUpdatesBefore = parentUpdateCount;
+      stream$.next("v2");
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.find(".label").text()).toBe("v2");
+      expect(wrapper.find(".local-count").text()).toBe("1");
+      expect(childMountCount).toBe(1);
+      expect(parentUpdateCount).toBe(parentUpdatesBefore);
+      expect(wrapper.find(".focus-input").element).toBe(inputElBefore);
+    });
+
+    it("should render stream values properly with SSR renderToString and detect ssrRender components", async () => {
+      const stream$ = $("Hello SSR");
+
+      const SsrOnlyComponent = {
+        ssrRender(_ctx: any, _push: (chunk: string) => void) {
+          _push('<b class="ssr-only">SSR Component</b>');
+        },
+      };
+
+      const App = defineComponent({
+        setup() {
+          return () =>
+            h("div", { class: "ssr-root" }, [
+              h("p", { class: "default" }, stream$.render$()),
+              h(
+                "p",
+                { class: "custom" },
+                stream$.render$((v) => h("span", `val:${v}`)),
+              ),
+              stream$.render$(() => SsrOnlyComponent as any),
+            ]);
+        },
+      });
+
+      const html = await renderToString(createSSRApp(App));
+      expect(html).toContain('<p class="default">Hello SSR</p>');
+      expect(html).toContain(
+        '<p class="custom"><span>val:Hello SSR</span></p>',
+      );
+      expect(html).toContain('<b class="ssr-only">SSR Component</b>');
+    });
+
+    it("should keep inline renderFn closures fresh with parent refs not read in parent render", async () => {
+      const stream$ = $("A");
+      const externalSuffix = ref("suffix-1");
+
+      const Parent = defineComponent({
+        setup() {
+          return () =>
+            h("div", [
+              stream$.render$((val) =>
+                h("span", { class: "out" }, `${val}:${externalSuffix.value}`),
+              ),
+            ]);
+        },
+      });
+
+      const wrapper = mount(Parent);
+      expect(wrapper.find(".out").text()).toBe("A:suffix-1");
+
+      externalSuffix.value = "suffix-2";
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".out").text()).toBe("A:suffix-2");
+
+      stream$.next("B");
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".out").text()).toBe("B:suffix-2");
+    });
+
+    it("should switch streams dynamically without remounting child and stop tracking old stream", async () => {
+      const a$ = $("A1");
+      const b$ = $("B1");
+      const useB = ref(false);
+      let childMounts = 0;
+
+      const Child = defineComponent({
+        props: { text: String },
+        setup(props) {
+          onMounted(() => {
+            childMounts++;
+          });
+          return () => h("span", { class: "switched" }, props.text);
+        },
+      });
+
+      const Parent = defineComponent({
+        setup() {
+          return () =>
+            (useB.value ? b$ : a$).render$((val) => h(Child, { text: val }));
+        },
+      });
+
+      const wrapper = mount(Parent);
+      expect(childMounts).toBe(1);
+      expect(wrapper.find(".switched").text()).toBe("A1");
+
+      useB.value = true;
+      await wrapper.vm.$nextTick();
+      expect(childMounts).toBe(1);
+      expect(wrapper.find(".switched").text()).toBe("B1");
+
+      // Old stream emissions should not overwrite the active stream display
+      a$.next("A2");
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".switched").text()).toBe("B1");
+
+      // New stream emissions update cleanly
+      b$.next("B2");
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find(".switched").text()).toBe("B2");
+      expect(childMounts).toBe(1);
+    });
+
+    it("should not leak subscriber nodes across repeated mount and unmount cycles", async () => {
+      const stream$ = $(0);
+      const renderCount = vi.fn();
+
+      const Comp = defineComponent({
+        setup() {
+          return () =>
+            stream$.render$((v) => {
+              renderCount(v);
+              return h("span", String(v));
+            });
+        },
+      });
+
+      for (let i = 0; i < 5; i++) {
+        const w = mount(Comp);
+        w.unmount();
+      }
+
+      renderCount.mockClear();
+      const active = mount(Comp);
+      expect(renderCount).toHaveBeenCalledTimes(1);
+
+      stream$.next(1);
+      await active.vm.$nextTick();
+      expect(renderCount).toHaveBeenCalledTimes(2);
+      expect(active.text()).toBe("1");
+
+      active.unmount();
+      stream$.next(2);
+      await Promise.resolve();
+      expect(renderCount).toHaveBeenCalledTimes(2);
     });
   });
 });

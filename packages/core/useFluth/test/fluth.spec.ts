@@ -1,8 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
-import { defineComponent, computed, watch, ref } from "vue";
+import {
+  defineComponent,
+  computed,
+  watch,
+  ref,
+  reactive,
+  readonly,
+  isRef,
+  isReadonly,
+  unref,
+} from "vue";
 
-import { $, Stream } from "../index";
+import { $, Stream, combine } from "../index";
 
 const consoleSpy = vi.spyOn(console, "log");
 
@@ -40,6 +50,163 @@ describe.sequential("useFluth", () => {
       wrapper.unmount();
       promise$.next(2);
       expect(consoleSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it("should unsubscribe PENDING async observable on unmount so settled node is detached from subsequent emissions", async () => {
+      vi.useRealTimers();
+      let resolvePending!: (val: string) => void;
+      const pendingPromise = new Promise<string>((resolve) => {
+        resolvePending = resolve;
+      });
+
+      const stream$ = $<number>();
+      const handler = vi.fn(() => pendingPromise);
+      const downstreamSpy = vi.fn();
+
+      const TestComp = defineComponent({
+        template: `<div>pending</div>`,
+        setup() {
+          stream$.then(handler).then((res) => {
+            downstreamSpy(res);
+          });
+          return {};
+        },
+      });
+
+      const wrapper = mount(TestComp);
+      // Put the async observable into PENDING state
+      stream$.next(1);
+      expect(handler).toHaveBeenCalledTimes(1);
+
+      // Unmount while the observable is still PENDING
+      wrapper.unmount();
+
+      // Resolve the pending promise so the unsubscribed node finishes and detaches
+      resolvePending("settled-after-unmount");
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(downstreamSpy).not.toHaveBeenCalled();
+
+      // Subsequent emissions must NOT re-trigger the detached handler or downstream
+      stream$.next(2);
+      await new Promise((r) => setTimeout(r, 10));
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(downstreamSpy).not.toHaveBeenCalled();
+    });
+
+    it("should complete and detach combine input node when component unmounts", () => {
+      const a$ = $(1);
+      const b$ = $(10);
+      const onComplete = vi.fn();
+
+      const TestComp = defineComponent({
+        template: `<div>combine</div>`,
+        setup() {
+          const derived$ = a$.thenImmediate((v) => v * 2);
+          derived$.afterComplete(onComplete);
+          combine(derived$, b$);
+          return {};
+        },
+      });
+
+      const wrapper = mount(TestComp);
+      expect(onComplete).not.toHaveBeenCalled();
+
+      wrapper.unmount();
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("$() PromiseLike support", () => {
+    it("should support Promise input and infer unwrapped type", async () => {
+      vi.useRealTimers();
+      let resolveValue!: (v: number) => void;
+      const deferred = new Promise<number>((resolve) => {
+        resolveValue = resolve;
+      });
+
+      const num$ = $(deferred);
+      const TestComp = defineComponent({
+        template: `<div data-testid="val">{{ num$ ?? 'loading' }}</div>`,
+        setup() {
+          return { num$ };
+        },
+      });
+
+      const wrapper = mount(TestComp);
+      expect(wrapper.find('[data-testid="val"]').text()).toBe("loading");
+
+      resolveValue(42);
+      await deferred;
+      await wrapper.vm.$nextTick();
+
+      const typedVal: number = num$.value;
+      expect(typedVal).toBe(42);
+      expect(wrapper.find('[data-testid="val"]').text()).toBe("42");
+    });
+
+    it("should support synchronous thenable input", () => {
+      const syncThenable: PromiseLike<string> = {
+        then<TResult1 = string>(
+          onfulfilled?:
+            | ((value: string) => TResult1 | PromiseLike<TResult1>)
+            | null,
+        ) {
+          const result = onfulfilled
+            ? onfulfilled("sync-ok")
+            : ("sync-ok" as any);
+          return Promise.resolve(result);
+        },
+      };
+
+      const str$ = $(syncThenable);
+      const typedVal: string = str$.value;
+      expect(typedVal).toBe("sync-ok");
+    });
+  });
+
+  describe("enhanceFluthStream reactivity interop and readonly semantics", () => {
+    it("should work with isRef, isReadonly, unref, ref, reactive, readonly, and watch(stream$)", async () => {
+      const stream$ = $("a");
+
+      expect(isRef(stream$)).toBe(true);
+      expect(isReadonly(stream$)).toBe(true);
+      expect(unref(stream$)).toBe("a");
+
+      // ref(stream$) should return the same instance without double-wrapping
+      expect(ref(stream$)).toBe(stream$);
+
+      // reactive(stream$) and readonly(stream$) should skip proxying so private fields stay intact
+      const reactiveStream = reactive(stream$);
+      expect(reactiveStream).toBe(stream$);
+      const readonlyStream = readonly(stream$);
+      expect(readonlyStream).toBe(stream$);
+
+      const watched: [string, string][] = [];
+      const stop = watch(stream$, (newVal, oldVal) => {
+        watched.push([newVal, oldVal]);
+      });
+
+      stream$.next("b");
+      await Promise.resolve();
+      expect(watched).toEqual([["b", "a"]]);
+
+      stop();
+    });
+
+    it("should warn instead of throwing when assigning to stream$.value directly", () => {
+      const warnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => undefined);
+      const stream$ = $("initial");
+
+      expect(() => {
+        (stream$ as any).value = "mutated";
+      }).not.toThrow();
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(stream$.value).toBe("initial");
+      warnSpy.mockRestore();
     });
   });
 

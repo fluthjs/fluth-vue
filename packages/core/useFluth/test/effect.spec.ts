@@ -176,5 +176,37 @@ describe("render$ function comprehensive tests", () => {
       expect(consoleSpy).toHaveBeenNthCalledWith(7, "resolve", "test2");
       expect(consoleSpy).toHaveBeenCalledTimes(7);
     });
+
+    it("should forward this context and arguments to wrapped render function", () => {
+      const ctx = { prefix: "ctx" };
+      const wrapped = effect$(function (
+        this: typeof ctx,
+        a: string,
+        b: number,
+      ) {
+        return `${this.prefix}:${a}:${b}`;
+      });
+
+      const out = wrapped.call(ctx, "hello", 42);
+      expect(out).toBe("ctx:hello:42");
+    });
+
+    it("should clean up partial side effects when render throws an error", () => {
+      const stream$ = $(1);
+      const leakedSpy = vi.fn();
+
+      const wrapped = effect$(() => {
+        stream$.then((v) => {
+          leakedSpy(v);
+        });
+        throw new Error("render boom");
+      });
+
+      expect(() => wrapped()).toThrow("render boom");
+
+      // Partial subscription created before throw must have been unsubscribed
+      stream$.next(2);
+      expect(leakedSpy).not.toHaveBeenCalled();
+    });
   });
 });
